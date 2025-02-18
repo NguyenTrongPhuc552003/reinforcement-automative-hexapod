@@ -1,0 +1,8 @@
+/home/strongfood/Projects/automative-hexapod/kernel_driver/build/CMakeFiles/build_module.dir
+/home/strongfood/Projects/automative-hexapod/kernel_driver/build/CMakeFiles/clean_module.dir
+/home/strongfood/Projects/automative-hexapod/kernel_driver/build/CMakeFiles/edit_cache.dir
+/home/strongfood/Projects/automative-hexapod/kernel_driver/build/CMakeFiles/rebuild_cache.dir
+/home/strongfood/Projects/automative-hexapod/kernel_driver/build/CMakeFiles/list_install_components.dir
+/home/strongfood/Projects/automative-hexapod/kernel_driver/build/CMakeFiles/install.dir
+/home/strongfood/Projects/automative-hexapod/kernel_driver/build/CMakeFiles/install/local.dir
+/home/strongfood/Projects/automative-hexapod/kernel_driver/build/CMakeFiles/install/strip.dir
