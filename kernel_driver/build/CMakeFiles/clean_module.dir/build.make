@@ -53,10 +53,10 @@ RM = /opt/st/stm32cubeclt_1.16.0/CMake/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/strongfood/Projects/automative-hexapod/kernel_driver
+CMAKE_SOURCE_DIR = /home/strongfood/Projects/reinforcement-automative-hexapod/kernel_driver
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/strongfood/Projects/automative-hexapod/kernel_driver/build
+CMAKE_BINARY_DIR = /home/strongfood/Projects/reinforcement-automative-hexapod/kernel_driver/build
 
 # Utility rule file for clean_module.
 
@@ -67,8 +67,8 @@ include CMakeFiles/clean_module.dir/compiler_depend.make
 include CMakeFiles/clean_module.dir/progress.make
 
 CMakeFiles/clean_module:
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/strongfood/Projects/automative-hexapod/kernel_driver/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Cleaning kernel module"
-	cd /home/strongfood/Projects/automative-hexapod/kernel_driver/src && make -C /lib/modules/6.13.2-arch1-1/build M=/home/strongfood/Projects/automative-hexapod/kernel_driver/src clean
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/strongfood/Projects/reinforcement-automative-hexapod/kernel_driver/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Cleaning kernel module"
+	cd /home/strongfood/Projects/reinforcement-automative-hexapod/kernel_driver/src && make -C /lib/modules/6.13.2-arch1-1/build M=/home/strongfood/Projects/reinforcement-automative-hexapod/kernel_driver/src clean
 
 clean_module: CMakeFiles/clean_module
 clean_module: CMakeFiles/clean_module.dir/build.make
@@ -83,6 +83,6 @@ CMakeFiles/clean_module.dir/clean:
 .PHONY : CMakeFiles/clean_module.dir/clean
 
 CMakeFiles/clean_module.dir/depend:
-	cd /home/strongfood/Projects/automative-hexapod/kernel_driver/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/strongfood/Projects/automative-hexapod/kernel_driver /home/strongfood/Projects/automative-hexapod/kernel_driver /home/strongfood/Projects/automative-hexapod/kernel_driver/build /home/strongfood/Projects/automative-hexapod/kernel_driver/build /home/strongfood/Projects/automative-hexapod/kernel_driver/build/CMakeFiles/clean_module.dir/DependInfo.cmake "--color=$(COLOR)"
+	cd /home/strongfood/Projects/reinforcement-automative-hexapod/kernel_driver/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/strongfood/Projects/reinforcement-automative-hexapod/kernel_driver /home/strongfood/Projects/reinforcement-automative-hexapod/kernel_driver /home/strongfood/Projects/reinforcement-automative-hexapod/kernel_driver/build /home/strongfood/Projects/reinforcement-automative-hexapod/kernel_driver/build /home/strongfood/Projects/reinforcement-automative-hexapod/kernel_driver/build/CMakeFiles/clean_module.dir/DependInfo.cmake "--color=$(COLOR)"
 .PHONY : CMakeFiles/clean_module.dir/depend
 

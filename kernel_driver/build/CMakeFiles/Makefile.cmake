@@ -7,7 +7,7 @@ set(CMAKE_DEPENDS_GENERATOR "Unix Makefiles")
 # The top level Makefile was generated from the following files:
 set(CMAKE_MAKEFILE_DEPENDS
   "CMakeCache.txt"
-  "/home/strongfood/Projects/automative-hexapod/kernel_driver/CMakeLists.txt"
+  "/home/strongfood/Projects/reinforcement-automative-hexapod/kernel_driver/CMakeLists.txt"
   "CMakeFiles/3.28.1/CMakeCCompiler.cmake"
   "CMakeFiles/3.28.1/CMakeSystem.cmake"
   "/opt/st/stm32cubeclt_1.16.0/CMake/share/cmake-3.28/Modules/CMakeCCompiler.cmake.in"
