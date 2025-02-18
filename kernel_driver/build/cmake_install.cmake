@@ -1,4 +1,4 @@
-# Install script for directory: /home/strongfood/Projects/automative-hexapod/kernel_driver
+# Install script for directory: /home/strongfood/Projects/reinforcement-automative-hexapod/kernel_driver
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -51,7 +51,7 @@ if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT
   if(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
-  file(INSTALL DESTINATION "/lib/modules/6.13.2-arch1-1/extra" TYPE FILE FILES "/home/strongfood/Projects/automative-hexapod/kernel_driver/src/hexapod_main.ko")
+  file(INSTALL DESTINATION "/lib/modules/6.13.2-arch1-1/extra" TYPE FILE FILES "/home/strongfood/Projects/reinforcement-automative-hexapod/kernel_driver/src/hexapod_main.ko")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT)
@@ -62,5 +62,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/strongfood/Projects/automative-hexapod/kernel_driver/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/strongfood/Projects/reinforcement-automative-hexapod/kernel_driver/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

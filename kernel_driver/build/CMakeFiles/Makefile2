@@ -54,10 +54,10 @@ RM = /opt/st/stm32cubeclt_1.16.0/CMake/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/strongfood/Projects/automative-hexapod/kernel_driver
+CMAKE_SOURCE_DIR = /home/strongfood/Projects/reinforcement-automative-hexapod/kernel_driver
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/strongfood/Projects/automative-hexapod/kernel_driver/build
+CMAKE_BINARY_DIR = /home/strongfood/Projects/reinforcement-automative-hexapod/kernel_driver/build
 
 #=============================================================================
 # Directory level rules for the build root directory
@@ -82,14 +82,14 @@ clean: CMakeFiles/clean_module.dir/clean
 CMakeFiles/build_module.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/build_module.dir/build.make CMakeFiles/build_module.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/build_module.dir/build.make CMakeFiles/build_module.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/strongfood/Projects/automative-hexapod/kernel_driver/build/CMakeFiles --progress-num=1 "Built target build_module"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/strongfood/Projects/reinforcement-automative-hexapod/kernel_driver/build/CMakeFiles --progress-num=1 "Built target build_module"
 .PHONY : CMakeFiles/build_module.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/build_module.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/strongfood/Projects/automative-hexapod/kernel_driver/build/CMakeFiles 1
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/strongfood/Projects/reinforcement-automative-hexapod/kernel_driver/build/CMakeFiles 1
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/build_module.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/strongfood/Projects/automative-hexapod/kernel_driver/build/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/strongfood/Projects/reinforcement-automative-hexapod/kernel_driver/build/CMakeFiles 0
 .PHONY : CMakeFiles/build_module.dir/rule
 
 # Convenience name for target.
@@ -108,14 +108,14 @@ CMakeFiles/build_module.dir/clean:
 CMakeFiles/clean_module.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/clean_module.dir/build.make CMakeFiles/clean_module.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/clean_module.dir/build.make CMakeFiles/clean_module.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/strongfood/Projects/automative-hexapod/kernel_driver/build/CMakeFiles --progress-num=2 "Built target clean_module"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/strongfood/Projects/reinforcement-automative-hexapod/kernel_driver/build/CMakeFiles --progress-num=2 "Built target clean_module"
 .PHONY : CMakeFiles/clean_module.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/clean_module.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/strongfood/Projects/automative-hexapod/kernel_driver/build/CMakeFiles 1
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/strongfood/Projects/reinforcement-automative-hexapod/kernel_driver/build/CMakeFiles 1
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/clean_module.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/strongfood/Projects/automative-hexapod/kernel_driver/build/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/strongfood/Projects/reinforcement-automative-hexapod/kernel_driver/build/CMakeFiles 0
 .PHONY : CMakeFiles/clean_module.dir/rule
 
 # Convenience name for target.
