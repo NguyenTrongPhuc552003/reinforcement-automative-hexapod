@@ -1,0 +1,1 @@
+cmd_/build/module/hexapod_main.ko := arm-linux-gnueabihf-ld -EL -r  -T ./scripts/module-common.lds --build-id  -T ./arch/arm/kernel/module.lds -o /build/module/hexapod_main.ko /build/module/hexapod_main.o /build/module/hexapod_main.mod.o ;  true
