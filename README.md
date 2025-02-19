@@ -1,6 +1,6 @@
 # Hexapod Robot Project
 
-This project implements a hexapod robot control system using BeagleBone AI. The system consists of kernel drivers for hardware control and user-space applications for high-level control.
+This project implements a hexapod robot control system using BeagleBone Black. The system consists of kernel drivers for hardware control and user-space applications for high-level control.
 
 ## Project Structure
 
@@ -14,69 +14,115 @@ This project implements a hexapod robot control system using BeagleBone AI. The 
 │   └── src/        # User-space source files
 ├── scripts/         # Build and deployment scripts
 ├── deploy/          # Deployment artifacts
-├── docs/           # Documentation
-│   ├── hardware/   # Hardware specifications
-│   ├── software/   # Software architecture
-│   └── api/        # API documentation
-└── tools/          # Development tools and utilities
+└── docs/           # Documentation
+```
 
-## Components
+## Hardware Requirements
+
+### BeagleBone Black
+- Linux kernel version: 4.14.108-ti-r144
+- I2C bus 0 enabled (P9_17 and P9_18 pins)
+- 5V power supply for servos
+
+### Sensors and Actuators
+- MPU6050 IMU sensor (I2C address: 0x68)
+- 2x PCA9685 PWM controllers (I2C addresses: 0x40, 0x41)
+- 18x servos (MG996R or compatible)
+
+### Connections
+1. I2C Bus 0:
+   - SCL: P9_17
+   - SDA: P9_18
+   - VDD: P9_3 (3.3V)
+   - GND: P9_1
+
+2. Servo Power:
+   - 5V external power supply
+   - Common ground with BeagleBone
+
+## Software Components
 
 ### Kernel Driver
-The kernel driver provides low-level hardware control through multiple loadable kernel modules:
-- I2C communication for sensors and servo controller
-- UART communication for debugging
-- MPU6050 sensor interface
-- PCA9685 PWM controller
-- Servo control interface
-See [kernel_driver/README.md](kernel_driver/README.md) for details.
+The kernel driver (`hexapod_driver.ko`) provides:
+- Character device interface (/dev/hexapod)
+- I2C communication for MPU6050 and PCA9685
+- Servo control and calibration
+- IMU data reading and processing
 
 ### User Space Application
 The user-space application provides:
-- High-level robot control
+- Servo testing and control
 - Movement pattern generation
-- Sensor data processing
-- Debug interface
-See [user_space/README.md](user_space/README.md) for details.
+- IMU data reading
+- Basic debugging interface
 
-## Getting Started
+## Building and Installation
 
-1. Set up the development environment:
+### Prerequisites
+- Docker for cross-compilation
+- SSH access to BeagleBone Black
+- I2C tools on BeagleBone (`apt-get install i2c-tools`)
+
+### Building
 ```bash
-./scripts/setup_env.sh
-```
-
-2. Build the kernel drivers:
-```bash
+# Build everything (kernel module and user space)
 ./scripts/build.sh
 ```
 
-3. Deploy to BeagleBone:
+### Deployment
+1. Configure BeagleBone IP in `scripts/deploy.sh`:
+```bash
+BEAGLEBONE_IP="192.168.1.9"  # Change to your BeagleBone's IP
+```
+
+2. Deploy and install:
 ```bash
 ./scripts/deploy.sh
 ```
 
-## Development
-
-### Prerequisites
-- Docker for build environment
-- BeagleBone AI board
-- MPU6050 sensor
-- PCA9685 PWM controller
-- 18 servos (MG996R or compatible)
-
-### Building
-All builds are done in a Docker container to ensure consistency:
+### Verification
+After installation, verify:
+1. I2C devices:
 ```bash
-./scripts/build.sh      # Build all components
-./scripts/test.sh       # Run tests
-./scripts/deploy.sh     # Deploy to BeagleBone
+i2cdetect -y -r 0
 ```
 
-## Documentation
-- [Hardware Setup](docs/hardware/README.md)
-- [Software Architecture](docs/software/README.md)
-- [API Documentation](docs/api/README.md)
+2. Kernel module:
+```bash
+lsmod | grep hexapod
+ls -l /dev/hexapod
+```
+
+3. Test servo movement:
+```bash
+servo_test
+```
+
+## Development
+
+### Adding New Features
+1. Kernel Driver:
+   - Add new functionality in `kernel_driver/src/`
+   - Update IOCTL commands in `kernel_driver/include/hexapod.h`
+   - Rebuild using `./scripts/build.sh`
+
+2. User Space:
+   - Add new programs in `user_space/src/`
+   - Update Makefile if needed
+   - Rebuild using `./scripts/build.sh`
+
+### Debugging
+1. Kernel messages:
+```bash
+dmesg | grep hexapod
+```
+
+2. I2C communication:
+```bash
+i2cdetect -y -r 0
+i2cdump -y 0 0x68  # MPU6050
+i2cdump -y 0 0x40  # PCA9685 #1
+```
 
 ## License
 This project is licensed under the GPL License - see the [LICENSE](LICENSE) file for details.

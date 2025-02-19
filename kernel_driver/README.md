@@ -1,75 +1,152 @@
 # Hexapod Kernel Driver
 
-This directory contains the kernel driver modules for the hexapod robot. The driver provides interfaces for controlling servos, reading sensor data, and communicating over I2C and UART.
+This directory contains the kernel driver for the hexapod robot. The driver provides interfaces for controlling servos via PCA9685 PWM controllers and reading sensor data from the MPU6050 IMU, all communicating over I2C.
 
 ## Directory Structure
 
 ```
 kernel_driver/
 ├── include/           # Header files
-│   ├── gpio_control.h
-│   ├── hexapod_ioctl.h
-│   ├── hexapod_main.h
-│   ├── i2c_comm.h
-│   ├── mpu6050.h
-│   ├── pca9685.h
-│   ├── pwm_control.h
-│   ├── servo.h
-│   └── uart_comm.h
+│   ├── hexapod.h     # Main driver interface
+│   ├── mpu6050.h     # MPU6050 registers and functions
+│   ├── pca9685.h     # PCA9685 registers and functions
+│   └── servo.h       # Servo control definitions
 ├── src/              # Source files
-│   ├── gpio_control.c
-│   ├── hexapod_main.c
-│   ├── i2c_comm.c
-│   ├── mpu6050.c
-│   ├── pca9685.c
-│   ├── pwm_control.c
-│   ├── servo.c
-│   └── uart_comm.c
+│   ├── hexapod.c     # Main character device driver
+│   ├── mpu6050.c     # MPU6050 sensor driver
+│   ├── pca9685.c     # PCA9685 PWM controller driver
+│   └── servo.c       # Servo control logic
 └── Makefile
 ```
 
+## Hardware Requirements
+
+### I2C Configuration
+The driver uses I2C bus 0 on the BeagleBone Black:
+- SCL: P9_17
+- SDA: P9_18
+- VDD: P9_3 (3.3V)
+- GND: P9_1
+
+### Connected Devices
+1. MPU6050 IMU Sensor
+   - I2C Address: 0x68
+   - Provides accelerometer and gyroscope data
+   - Temperature sensor included
+
+2. PCA9685 PWM Controllers
+   - Controller #1: I2C Address 0x40 (Legs 0-2)
+   - Controller #2: I2C Address 0x41 (Legs 3-5)
+   - 16 channels each
+   - PWM frequency: 50Hz for servo control
+
+3. Servo Configuration
+   - 18 servos total (3 per leg × 6 legs)
+   - Operating voltage: 5V
+   - PWM range: 150-600 (corresponds to -90° to +90°)
+   - Default frequency: 50Hz
+
 ## Module Architecture
 
-The driver is split into multiple modules for better maintainability:
+The driver consists of four main components:
 
-- **hexapod_main**: Main character device driver and IOCTL handler
-- **i2c_comm**: I2C communication interface
-- **uart_comm**: UART communication interface
-- **mpu6050**: MPU6050 sensor driver
-- **pca9685**: PCA9685 PWM controller driver
-- **servo**: Servo control logic
-- **gpio_control**: GPIO interface
-- **pwm_control**: PWM control interface
+1. **Main Driver (hexapod.c)**
+   - Character device interface
+   - IOCTL command handling
+   - Module initialization and cleanup
+   - Device node: /dev/hexapod
 
-Each module is independent but can be used by other modules through exported symbols.
+2. **MPU6050 Driver (mpu6050.c)**
+   - Sensor initialization
+   - Register reading/writing
+   - Data conversion and processing
+   - Error handling and recovery
+
+3. **PCA9685 Driver (pca9685.c)**
+   - PWM controller initialization
+   - Channel control
+   - Frequency setting
+   - Multiple device support
+
+4. **Servo Control (servo.c)**
+   - Angle to PWM conversion
+   - Joint limit enforcement
+   - Smooth movement control
+   - Multi-servo coordination
 
 ## Building
 
-The driver can be built using the Docker environment:
+The driver is built using a Docker-based cross-compilation environment:
 ```bash
 ./scripts/build.sh
 ```
 
+This creates:
+- hexapod_driver.ko (Kernel module)
+- servo_test (User space test program)
+
 ## Installation
 
-After building, deploy and install the modules on the BeagleBone:
+Deploy and install on the BeagleBone:
 ```bash
 ./scripts/deploy.sh
 ```
 
-This will:
-1. Copy the built modules to the BeagleBone
-2. Load all modules in the correct order
-3. Create the device node `/dev/hexapod`
+The installation script will:
+1. Check for I2C bus availability
+2. Install required packages (i2c-tools)
+3. Load the kernel module
+4. Create device node (/dev/hexapod)
+5. Set appropriate permissions
+6. Install user space test program
 
-## Usage
+## IOCTL Interface
 
-The driver creates a character device `/dev/hexapod` that accepts the following IOCTL commands:
-- `IOCTL_SET_SERVO`: Set individual servo angle
-- `IOCTL_MOVE_LEG`: Move a leg (multiple servos)
-- `IOCTL_SET_PATTERN`: Set movement pattern
-- `IOCTL_GET_MPU6050`: Read MPU6050 sensor data
-- `UART_SEND`: Send data over UART
-- `UART_RECEIVE`: Receive data over UART
+The driver provides the following IOCTL commands:
 
-See `include/hexapod_ioctl.h` for detailed command definitions.
+1. **IOCTL_SET_SERVO**
+   - Set individual servo angle
+   - Parameters: leg_id, joint_id, angle
+   - Angle range: -90 to +90 degrees
+
+2. **IOCTL_SET_PATTERN**
+   - Set movement pattern
+   - Parameters: pattern_id, speed, direction
+   - Patterns: TRIPOD (0), WAVE (1), RIPPLE (2)
+
+3. **IOCTL_GET_MPU6050**
+   - Read sensor data
+   - Returns: accelerometer, gyroscope, temperature
+   - Data in raw format (needs conversion)
+
+See `include/hexapod.h` for detailed command definitions and structures.
+
+## Error Handling
+
+The driver includes comprehensive error handling:
+- I2C bus validation
+- Device detection and recovery
+- Invalid parameter checking
+- Resource cleanup
+- Detailed error reporting via dmesg
+
+## Debugging
+
+1. Check module status:
+```bash
+lsmod | grep hexapod
+dmesg | grep hexapod
+```
+
+2. Verify I2C devices:
+```bash
+i2cdetect -y -r 0
+```
+
+3. Monitor device node:
+```bash
+ls -l /dev/hexapod
+```
+
+## License
+This driver is licensed under the GPL License.

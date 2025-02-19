@@ -1,205 +1,225 @@
+// servo_test.c
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
+#include <signal.h>
 #include <unistd.h>
-#include <errno.h>
-#include "../include/hexapod_ioctl_user.h"
+#include "hexapod_ioctl.h"
 
 #define DEVICE_PATH "/dev/hexapod"
 
-// Movement patterns
-#define PATTERN_TRIPOD 0
-#define PATTERN_WAVE   1
-#define PATTERN_RIPPLE 2
+static int g_fd = -1;
+static volatile int g_running = 1;
 
-#define DIRECTION_FORWARD 1
-#define DIRECTION_STOP 0
+// Core servo testing functions
+void test_single_servo(void);
+void test_leg_movement(void);
+void test_all_legs(void);
 
-void test_single_servo(int fd, uint8_t leg_id, uint8_t joint_id, int16_t angle)
-{
-    struct servo_control ctrl = {
-        .leg_id = leg_id,
-        .joint_id = joint_id,
-        .angle = angle
-    };
-
-    if (ioctl(fd, IOCTL_SET_SERVO, &ctrl) < 0) {
-        perror("Failed to control servo");
-        return;
-    }
-
-    printf("Set leg %d joint %d to angle %d\n", leg_id, joint_id, angle);
+// Menu options
+enum {
+    OPTION_EXIT = 0,
+    OPTION_TEST_SINGLE_SERVO,
+    OPTION_TEST_LEG_MOVEMENT,
+    OPTION_TEST_ALL_LEGS
+};
+// Signal handler for clean exit
+static void signal_handler(int signo) {
+    g_running = 0;
 }
 
-void test_move_leg(int fd, uint8_t leg_id, int16_t hip, int16_t knee, int16_t ankle)
-{
-    // Test hip joint
-    test_single_servo(fd, leg_id, 0, hip);
-    usleep(500000);  // 500ms delay
+// Initialize device and signal handling
+static int initialize(void) {
+    g_fd = open(DEVICE_PATH, O_RDWR);
+    if (g_fd < 0) {
+        perror("Failed to open device");
+        return -1;
+    }
 
-    // Test knee joint
-    test_single_servo(fd, leg_id, 1, knee);
-    usleep(500000);
-
-    // Test ankle joint
-    test_single_servo(fd, leg_id, 2, ankle);
-    usleep(500000);
+    signal(SIGINT, signal_handler);
+    signal(SIGTERM, signal_handler);
+    return 0;
 }
 
-void test_pattern(int fd, uint8_t pattern_id, uint8_t speed, int8_t direction)
-{
-    struct movement_pattern pattern = {
-        .pattern_id = pattern_id,
-        .speed = speed,
-        .direction = direction
-    };
-
-    if (ioctl(fd, IOCTL_SET_PATTERN, &pattern) < 0) {
-        perror("Failed to set movement pattern");
-        return;
+// Clean up resources
+static void cleanup(void) {
+    if (g_fd >= 0) {
+        close(g_fd);
+        g_fd = -1;
     }
-
-    printf("Set pattern %d with speed %d and direction %d\n", 
-           pattern_id, speed, direction);
 }
 
-void test_mpu6050(int fd)
-{
-    struct mpu6050_data data;
-    
-    if (ioctl(fd, IOCTL_GET_MPU6050, &data) < 0) {
-        perror("Failed to read MPU6050");
-        return;
+// Display menu and get user choice
+static int display_menu(void) {
+    printf("\nServo Test Menu:\n");
+    printf("1. Test Single Servo\n");
+    printf("2. Test Leg Movement\n");
+    printf("3. Test All Legs\n");
+    printf("0. Exit\n");
+    printf("Enter choice: ");
+
+    int choice;
+    if (scanf("%d", &choice) != 1) {
+        while (getchar() != '\n'); // Clear input buffer
+        return -1;
     }
-    
-    printf("MPU6050 Data:\n");
-    printf("Accel: X=%d Y=%d Z=%d\n", data.accel_x, data.accel_y, data.accel_z);
-    printf("Gyro:  X=%d Y=%d Z=%d\n", data.gyro_x, data.gyro_y, data.gyro_z);
-    printf("Temp:  %d\n", data.temp);
+    return choice;
 }
 
-void test_uart(int fd)
-{
-    struct uart_message msg;
-    const char *test_str = "Hello from user space!\n";
-    
-    strncpy((char *)msg.data, test_str, sizeof(msg.data));
-    msg.len = strlen(test_str);
-    
-    if (ioctl(fd, IOCTL_UART_WRITE, &msg) < 0) {
-        perror("Failed to write UART");
+void test_single_servo(void) {
+    struct servo_data data;
+    printf("Enter servo number (0-17): ");
+    if (scanf("%d", &data.servo_num) != 1 || data.servo_num < 0 || data.servo_num > 17) {
+        printf("Invalid servo number\n");
+        while (getchar() != '\n');
         return;
     }
-    
-    // Try to read response
-    memset(&msg, 0, sizeof(msg));
-    msg.len = sizeof(msg.data);
-    
-    if (ioctl(fd, IOCTL_UART_READ, &msg) < 0) {
-        perror("Failed to read UART");
+
+    printf("Enter angle (0-180): ");
+    if (scanf("%d", &data.angle) != 1 || data.angle < 0 || data.angle > 180) {
+        printf("Invalid angle\n");
+        while (getchar() != '\n');
         return;
     }
-    
-    if (msg.len > 0) {
-        printf("Received: %.*s\n", (int)msg.len, msg.data);
+
+    if (ioctl(g_fd, SERVO_SET_ANGLE, &data) < 0) {
+        perror("Failed to set servo angle");
     } else {
-        printf("No data received\n");
+        printf("Servo %d set to %d degrees\n", data.servo_num, data.angle);
     }
 }
 
-int main(int argc, char *argv[])
-{
-    int fd, opt;
-    int leg_id = -1, joint_id = -1, angle = -1;
-    int coxa = -1, femur = -1, tibia = -1;
-    int pattern_id = -1, speed = 5, direction = 1;
-    int read_mpu = 0;
-    int run_wave = 0;
-    int run_tripod = 0;
+void test_leg_movement(void) {
+    int leg_num;
+    printf("Enter leg number (0-5): ");
+    if (scanf("%d", &leg_num) != 1 || leg_num < 0 || leg_num > 5) {
+        printf("Invalid leg number\n");
+        while (getchar() != '\n');
+        return;
+    }
 
-    // Parse command line arguments
-    while ((opt = getopt(argc, argv, "s:j:a:l:c:f:t:p:v:d:mwrh")) != -1) {
-        switch (opt) {
-            case 's': leg_id = atoi(optarg); break;
-            case 'j': joint_id = atoi(optarg); break;
-            case 'a': angle = atoi(optarg); break;
-            case 'l': leg_id = atoi(optarg); break;
-            case 'c': coxa = atoi(optarg); break;
-            case 'f': femur = atoi(optarg); break;
-            case 't': tibia = atoi(optarg); break;
-            case 'p': pattern_id = atoi(optarg); break;
-            case 'v': speed = atoi(optarg); break;
-            case 'd': direction = atoi(optarg); break;
-            case 'm': read_mpu = 1; break;
-            case 'w': run_wave = 1; break;
-            case 'r': run_tripod = 1; break;
-            case 'h':
-            default:
-                printf("Usage: %s [OPTIONS]\n", argv[0]);
-                printf("Options:\n");
-                printf("  -s <leg_id> -j <joint_id> -a <angle>  Set single servo\n");
-                printf("  -l <leg_id> -c <coxa> -f <femur> -t <tibia>  Move entire leg\n");
-                printf("  -p <pattern_id> -v <speed> -d <direction>  Run movement pattern\n");
-                printf("  -m  Read MPU6050 sensor data\n");
-                printf("  -w  Run wave pattern test\n");
-                printf("  -r  Run tripod pattern test\n");
-                printf("  -h  Show this help message\n");
-                return 1;
+    struct leg_data data = {
+        .leg_num = leg_num,
+        .hip_angle = 90,
+        .knee_angle = 90,
+        .ankle_angle = 90
+    };
+
+    printf("Testing leg %d...\n", leg_num);
+    printf("Moving to neutral position...\n");
+    if (ioctl(g_fd, LEG_SET_POSITION, &data) < 0) {
+        perror("Failed to set leg position");
+        return;
+    }
+
+    sleep(1);
+
+    // Test range of motion
+    const int test_angles[] = {45, 135, 90};
+    const char *joint_names[] = {"hip", "knee", "ankle"};
+    
+    for (int i = 0; i < 3; i++) {
+        for (int angle : test_angles) {
+            switch (i) {
+                case 0: data.hip_angle = angle; break;
+                case 1: data.knee_angle = angle; break;
+                case 2: data.ankle_angle = angle; break;
+            }
+            
+            printf("Setting %s to %d degrees...\n", joint_names[i], angle);
+            if (ioctl(g_fd, LEG_SET_POSITION, &data) < 0) {
+                perror("Failed to set leg position");
+                return;
+            }
+            sleep(1);
         }
     }
+}
 
-    // Open device
-    fd = open(DEVICE_PATH, O_RDWR);
-    if (fd < 0) {
-        perror("Failed to open device");
+void test_all_legs(void) {
+    printf("Testing all legs...\n");
+    
+    // Set all legs to neutral position
+    for (int leg = 0; leg < 6; leg++) {
+        struct leg_data data = {
+            .leg_num = leg,
+            .hip_angle = 90,
+            .knee_angle = 90,
+            .ankle_angle = 90
+        };
+        
+        if (ioctl(g_fd, LEG_SET_POSITION, &data) < 0) {
+            perror("Failed to set leg position");
+            return;
+        }
+    }
+    
+    sleep(2);
+    
+    // Test simple movement for each leg
+    for (int leg = 0; leg < 6 && g_running; leg++) {
+        printf("Testing leg %d\n", leg);
+        struct leg_data data = {
+            .leg_num = leg,
+            .hip_angle = 45,
+            .knee_angle = 45,
+            .ankle_angle = 45
+        };
+        
+        if (ioctl(g_fd, LEG_SET_POSITION, &data) < 0) {
+            perror("Failed to set leg position");
+            return;
+        }
+        
+        sleep(1);
+        
+        // Return to neutral
+        data.hip_angle = 90;
+        data.knee_angle = 90;
+        data.ankle_angle = 90;
+        
+        if (ioctl(g_fd, LEG_SET_POSITION, &data) < 0) {
+            perror("Failed to set leg position");
+            return;
+        }
+        
+        sleep(1);
+    }
+}
+
+int main(void) {
+    if (initialize() < 0) {
         return 1;
     }
 
-    // Execute requested operation
-    if (leg_id >= 0 && joint_id >= 0 && angle >= 0) {
-        test_single_servo(fd, leg_id, joint_id, angle);
-    }
-    else if (leg_id >= 0 && coxa >= 0 && femur >= 0 && tibia >= 0) {
-        test_move_leg(fd, leg_id, coxa, femur, tibia);
-    }
-    else if (pattern_id >= 0) {
-        test_pattern(fd, pattern_id, speed, direction);
-    }
-    else if (read_mpu) {
-        test_mpu6050(fd);
-    }
-    else if (run_wave) {
-        printf("Running wave pattern test...\n");
-        test_pattern(fd, PATTERN_WAVE, 5, DIRECTION_FORWARD);  // Speed 5, forward direction
-        sleep(10);  // Run for 10 seconds
-        test_pattern(fd, PATTERN_WAVE, 0, DIRECTION_STOP);  // Stop
-    }
-    else if (run_tripod) {
-        printf("Running tripod pattern test...\n");
-        test_pattern(fd, PATTERN_TRIPOD, 7, DIRECTION_FORWARD);  // Speed 7, forward direction
-        sleep(10);  // Run for 10 seconds
-        test_pattern(fd, PATTERN_TRIPOD, 0, DIRECTION_STOP);  // Stop
-    }
-    else {
-        printf("Testing individual servo control...\n");
-        // Test leg 0 movements
-        test_move_leg(fd, 0, 0, 45, -45);  // Neutral, raised, extended
+    printf("Servo Test Program\n");
+    printf("Press Ctrl+C to exit\n");
+
+    while (g_running) {
+        int choice = display_menu();
         
-        printf("\nTesting movement patterns...\n");
-        // Test tripod gait
-        test_pattern(fd, PATTERN_TRIPOD, 5, DIRECTION_FORWARD);
-        sleep(5);  // Let it walk for 5 seconds
-        test_pattern(fd, PATTERN_TRIPOD, 0, DIRECTION_STOP);
-        
-        printf("\nTesting MPU6050 sensor...\n");
-        test_mpu6050(fd);
-        
-        printf("\nTesting UART communication...\n");
-        test_uart(fd);
+        switch (choice) {
+            case OPTION_TEST_SINGLE_SERVO:
+                test_single_servo();
+                break;
+            case OPTION_TEST_LEG_MOVEMENT:
+                test_leg_movement();
+                break;
+            case OPTION_TEST_ALL_LEGS:
+                test_all_legs();
+                break;
+            case OPTION_EXIT:
+                g_running = 0;
+                break;
+            default:
+                printf("Invalid choice\n");
+                break;
+        }
     }
 
-    close(fd);
+    cleanup();
+    printf("\nExiting servo test program\n");
     return 0;
 }
