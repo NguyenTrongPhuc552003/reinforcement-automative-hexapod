@@ -1,212 +1,226 @@
 #include <linux/module.h>
+#include <linux/kernel.h>
+#include <linux/init.h>
 #include <linux/i2c.h>
 #include <linux/delay.h>
-#include "../include/pca9685.h"
-#include "../include/i2c_comm.h"
+#include "pca9685.h"
+#include "servo.h"
 
-#define PCA9685_MODE1 0x00
-#define PCA9685_MODE2 0x01
-#define PCA9685_SUBADR1 0x02
-#define PCA9685_SUBADR2 0x03
-#define PCA9685_SUBADR3 0x04
-#define PCA9685_PRESCALE 0xFE
-#define PCA9685_LED0_ON_L 0x06
-#define PCA9685_LED0_ON_H 0x07
-#define PCA9685_LED0_OFF_L 0x08
-#define PCA9685_LED0_OFF_H 0x09
-
-#define PCA9685_RESTART 0x80
-#define PCA9685_SLEEP 0x10
-#define PCA9685_ALLCALL 0x01
-#define PCA9685_INVRT 0x10
-#define PCA9685_OUTDRV 0x04
-
-struct pca9685_device {
-    u8 i2c_addr;
-    bool is_initialized;
-    u8 prescale_value;
-};
-
-static struct pca9685_device pca9685_devices[MAX_PCA9685_DEVICES];
+static struct i2c_client *pca9685_clients[MAX_DEVICES];
 static int num_devices = 0;
 
-// Helper functions for single byte operations
-static inline int pca9685_read_reg(u8 i2c_addr, u8 reg, u8 *value)
+// Read a single byte from PCA9685
+static s32 pca9685_read_byte(struct i2c_client *client, u8 reg)
 {
-    return i2c_read_data(i2c_addr, reg, value, 1);
+    s32 ret = i2c_smbus_read_byte_data(client, reg);
+    if (ret < 0)
+        pr_err("PCA9685: Failed to read from register 0x%02x\n", reg);
+    return ret;
 }
 
-static inline int pca9685_write_reg(u8 i2c_addr, u8 reg, u8 value)
+// Write a single byte to PCA9685
+static s32 pca9685_write_byte(struct i2c_client *client, u8 reg, u8 data)
 {
-    return i2c_write_data(i2c_addr, reg, &value, 1);
+    s32 ret = i2c_smbus_write_byte_data(client, reg, data);
+    if (ret < 0)
+        pr_err("PCA9685: Failed to write 0x%02x to register 0x%02x\n", data, reg);
+    return ret;
 }
 
-void pca9685_reset(void)
+// Write 4 bytes to PCA9685 for PWM control
+static s32 pca9685_write_pwm(struct i2c_client *client, u8 reg, u16 on, u16 off)
 {
-    // Reset implementation
+    u8 data[4];
+    s32 ret;
+
+    data[0] = on & 0xFF;
+    data[1] = on >> 8;
+    data[2] = off & 0xFF;
+    data[3] = off >> 8;
+
+    ret = i2c_smbus_write_i2c_block_data(client, reg, 4, data);
+    if (ret < 0)
+        pr_err("PCA9685: Failed to write PWM data to register 0x%02x\n", reg);
+    return ret;
+}
+
+// Helper function to find client by I2C address
+static struct i2c_client *find_client(u8 i2c_addr)
+{
+    int i;
+    for (i = 0; i < num_devices; i++) {
+        if (pca9685_clients[i] && pca9685_clients[i]->addr == i2c_addr) {
+            return pca9685_clients[i];
+        }
+    }
+    return NULL;
 }
 
 int pca9685_device_init(u8 i2c_addr)
 {
-    int ret;
+    struct i2c_adapter *adapter;
+    struct i2c_board_info board_info = {
+        I2C_BOARD_INFO("pca9685", i2c_addr)
+    };
+    struct i2c_client *client;
+    s32 ret;
 
-    // Reset the device
-    pca9685_reset();
-
-    // Set sleep mode
-    ret = pca9685_write_reg(i2c_addr, PCA9685_MODE1, 0x10);
-    if (ret < 0)
-        return ret;
-
-    // Set mode1 (normal mode, auto-increment enabled)
-    ret = pca9685_write_reg(i2c_addr, PCA9685_MODE1, PCA9685_ALLCALL);
-    if (ret < 0)
-        return ret;
-
-    // Wait for oscillator
-    udelay(500);
-
-    // Add device to our list if not already present
-    if (num_devices < MAX_PCA9685_DEVICES) {
-        int i;
-        bool found = false;
-
-        for (i = 0; i < num_devices; i++) {
-            if (pca9685_devices[i].i2c_addr == i2c_addr) {
-                found = true;
-                break;
-            }
-        }
-
-        if (!found) {
-            pca9685_devices[num_devices].i2c_addr = i2c_addr;
-            pca9685_devices[num_devices].is_initialized = true;
-            num_devices++;
-        }
+    // Get I2C adapter for i2c-0
+    adapter = i2c_get_adapter(0);
+    if (!adapter) {
+        pr_err("PCA9685: Failed to get I2C adapter\n");
+        return -ENODEV;
     }
 
+    // Create I2C client
+    client = i2c_new_device(adapter, &board_info);
+    if (!client) {
+        pr_err("PCA9685: Failed to create I2C client for address 0x%02x\n", i2c_addr);
+        i2c_put_adapter(adapter);
+        return -ENODEV;
+    }
+
+    // Store client in array
+    if (num_devices >= MAX_DEVICES) {
+        pr_err("PCA9685: Too many devices\n");
+        i2c_unregister_device(client);
+        i2c_put_adapter(adapter);
+        return -ENOSPC;
+    }
+    pca9685_clients[num_devices++] = client;
+
+    // Software reset
+    ret = pca9685_write_byte(client, PCA9685_MODE1, PCA9685_RESTART);
+    if (ret < 0) {
+        pr_err("PCA9685: Failed to reset device at 0x%02x\n", i2c_addr);
+        goto error;
+    }
+    msleep(10);
+
+    // Set to sleep mode
+    ret = pca9685_write_byte(client, PCA9685_MODE1, PCA9685_SLEEP);
+    if (ret < 0) {
+        pr_err("PCA9685: Failed to set sleep mode at 0x%02x\n", i2c_addr);
+        goto error;
+    }
+
+    // Set PWM frequency
+    ret = pca9685_set_pwm_freq(i2c_addr, PWM_FREQ);
+    if (ret < 0) {
+        pr_err("PCA9685: Failed to set PWM frequency at 0x%02x\n", i2c_addr);
+        goto error;
+    }
+
+    // Set normal mode with auto-increment enabled
+    ret = pca9685_write_byte(client, PCA9685_MODE1, PCA9685_ALLCALL);
+    if (ret < 0) {
+        pr_err("PCA9685: Failed to set normal mode at 0x%02x\n", i2c_addr);
+        goto error;
+    }
+    msleep(5);
+
+    // Set output mode
+    ret = pca9685_write_byte(client, PCA9685_MODE2, PCA9685_OUTDRV);
+    if (ret < 0) {
+        pr_err("PCA9685: Failed to set output mode at 0x%02x\n", i2c_addr);
+        goto error;
+    }
+
+    pr_info("PCA9685: Device at 0x%02x initialized successfully\n", i2c_addr);
     return 0;
+
+error:
+    i2c_unregister_device(client);
+    pca9685_clients[--num_devices] = NULL;
+    return ret;
 }
 
-int pca9685_set_pwm_freq(u8 i2c_addr, unsigned int freq_hz)
+int pca9685_set_pwm_freq(u8 i2c_addr, u8 freq)
 {
-    int ret;
-    u8 prescale_val;
-    u8 old_mode;
-    u8 new_mode;
+    struct i2c_client *client;
+    u32 prescale;
+    s32 oldmode, newmode, ret;
 
-    // Calculate prescale value
-    prescale_val = (u8)(25000000.0f / (4096.0f * freq_hz) - 0.5f);
+    client = find_client(i2c_addr);
+    if (!client) {
+        pr_err("PCA9685: Device not found at address 0x%02x\n", i2c_addr);
+        return -ENODEV;
+    }
+
+    // Calculate prescale value for desired frequency
+    prescale = (INTERNAL_CLOCK_FREQ / (PWM_RESOLUTION * freq)) - 1;
+    if (prescale < 3)
+        prescale = 3;
+    if (prescale > 255)
+        prescale = 255;
 
     // Read current mode
-    ret = pca9685_read_reg(i2c_addr, PCA9685_MODE1, &old_mode);
-    if (ret < 0)
-        return ret;
+    oldmode = pca9685_read_byte(client, PCA9685_MODE1);
+    if (oldmode < 0)
+        return oldmode;
 
-    // Set sleep mode
-    new_mode = (old_mode & ~0x7F) | 0x10;
-    ret = pca9685_write_reg(i2c_addr, PCA9685_MODE1, new_mode);
+    // Set sleep mode to change prescale
+    newmode = (oldmode & ~PCA9685_RESTART) | PCA9685_SLEEP;
+    ret = pca9685_write_byte(client, PCA9685_MODE1, newmode);
     if (ret < 0)
         return ret;
 
     // Set prescale value
-    ret = pca9685_write_reg(i2c_addr, PCA9685_PRESCALE, prescale_val);
+    ret = pca9685_write_byte(client, PCA9685_PRESCALE, prescale);
     if (ret < 0)
         return ret;
 
-    // Restore old mode
-    ret = pca9685_write_reg(i2c_addr, PCA9685_MODE1, old_mode);
+    // Restore mode
+    ret = pca9685_write_byte(client, PCA9685_MODE1, oldmode);
     if (ret < 0)
         return ret;
 
-    // Wait for oscillator
-    udelay(500);
+    msleep(5);
 
-    // Update mode with restart bit
-    ret = pca9685_write_reg(i2c_addr, PCA9685_MODE1, old_mode | 0x80);
+    // Set restart bit
+    ret = pca9685_write_byte(client, PCA9685_MODE1, oldmode | PCA9685_RESTART);
     if (ret < 0)
         return ret;
 
+    pr_info("PCA9685: Set frequency to %dHz (prescale: %d)\n", freq, prescale);
     return 0;
 }
 
-int pca9685_set_pwm(u8 i2c_addr, u8 channel, u16 on_time, u16 off_time)
+int pca9685_set_pwm(u8 i2c_addr, u8 channel, u16 on, u16 off)
 {
-    int ret;
-    u8 led_start = PCA9685_LED0_ON_L + (channel * 4);
+    struct i2c_client *client;
+    u8 reg;
 
-    ret = pca9685_write_reg(i2c_addr, led_start, on_time & 0xFF);
-    if (ret < 0)
-        return ret;
+    if (channel >= PWM_CHANNELS) {
+        pr_err("PCA9685: Invalid channel %d\n", channel);
+        return -EINVAL;
+    }
 
-    ret = pca9685_write_reg(i2c_addr, led_start + 1, on_time >> 8);
-    if (ret < 0)
-        return ret;
+    client = find_client(i2c_addr);
+    if (!client) {
+        pr_err("PCA9685: Device not found at address 0x%02x\n", i2c_addr);
+        return -ENODEV;
+    }
 
-    ret = pca9685_write_reg(i2c_addr, led_start + 2, off_time & 0xFF);
-    if (ret < 0)
-        return ret;
-
-    ret = pca9685_write_reg(i2c_addr, led_start + 3, off_time >> 8);
-    return ret;
-}
-
-int pca9685_device_sleep(u8 i2c_addr)
-{
-    int ret;
-    u8 mode1;
-
-    // Read current mode1 register
-    ret = pca9685_read_reg(i2c_addr, PCA9685_MODE1, &mode1);
-    if (ret < 0)
-        return ret;
-
-    // Set sleep bit
-    mode1 |= PCA9685_SLEEP;
-    return pca9685_write_reg(i2c_addr, PCA9685_MODE1, mode1);
-}
-
-int pca9685_device_wake(u8 i2c_addr)
-{
-    int ret;
-    u8 mode1;
-
-    // Read current mode1 register
-    ret = pca9685_read_reg(i2c_addr, PCA9685_MODE1, &mode1);
-    if (ret < 0)
-        return ret;
-
-    // Clear sleep bit
-    mode1 &= ~PCA9685_SLEEP;
-    ret = pca9685_write_reg(i2c_addr, PCA9685_MODE1, mode1);
-    if (ret < 0)
-        return ret;
-
-    // Wait for oscillator to stabilize
-    udelay(500);
-    return 0;
+    reg = PCA9685_LED0_ON_L + (channel * 4);
+    return pca9685_write_pwm(client, reg, on, off);
 }
 
 void pca9685_cleanup(void)
 {
     int i;
+    struct i2c_client *client;
+
     for (i = 0; i < num_devices; i++) {
-        if (pca9685_devices[i].is_initialized) {
-            // Put device in sleep mode
-            pca9685_device_sleep(pca9685_devices[i].i2c_addr);
-            pca9685_devices[i].is_initialized = false;
+        client = pca9685_clients[i];
+        if (client) {
+            pca9685_write_byte(client, PCA9685_MODE1, PCA9685_SLEEP);
+            i2c_unregister_device(client);
+            pca9685_clients[i] = NULL;
         }
     }
     num_devices = 0;
+    pr_info("PCA9685: Cleanup complete\n");
 }
-
-// Export symbols at the end of the file
-EXPORT_SYMBOL_GPL(pca9685_reset);
-EXPORT_SYMBOL_GPL(pca9685_device_init);
-EXPORT_SYMBOL_GPL(pca9685_set_pwm);
-EXPORT_SYMBOL_GPL(pca9685_set_pwm_freq);
-EXPORT_SYMBOL_GPL(pca9685_device_sleep);
-EXPORT_SYMBOL_GPL(pca9685_device_wake);
-EXPORT_SYMBOL_GPL(pca9685_cleanup);
 
 MODULE_LICENSE("GPL");

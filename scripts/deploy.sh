@@ -48,7 +48,7 @@ fi
 
 # Install on BeagleBone
 echo "Installing on BeagleBone..."
-ssh ${BEAGLEBONE_USER}@${BEAGLEBONE_IP} "cd ~/hexapod_driver && ./install.sh"
+ssh -t ${BEAGLEBONE_USER}@${BEAGLEBONE_IP} "cd ~/hexapod_driver && sudo ./install.sh"
 
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}Deployment successful!${NC}"

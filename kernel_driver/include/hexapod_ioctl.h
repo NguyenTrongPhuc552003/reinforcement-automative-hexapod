@@ -1,47 +1,51 @@
-#ifndef HEXAPOD_IOCTL_H
-#define HEXAPOD_IOCTL_H
+#ifndef _HEXAPOD_IOCTL_H
+#define _HEXAPOD_IOCTL_H
 
 #include <linux/ioctl.h>
 #include <linux/types.h>
 
 // IOCTL magic number
-#define HEXAPOD_IOC_MAGIC 'H'
+#define HEXAPOD_IOC_MAGIC       'H'
+
+// Movement patterns
+typedef enum {
+    MOVE_FORWARD,
+    MOVE_BACKWARD,
+    TURN_LEFT,
+    TURN_RIGHT,
+    MOVE_UP,
+    MOVE_DOWN,
+    MOVE_STOP
+} movement_type_t;
 
 // Servo control structure
 struct servo_control {
-    unsigned int leg_id;     // Leg ID (0-5)
-    unsigned int joint_id;   // Joint ID (0-2: COXA, FEMUR, TIBIA)
-    unsigned int angle;      // Angle in degrees (0-180)
-};
+    u8 leg_id;         // Leg identifier (0-5)
+    u8 joint_id;       // Joint identifier (0-2)
+    s16 angle;         // Target angle (-90 to +90)
+} __attribute__((packed));
 
-// Movement pattern structure
-struct movement_pattern {
-    unsigned int pattern_id;  // Pattern ID (0: TRIPOD, 1: WAVE, 2: RIPPLE)
-    unsigned int speed;       // Movement speed (1-10)
-    int direction;           // Direction (-1: backward, 0: stop, 1: forward)
-};
+// MPU6050 data structure
+struct mpu6050_data {
+    s16 accel_x;       // Accelerometer X-axis
+    s16 accel_y;       // Accelerometer Y-axis
+    s16 accel_z;       // Accelerometer Z-axis
+    s16 temp;          // Temperature
+    s16 gyro_x;        // Gyroscope X-axis
+    s16 gyro_y;        // Gyroscope Y-axis
+    s16 gyro_z;        // Gyroscope Z-axis
+} __attribute__((packed));
 
-// I2C transfer structure
-struct i2c_transfer {
-    u8 addr;
-    u8 reg;
-    u8 data[32];
-    size_t length;
-    bool is_read;
-};
-
-// UART message structure
-struct uart_msg {
-    char data[256];
-    int length;
-};
+// Movement control structure
+struct movement_control {
+    movement_type_t type;   // Movement type
+    u16 speed;             // Movement speed (0-1000)
+    u16 duration;          // Duration in milliseconds
+} __attribute__((packed));
 
 // IOCTL commands
-#define IOCTL_SET_SERVO _IOW(HEXAPOD_IOC_MAGIC, 1, struct servo_control)
-#define IOCTL_MOVE_LEG _IOW(HEXAPOD_IOC_MAGIC, 2, struct servo_control)
-#define IOCTL_SET_PATTERN _IOW(HEXAPOD_IOC_MAGIC, 3, struct movement_pattern)
-#define IOCTL_GET_MPU6050 _IOR(HEXAPOD_IOC_MAGIC, 4, struct mpu6050_data)
-#define UART_SEND _IOW(HEXAPOD_IOC_MAGIC, 5, struct uart_msg)
-#define UART_RECEIVE _IOWR(HEXAPOD_IOC_MAGIC, 6, struct uart_msg)
+#define HEXAPOD_IOC_SET_SERVO    _IOW(HEXAPOD_IOC_MAGIC, 0, struct servo_control)
+#define HEXAPOD_IOC_GET_MPU6050  _IOR(HEXAPOD_IOC_MAGIC, 1, struct mpu6050_data)
+#define HEXAPOD_IOC_SET_MOVEMENT _IOW(HEXAPOD_IOC_MAGIC, 2, struct movement_control)
 
-#endif /* HEXAPOD_IOCTL_H */
+#endif /* _HEXAPOD_IOCTL_H */

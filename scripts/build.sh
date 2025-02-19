@@ -70,28 +70,55 @@ create_install_script() {
     cat > "${DEPLOY_DIR}/install.sh" << 'EOF'
 #!/bin/bash
 
-# Stop any existing module
-sudo rmmod hexapod_main 2>/dev/null || true
+echo "Installing Hexapod driver..."
 
-# Install new module
-sudo insmod hexapod_main.ko
+# Stop if any command fails
+set -e
 
-# Create device node if needed
+# Remove old module if loaded
+if lsmod | grep -q "hexapod_driver"; then
+    echo "Removing old module..."
+    sudo rmmod hexapod_driver
+fi
+
+# Load kernel module
+echo "Loading kernel module..."
+sudo insmod hexapod_driver.ko
+
+# Create device node if not created automatically
 if [ ! -e /dev/hexapod ]; then
-    sudo mknod /dev/hexapod c $(grep hexapod /proc/devices | cut -d' ' -f1) 0
+    echo "Creating device node..."
+    major=$(grep hexapod /proc/devices | cut -d' ' -f1)
+    if [ -z "$major" ]; then
+        echo "Error: Failed to get device major number!"
+        exit 1
+    fi
+    sudo mknod /dev/hexapod c $major 0
     sudo chmod 666 /dev/hexapod
 fi
 
 # Load module at boot
-if ! grep -q hexapod_main /etc/modules; then
-    echo "hexapod_main" | sudo tee -a /etc/modules
+if ! grep -q hexapod_driver /etc/modules; then
+    echo "Adding module to /etc/modules..."
+    echo "hexapod_driver" | sudo tee -a /etc/modules
 fi
 
 # Copy user space program
+echo "Installing servo test program..."
 sudo cp servo_test /usr/local/bin/
 sudo chmod +x /usr/local/bin/servo_test
 
-echo "Installation completed successfully!"
+echo -e "\nInstallation completed successfully!"
+
+# Show system status
+echo -e "\nI2C devices on i2c-0:"
+i2cdetect -y -r 0
+
+echo -e "\nLoaded kernel modules:"
+lsmod | grep hexapod
+
+echo -e "\nDevice node:"
+ls -l /dev/hexapod
 EOF
 
     chmod +x "${DEPLOY_DIR}/install.sh"

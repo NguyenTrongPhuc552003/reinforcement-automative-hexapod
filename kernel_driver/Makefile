@@ -1,49 +1,42 @@
+# Check if we're in Docker build environment
+ifneq ($(wildcard /build/module),)
+    # We're in Docker, use the kernel headers from the container
+    KERNEL_DIR ?= /build/kernel/usr/src/linux-headers-4.14.108-ti-r144
+else
+    $(error Please use the Docker build environment by running ./scripts/build.sh)
+endif
+
+# Define source directory
+SRC_DIR := src
+
+# Define objects from source files
+hexapod_driver-objs := \
+                $(SRC_DIR)/hexapod.o \
+                $(SRC_DIR)/mpu6050.o \
+                $(SRC_DIR)/pca9685.o \
+                $(SRC_DIR)/servo.o
+
 # Define the module
-obj-m += src/hexapod_main.o
-obj-m += src/i2c_comm.o
-obj-m += src/uart_comm.o
-obj-m += src/mpu6050.o
-obj-m += src/pca9685.o
-obj-m += src/servo.o
-obj-m += src/gpio_control.o
-obj-m += src/pwm_control.o
+obj-m += hexapod_driver.o
 
 # Add include directory and floating point support
-ccflags-y := -I$(PWD)/include -mfpu=vfp -mfloat-abi=softfp
-
-# Check if we're building inside Docker
-ifeq ($(shell test -e /.dockerenv && echo yes),yes)
-    # Use the Docker kernel directory
-    KDIR ?= /build/kernel/usr/src/linux-headers-4.14.108-ti-r144
-else
-    # Check if we're building on the BeagleBone
-    ifeq ($(shell uname -r),4.14.108-ti-r144)
-        # Use the local kernel directory
-        KDIR ?= /lib/modules/$(shell uname -r)/build
-    else
-        $(error Please use the Docker build environment by running ./scripts/build.sh)
-    endif
-endif
+EXTRA_CFLAGS := -I$(PWD)/include
 
 # Current directory
 PWD := $(shell pwd)
 
 # Build modules
 all:
-	@if [ -z "$(INSIDE_DOCKER)" ]; then \
-		echo "Please use the Docker build environment by running ./scripts/build.sh"; \
-		exit 1; \
-	fi
-	$(MAKE) -C $(KDIR) M=$(PWD) modules
+	$(MAKE) -C $(KERNEL_DIR) M=$(PWD) modules
 
 modules:
-	$(MAKE) -C $(KDIR) M=$(PWD) modules
+	$(MAKE) -C $(KERNEL_DIR) M=$(PWD) modules
 
 # Clean target
 clean:
-	$(MAKE) -C $(KDIR) M=$(PWD) clean
+	$(MAKE) -C $(KERNEL_DIR) M=$(PWD) clean
 	rm -f Module.symvers modules.order
 
 # Install target (for development)
 install:
-	$(MAKE) -C $(KDIR) M=$(PWD) modules_install
+	$(MAKE) -C $(KERNEL_DIR) M=$(PWD) modules_install
