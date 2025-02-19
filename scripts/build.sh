@@ -101,6 +101,10 @@ EOF
 case "$1" in
     clean)
         log "${GREEN}" "Cleaning build artifacts..."
+        # Check if Docker image exists, build if it doesn't
+        if [[ "$(docker images -q hexapod-builder 2> /dev/null)" == "" ]]; then
+            build_docker_image
+        fi
         docker run --rm \
             -v "${KERNEL_DRIVER_DIR}:/build/module" \
             -v "${DEPLOY_DIR}:/build/deploy" \

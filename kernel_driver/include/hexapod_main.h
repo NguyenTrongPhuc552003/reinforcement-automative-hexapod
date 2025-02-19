@@ -2,38 +2,20 @@
 #define HEXAPOD_MAIN_H
 
 #include <linux/types.h>
+#include "hexapod_ioctl.h"
 
-// IOCTL commands
-#define HEXAPOD_IOC_MAGIC 'H'
-#define IOCTL_SET_MODE _IOW(HEXAPOD_IOC_MAGIC, 1, int)
-#define IOCTL_SET_SERVO _IOW(HEXAPOD_IOC_MAGIC, 2, struct servo_control)
-#define IOCTL_SET_GPIO _IOW(HEXAPOD_IOC_MAGIC, 3, struct gpio_control)
-#define IOCTL_SEND_UART _IOW(HEXAPOD_IOC_MAGIC, 4, struct uart_message)
-#define IOCTL_I2C_TRANSFER _IOWR(HEXAPOD_IOC_MAGIC, 5, struct i2c_transfer)
+// Function declarations for component initialization
+int servo_init_all(void);
+void servo_cleanup(void);
 
-// Control structures
-struct servo_control {
-    unsigned int channel;    // Changed from servo_id to channel
-    unsigned int angle;      // 0-180 degrees
-};
+// These functions use default configuration
+int uart_init(void);
+void uart_cleanup(void);
 
-struct gpio_control {
-    unsigned int pin;
-    int value;
-};
+int i2c_init(void);
+void i2c_cleanup(void);
 
-struct uart_message {
-    unsigned int port;
-    char data[256];
-    size_t length;
-};
-
-struct i2c_transfer {
-    u8 addr;
-    u8 reg;
-    u8 data[32];
-    size_t length;
-    bool is_read;
-};
+int mpu6050_init(void);
+void mpu6050_cleanup(void);
 
 #endif /* HEXAPOD_MAIN_H */

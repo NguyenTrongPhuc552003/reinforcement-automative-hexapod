@@ -8,6 +8,7 @@ hexapod_main-y := src/gpio_control.o \
                   src/i2c_comm.o \
                   src/uart_comm.o \
                   src/pwm_control.o \
+                  src/mpu6050.o \
                   src/hexapod_main.o
 
 # Add include directory
@@ -45,4 +46,4 @@ install:
 	$(MAKE) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) -C $(KERNEL_DIR) M=$(PWD) modules_install
 	depmod -a
 
-.PHONY: all clean install 
+.PHONY: all clean install

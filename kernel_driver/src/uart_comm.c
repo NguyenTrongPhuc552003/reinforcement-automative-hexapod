@@ -3,19 +3,26 @@
 #include <linux/tty_driver.h>
 #include <linux/serial.h>
 #include <linux/slab.h>
+#include <linux/wait.h>
 #include "../include/uart_comm.h"
 
 static struct uart_dev uart = {0};
 
-int uart_init(const char *device, int baud) {
+int uart_init(void)
+{
+    return uart_init_with_config(DEFAULT_UART_DEVICE, DEFAULT_UART_BAUD);
+}
+
+int uart_init_with_config(const char *device, int baud)
+{
     struct tty_struct *tty;
     struct file *file;
-    int ret;
+    struct ktermios new_termios;
 
     // Open the TTY device directly
     file = filp_open(device, O_RDWR | O_NOCTTY, 0);
     if (IS_ERR(file)) {
-        pr_err("Failed to open TTY device\n");
+        pr_err("Failed to open TTY device %s\n", device);
         return PTR_ERR(file);
     }
 
@@ -30,12 +37,32 @@ int uart_init(const char *device, int baud) {
         return -ENODEV;
     }
 
+    // Get current termios settings
+    memcpy(&new_termios, &tty->termios, sizeof(struct ktermios));
+
+    // Configure TTY for raw mode
+    new_termios.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON);
+    new_termios.c_oflag &= ~OPOST;
+    new_termios.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
+    new_termios.c_cflag &= ~(CSIZE | PARENB);
+    new_termios.c_cflag |= CS8;
+
+    // Set baud rate
+    tty_termios_encode_baud_rate(&new_termios, baud, baud);
+
+    // Apply new settings
+    if (tty->ops->set_termios)
+        tty->ops->set_termios(tty, &new_termios);
+
     uart.tty = tty;
     filp_close(file, NULL);
+
+    pr_info("UART initialized on %s at %d baud\n", device, baud);
     return 0;
 }
 
-int uart_write(const char *data, size_t len) {
+int uart_write(const char *data, size_t len)
+{
     struct tty_struct *tty = uart.tty;
     int ret;
 
@@ -46,21 +73,44 @@ int uart_write(const char *data, size_t len) {
     return ret < 0 ? ret : 0;
 }
 
-int uart_read(char *data, size_t len) {
-    // For now, just return 0 as reading will be implemented later
-    return 0;
-}
+int uart_read(char *data, size_t len)
+{
+    struct tty_struct *tty = uart.tty;
+    int copied = 0;
 
-void uart_cleanup(void) {
-    if (uart.tty) {
-        // No need to release tty_struct when using polling driver
-        uart.tty = NULL;
+    if (!tty || !tty->port)
+        return -ENODEV;
+
+    // Try to get data from the flip buffer
+    if (tty->port->buf.head == tty->port->buf.tail)
+        return 0;  // No data available
+
+    while (copied < len && tty->port->buf.head != tty->port->buf.tail) {
+        int space = tty->port->buf.tail - tty->port->buf.head;
+        int to_copy = min_t(int, len - copied, space);
+
+        memcpy(data + copied, tty->port->buf.head, to_copy);
+        tty->port->buf.head += to_copy;
+        copied += to_copy;
+
+        // Wrap around if needed
+        if (tty->port->buf.head == tty->port->buf.tail_end)
+            tty->port->buf.head = tty->port->buf.start;
     }
 
-    uart.driver = NULL;  // Driver is managed by the system
+    return copied;
+}
+
+void uart_cleanup(void)
+{
+    if (uart.tty) {
+        // The TTY layer will handle cleanup
+        uart.tty = NULL;
+    }
 }
 
 EXPORT_SYMBOL_GPL(uart_init);
+EXPORT_SYMBOL_GPL(uart_init_with_config);
 EXPORT_SYMBOL_GPL(uart_write);
 EXPORT_SYMBOL_GPL(uart_read);
 EXPORT_SYMBOL_GPL(uart_cleanup);

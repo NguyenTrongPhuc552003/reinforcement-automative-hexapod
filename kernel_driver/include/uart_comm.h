@@ -10,7 +10,13 @@ struct uart_dev {
     int port;
 };
 
-int uart_init(const char *device, int baud);
+// Default UART configuration
+#define DEFAULT_UART_DEVICE "/dev/ttyS0"
+#define DEFAULT_UART_BAUD 115200
+
+// Function declarations
+int uart_init(void);  // Use default configuration
+int uart_init_with_config(const char *device, int baud);  // Custom configuration
 int uart_write(const char *data, size_t len);
 int uart_read(char *data, size_t len);
 void uart_cleanup(void);

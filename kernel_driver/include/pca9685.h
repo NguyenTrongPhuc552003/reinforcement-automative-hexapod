@@ -13,7 +13,11 @@ void pca9685_reset(void);
 // Set PWM frequency
 int pca9685_set_pwm_freq(u8 i2c_addr, unsigned int freq_hz);
 
+// Power management
+int pca9685_device_sleep(u8 i2c_addr);  // Put device in sleep mode
+int pca9685_device_wake(u8 i2c_addr);   // Wake device from sleep
+
 // Cleanup all PCA9685 devices
 void pca9685_cleanup(void);
 
-#endif /* PCA9685_H */ 
+#endif /* PCA9685_H */
