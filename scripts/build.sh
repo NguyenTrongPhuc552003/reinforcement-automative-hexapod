@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Exit on any error
+set -e
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -10,58 +13,65 @@ NC='\033[0m'
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 KERNEL_DRIVER_DIR="${PROJECT_ROOT}/kernel_driver"
 USER_SPACE_DIR="${PROJECT_ROOT}/user_space"
-
-echo -e "${YELLOW}Building Docker image...${NC}"
-
-# Check if --no-cache flag is passed
-if [[ "$1" == "--no-cache" ]]; then
-    docker build --no-cache -t hexapod-builder "${PROJECT_ROOT}"
-else
-    docker build -t hexapod-builder "${PROJECT_ROOT}"
-fi
-
-if [ $? -ne 0 ]; then
-    echo -e "${RED}Docker build failed!${NC}"
-    exit 1
-fi
-
-echo -e "${GREEN}Docker image built successfully!${NC}"
-
-# Create deploy directory
 DEPLOY_DIR="${PROJECT_ROOT}/deploy"
-mkdir -p "${DEPLOY_DIR}"
 
-# Build kernel module
-echo -e "${YELLOW}Building kernel module...${NC}"
-docker run --rm \
-    -v "${KERNEL_DRIVER_DIR}:/build/module" \
-    -v "${DEPLOY_DIR}:/build/deploy" \
-    hexapod-builder
-
-if [ $? -eq 0 ]; then
-    echo -e "${GREEN}Build completed successfully!${NC}"
-else
-    echo -e "${RED}Build failed!${NC}"
+# Function to show usage
+usage() {
+    echo "Usage: $0 [OPTIONS]"
+    echo "Options:"
+    echo "  clean         Clean build artifacts"
+    echo "  --no-cache   Build Docker image without cache"
+    echo "  -h, --help   Show this help message"
     exit 1
-fi
+}
 
-# Build user space program
-echo "Building user space program..."
-cd "${USER_SPACE_DIR}"
-make clean && make
-if [ $? -eq 0 ]; then
+# Function to print colored messages
+log() {
+    local color=$1
+    shift
+    echo -e "${color}$@${NC}"
+}
+
+# Function to build Docker image
+build_docker_image() {
+    local cache_flag=$1
+    log "${GREEN}" "Building Docker image..."
+    docker build ${cache_flag} -t hexapod-builder "${PROJECT_ROOT}" || {
+        log "${RED}" "Docker build failed!"
+        exit 1
+    }
+}
+
+# Function to build kernel module
+build_kernel_module() {
+    log "${YELLOW}" "Building kernel module..."
+    docker run --rm \
+        -v "${KERNEL_DRIVER_DIR}:/build/module" \
+        -v "${DEPLOY_DIR}:/build/deploy" \
+        hexapod-builder || {
+        log "${RED}" "Kernel module build failed!"
+        exit 1
+    }
+}
+
+# Function to build user space program
+build_user_space() {
+    log "${YELLOW}" "Building user space program..."
+    cd "${USER_SPACE_DIR}"
+    make clean && make || {
+        log "${RED}" "User space program build failed!"
+        exit 1
+    }
     cp servo_test "${DEPLOY_DIR}/"
-else
-    echo -e "${RED}User space program build failed!${NC}"
-    exit 1
-fi
+}
 
-# Create install script
-cat > "${DEPLOY_DIR}/install.sh" << 'EOF'
+# Function to create install script
+create_install_script() {
+    cat > "${DEPLOY_DIR}/install.sh" << 'EOF'
 #!/bin/bash
 
 # Stop any existing module
-sudo rmmod hexapod_main 2>/dev/null
+sudo rmmod hexapod_main 2>/dev/null || true
 
 # Install new module
 sudo insmod hexapod_main.ko
@@ -84,7 +94,46 @@ sudo chmod +x /usr/local/bin/servo_test
 echo "Installation completed successfully!"
 EOF
 
-chmod +x "${DEPLOY_DIR}/install.sh"
+    chmod +x "${DEPLOY_DIR}/install.sh"
+}
 
-echo -e "${GREEN}Build completed successfully!${NC}"
-echo "Deployment package created in: ${DEPLOY_DIR}"
+# Parse command line arguments
+case "$1" in
+    clean)
+        log "${GREEN}" "Cleaning build artifacts..."
+        docker run --rm \
+            -v "${KERNEL_DRIVER_DIR}:/build/module" \
+            -v "${DEPLOY_DIR}:/build/deploy" \
+            hexapod-builder clean
+        rm -rf "${DEPLOY_DIR}"/*
+        cd "${USER_SPACE_DIR}" && make clean
+        log "${GREEN}" "Clean completed successfully!"
+        exit 0
+        ;;
+    --no-cache)
+        build_docker_image "--no-cache"
+        ;;
+    -h|--help)
+        usage
+        ;;
+    "")
+        # Check if Docker image exists
+        if [[ "$(docker images -q hexapod-builder 2> /dev/null)" == "" ]]; then
+            build_docker_image
+        fi
+        ;;
+    *)
+        usage
+        ;;
+esac
+
+# Create deploy directory
+mkdir -p "${DEPLOY_DIR}"
+
+# Build everything
+build_kernel_module
+build_user_space
+create_install_script
+
+log "${GREEN}" "Build completed successfully!"
+log "${GREEN}" "Deployment package created in: ${DEPLOY_DIR}"
