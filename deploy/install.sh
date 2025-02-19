@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Stop any existing module
-sudo rmmod hexapod_main 2>/dev/null
+sudo rmmod hexapod_main 2>/dev/null || true
 
 # Install new module
 sudo insmod hexapod_main.ko
