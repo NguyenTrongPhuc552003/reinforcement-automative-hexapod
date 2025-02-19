@@ -3,6 +3,7 @@
 
 #include <linux/tty.h>
 #include <linux/serial.h>
+#include <linux/types.h>
 
 struct uart_dev {
     struct tty_struct *tty;
@@ -17,8 +18,8 @@ struct uart_dev {
 // Function declarations
 int uart_init(void);  // Use default configuration
 int uart_init_with_config(const char *device, int baud);  // Custom configuration
-int uart_write(const char *data, size_t len);
-int uart_read(char *data, size_t len);
+int uart_write(const u8 *data, size_t len);
+int uart_read(u8 *data, size_t len);
 void uart_cleanup(void);
 
 #endif /* UART_COMM_H */

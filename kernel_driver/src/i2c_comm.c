@@ -21,6 +21,7 @@ int i2c_init_device(struct i2c_adapter *adapter, u8 addr) {
 
     return 0;
 }
+EXPORT_SYMBOL_GPL(i2c_init_device);
 
 int i2c_write_data(u8 addr, u8 reg, u8 *data, size_t len) {
     struct i2c_msg msg;
@@ -47,9 +48,11 @@ int i2c_write_data(u8 addr, u8 reg, u8 *data, size_t len) {
 
     return ret < 0 ? ret : 0;
 }
+EXPORT_SYMBOL_GPL(i2c_write_data);
 
 int i2c_read_data(u8 addr, u8 reg, u8 *data, size_t len) {
     struct i2c_msg msgs[2];
+    u8 reg_buf = reg;
     int ret;
 
     if (!i2c_client || !data)
@@ -59,7 +62,7 @@ int i2c_read_data(u8 addr, u8 reg, u8 *data, size_t len) {
     msgs[0].addr = addr;
     msgs[0].flags = 0;  // Write
     msgs[0].len = 1;
-    msgs[0].buf = &reg;
+    msgs[0].buf = &reg_buf;
 
     // Second message: Read data
     msgs[1].addr = addr;
@@ -68,8 +71,10 @@ int i2c_read_data(u8 addr, u8 reg, u8 *data, size_t len) {
     msgs[1].buf = data;
 
     ret = i2c_transfer(i2c_client->adapter, msgs, 2);
+
     return ret < 0 ? ret : 0;
 }
+EXPORT_SYMBOL_GPL(i2c_read_data);
 
 void i2c_cleanup(void) {
     if (i2c_client) {
@@ -77,3 +82,9 @@ void i2c_cleanup(void) {
         i2c_client = NULL;
     }
 }
+EXPORT_SYMBOL_GPL(i2c_cleanup);
+
+MODULE_LICENSE("GPL");
+MODULE_AUTHOR("Your Name");
+MODULE_DESCRIPTION("I2C Communication Module for Hexapod");
+MODULE_VERSION("1.0");

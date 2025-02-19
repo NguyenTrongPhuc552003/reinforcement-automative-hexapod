@@ -199,5 +199,6 @@ module_exit(hexapod_exit);
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Your Name");
-MODULE_DESCRIPTION("Hexapod Robot Control Driver");
+MODULE_DESCRIPTION("Main Hexapod Driver Module");
 MODULE_VERSION("1.0");
+MODULE_SOFTDEP("pre: i2c_comm uart_comm mpu6050");

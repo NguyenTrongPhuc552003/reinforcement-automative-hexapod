@@ -1,136 +1,82 @@
-# Hexapod Robot Control System
+# Hexapod Robot Project
 
-A BeagleBone AI-based hexapod robot control system with kernel-level drivers for precise servo control and motion sensing.
+This project implements a hexapod robot control system using BeagleBone AI. The system consists of kernel drivers for hardware control and user-space applications for high-level control.
 
-## Features
-
-- Kernel-level driver for precise control of 18 servos via dual PCA9685 PWM controllers
-- MPU6050 IMU integration for motion sensing and stability control
-- UART communication for remote control
-- User-space utilities for testing and control
-- Docker-based cross-compilation environment
-
-## Hardware Requirements
-
-- BeagleBone AI board
-- 2x PCA9685 PWM controllers (I2C addresses: 0x40, 0x41)
-- MPU6050 IMU sensor
-- 18x Servo motors (recommended: MG996R or similar)
-- Power supply (recommended: 6-7.4V for servos, separate 5V for logic)
-
-## Directory Structure
+## Project Structure
 
 ```
 .
-├── kernel_driver/    # Kernel module source code
-├── user_space/      # User space control programs
-├── scripts/         # Build and utility scripts
+├── kernel_driver/     # Kernel-space drivers
+│   ├── include/      # Header files
+│   └── src/         # Source files for kernel modules
+├── user_space/       # User-space applications
+│   ├── include/     # User-space headers
+│   └── src/        # User-space source files
+├── scripts/         # Build and deployment scripts
 ├── deploy/          # Deployment artifacts
-└── docs/           # Documentation
+├── docs/           # Documentation
+│   ├── hardware/   # Hardware specifications
+│   ├── software/   # Software architecture
+│   └── api/        # API documentation
+└── tools/          # Development tools and utilities
+
+## Components
+
+### Kernel Driver
+The kernel driver provides low-level hardware control through multiple loadable kernel modules:
+- I2C communication for sensors and servo controller
+- UART communication for debugging
+- MPU6050 sensor interface
+- PCA9685 PWM controller
+- Servo control interface
+See [kernel_driver/README.md](kernel_driver/README.md) for details.
+
+### User Space Application
+The user-space application provides:
+- High-level robot control
+- Movement pattern generation
+- Sensor data processing
+- Debug interface
+See [user_space/README.md](user_space/README.md) for details.
+
+## Getting Started
+
+1. Set up the development environment:
+```bash
+./scripts/setup_env.sh
 ```
 
-## Building
-
-### Prerequisites
-
-- Docker
-- Make
-- Git
-
-### Build Instructions
-
-1. Clone the repository:
-   ```bash
-   git clone <repository-url>
-   cd reinforcement-automative-hexapod
-   ```
-
-2. Build the kernel module and user space programs:
-   ```bash
-   ./scripts/build.sh
-   ```
-
-3. Clean build artifacts:
-   ```bash
-   ./scripts/build.sh clean
-   ```
-
-## Installation
-
-1. Copy the deployment package to your BeagleBone AI:
-   ```bash
-   scp deploy/hexapod-install.tar.gz debian@<beaglebone-ip>:~
-   ```
-
-2. On the BeagleBone AI, extract and install:
-   ```bash
-   tar xf hexapod-install.tar.gz
-   cd hexapod-install
-   sudo ./install.sh
-   ```
-
-## Usage
-
-### Loading the Kernel Module
-
+2. Build the kernel drivers:
 ```bash
-sudo modprobe hexapod
+./scripts/build.sh
 ```
 
-### Testing Servo Movement
-
+3. Deploy to BeagleBone:
 ```bash
-# Test individual servo
-servo_test -s <servo-id> -a <angle>
-
-# Run wave pattern test
-servo_test -w
-
-# Run sequential movement test
-servo_test -q
+./scripts/deploy.sh
 ```
 
 ## Development
 
-### Adding New Movement Patterns
+### Prerequisites
+- Docker for build environment
+- BeagleBone AI board
+- MPU6050 sensor
+- PCA9685 PWM controller
+- 18 servos (MG996R or compatible)
 
-1. Define the pattern in `kernel_driver/include/servo.h`
-2. Implement the pattern in `kernel_driver/src/servo.c`
-3. Add user space control in `user_space/src/servo_test.c`
+### Building
+All builds are done in a Docker container to ensure consistency:
+```bash
+./scripts/build.sh      # Build all components
+./scripts/test.sh       # Run tests
+./scripts/deploy.sh     # Deploy to BeagleBone
+```
 
-### Debugging
-
-- Check kernel logs: `dmesg | tail`
-- Monitor I2C traffic: `i2cdump -y 2 0x40`
-- Test servo response: `servo_test -d`
-
-## Troubleshooting
-
-### Common Issues
-
-1. Servos not responding:
-   - Check I2C addresses
-   - Verify power supply voltage
-   - Check servo signal connections
-
-2. MPU6050 errors:
-   - Verify I2C connection
-   - Check sensor orientation
-   - Validate initialization sequence
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+## Documentation
+- [Hardware Setup](docs/hardware/README.md)
+- [Software Architecture](docs/software/README.md)
+- [API Documentation](docs/api/README.md)
 
 ## License
-
-This project is licensed under the GPL License - see the LICENSE file for details.
-
-## Authors
-
-- Your Name
-- Contributors
+This project is licensed under the GPL License - see the [LICENSE](LICENSE) file for details.

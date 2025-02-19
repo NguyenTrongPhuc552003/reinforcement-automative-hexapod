@@ -1,49 +1,49 @@
-# Define the module name
-obj-m := hexapod_main.o
+# Define the module
+obj-m += src/hexapod_main.o
+obj-m += src/i2c_comm.o
+obj-m += src/uart_comm.o
+obj-m += src/mpu6050.o
+obj-m += src/pca9685.o
+obj-m += src/servo.o
+obj-m += src/gpio_control.o
+obj-m += src/pwm_control.o
 
-# Define the source files
-hexapod_main-y := src/gpio_control.o \
-                  src/servo.o \
-                  src/pca9685.o \
-                  src/i2c_comm.o \
-                  src/uart_comm.o \
-                  src/pwm_control.o \
-                  src/mpu6050.o \
-                  src/hexapod_main.o
-
-# Add include directory
-ccflags-y := -I$(PWD)/include
+# Add include directory and floating point support
+ccflags-y := -I$(PWD)/include -mfpu=vfp -mfloat-abi=softfp
 
 # Check if we're building inside Docker
 ifeq ($(shell test -e /.dockerenv && echo yes),yes)
-    # Inside Docker: Use the kernel source we downloaded
-    KERNEL_DIR ?= /build/kernel
+    # Use the Docker kernel directory
+    KDIR ?= /build/kernel/usr/src/linux-headers-4.14.108-ti-r144
 else
-    # Outside Docker: Don't try to build directly
-    $(error Please use the Docker build environment by running ./scripts/build.sh)
+    # Check if we're building on the BeagleBone
+    ifeq ($(shell uname -r),4.14.108-ti-r144)
+        # Use the local kernel directory
+        KDIR ?= /lib/modules/$(shell uname -r)/build
+    else
+        $(error Please use the Docker build environment by running ./scripts/build.sh)
+    endif
 endif
-
-# Architecture and cross-compiler settings
-ARCH ?= arm
-CROSS_COMPILE ?= arm-linux-gnueabihf-
-
-# Ensure the make is available
-MAKE := /usr/bin/make
 
 # Current directory
 PWD := $(shell pwd)
 
-# Default target
+# Build modules
 all:
-	$(MAKE) -C $(KERNEL_DIR) M=$(PWD) modules
+	@if [ -z "$(INSIDE_DOCKER)" ]; then \
+		echo "Please use the Docker build environment by running ./scripts/build.sh"; \
+		exit 1; \
+	fi
+	$(MAKE) -C $(KDIR) M=$(PWD) modules
+
+modules:
+	$(MAKE) -C $(KDIR) M=$(PWD) modules
 
 # Clean target
 clean:
-	$(MAKE) -C $(KERNEL_DIR) M=$(PWD) clean
+	$(MAKE) -C $(KDIR) M=$(PWD) clean
+	rm -f Module.symvers modules.order
 
 # Install target (for development)
 install:
-	$(MAKE) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) -C $(KERNEL_DIR) M=$(PWD) modules_install
-	depmod -a
-
-.PHONY: all clean install
+	$(MAKE) -C $(KDIR) M=$(PWD) modules_install
