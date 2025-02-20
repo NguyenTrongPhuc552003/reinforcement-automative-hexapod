@@ -1,0 +1,47 @@
+# Build artifacts
+*.o
+*.ko
+*.mod
+*.mod.c
+*.mod.o
+*.cmd
+.tmp_versions/
+Module.symvers
+modules.order
+deploy/
+
+# Editor and IDE files
+.vscode/
+.idea/
+*.swp
+*~
+
+# Compiled device tree blobs
+*.dtbo
+
+# Docker artifacts
+.docker/
+
+# Dependencies
+node_modules/
+
+# Logs and databases
+*.log
+*.sqlite
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Build symlinks
+/build.sh
+/clean.sh
+
+# User-specific files
+*.env
+*.config

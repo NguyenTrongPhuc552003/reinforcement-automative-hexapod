@@ -1,225 +1,93 @@
-// servo_test.c
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
-#include <sys/ioctl.h>
-#include <signal.h>
 #include <unistd.h>
-#include "hexapod_ioctl.h"
+#include <sys/ioctl.h>
+#include <errno.h>
+#include "../include/test_ioctl.h"
 
 #define DEVICE_PATH "/dev/hexapod"
 
-static int g_fd = -1;
-static volatile int g_running = 1;
+// Function prototypes
+static int set_servo_angle(int fd, unsigned char leg_id, unsigned char joint_id, short angle);
+static void sweep_test(int fd, unsigned char leg_id, unsigned char joint_id);
 
-// Core servo testing functions
-void test_single_servo(void);
-void test_leg_movement(void);
-void test_all_legs(void);
-
-// Menu options
-enum {
-    OPTION_EXIT = 0,
-    OPTION_TEST_SINGLE_SERVO,
-    OPTION_TEST_LEG_MOVEMENT,
-    OPTION_TEST_ALL_LEGS
-};
-// Signal handler for clean exit
-static void signal_handler(int signo) {
-    g_running = 0;
-}
-
-// Initialize device and signal handling
-static int initialize(void) {
-    g_fd = open(DEVICE_PATH, O_RDWR);
-    if (g_fd < 0) {
+int main(int argc, char *argv[]) {
+    int fd;
+    unsigned char leg_id = 0;
+    unsigned char joint_id = 0;
+    
+    if (argc != 3) {
+        printf("Usage: %s <leg_id> <joint_id>\n", argv[0]);
+        printf("leg_id: 0-5 (RF=0, RM=1, RB=2, LF=3, LM=4, LB=5)\n");
+        printf("joint_id: 0-2 (Coxa=0, Femur=1, Tibia=2)\n");
+        return -1;
+    }
+    
+    leg_id = (unsigned char)atoi(argv[1]);
+    joint_id = (unsigned char)atoi(argv[2]);
+    
+    if (leg_id >= NUM_LEGS || joint_id >= NUM_JOINTS_PER_LEG) {
+        printf("Invalid leg_id or joint_id\n");
+        return -1;
+    }
+    
+    // Open the hexapod device
+    fd = open(DEVICE_PATH, O_RDWR);
+    if (fd < 0) {
         perror("Failed to open device");
         return -1;
     }
-
-    signal(SIGINT, signal_handler);
-    signal(SIGTERM, signal_handler);
+    
+    printf("Testing servo: Leg %d, Joint %d\n", leg_id, joint_id);
+    sweep_test(fd, leg_id, joint_id);
+    
+    // Reset servo to neutral position
+    set_servo_angle(fd, leg_id, joint_id, 0);
+    
+    close(fd);
     return 0;
 }
 
-// Clean up resources
-static void cleanup(void) {
-    if (g_fd >= 0) {
-        close(g_fd);
-        g_fd = -1;
-    }
-}
-
-// Display menu and get user choice
-static int display_menu(void) {
-    printf("\nServo Test Menu:\n");
-    printf("1. Test Single Servo\n");
-    printf("2. Test Leg Movement\n");
-    printf("3. Test All Legs\n");
-    printf("0. Exit\n");
-    printf("Enter choice: ");
-
-    int choice;
-    if (scanf("%d", &choice) != 1) {
-        while (getchar() != '\n'); // Clear input buffer
+static int set_servo_angle(int fd, unsigned char leg_id, unsigned char joint_id, short angle) {
+    struct servo_command cmd;
+    
+    if (angle < ANGLE_MIN || angle > ANGLE_MAX) {
+        printf("Error: Angle %d out of range [%d, %d]\n", angle, ANGLE_MIN, ANGLE_MAX);
         return -1;
     }
-    return choice;
-}
-
-void test_single_servo(void) {
-    struct servo_data data;
-    printf("Enter servo number (0-17): ");
-    if (scanf("%d", &data.servo_num) != 1 || data.servo_num < 0 || data.servo_num > 17) {
-        printf("Invalid servo number\n");
-        while (getchar() != '\n');
-        return;
-    }
-
-    printf("Enter angle (0-180): ");
-    if (scanf("%d", &data.angle) != 1 || data.angle < 0 || data.angle > 180) {
-        printf("Invalid angle\n");
-        while (getchar() != '\n');
-        return;
-    }
-
-    if (ioctl(g_fd, SERVO_SET_ANGLE, &data) < 0) {
-        perror("Failed to set servo angle");
-    } else {
-        printf("Servo %d set to %d degrees\n", data.servo_num, data.angle);
-    }
-}
-
-void test_leg_movement(void) {
-    int leg_num;
-    printf("Enter leg number (0-5): ");
-    if (scanf("%d", &leg_num) != 1 || leg_num < 0 || leg_num > 5) {
-        printf("Invalid leg number\n");
-        while (getchar() != '\n');
-        return;
-    }
-
-    struct leg_data data = {
-        .leg_num = leg_num,
-        .hip_angle = 90,
-        .knee_angle = 90,
-        .ankle_angle = 90
-    };
-
-    printf("Testing leg %d...\n", leg_num);
-    printf("Moving to neutral position...\n");
-    if (ioctl(g_fd, LEG_SET_POSITION, &data) < 0) {
-        perror("Failed to set leg position");
-        return;
-    }
-
-    sleep(1);
-
-    // Test range of motion
-    const int test_angles[] = {45, 135, 90};
-    const char *joint_names[] = {"hip", "knee", "ankle"};
     
-    for (int i = 0; i < 3; i++) {
-        for (int angle : test_angles) {
-            switch (i) {
-                case 0: data.hip_angle = angle; break;
-                case 1: data.knee_angle = angle; break;
-                case 2: data.ankle_angle = angle; break;
-            }
-            
-            printf("Setting %s to %d degrees...\n", joint_names[i], angle);
-            if (ioctl(g_fd, LEG_SET_POSITION, &data) < 0) {
-                perror("Failed to set leg position");
-                return;
-            }
-            sleep(1);
-        }
-    }
-}
-
-void test_all_legs(void) {
-    printf("Testing all legs...\n");
+    cmd.leg_id = leg_id;
+    cmd.joint_id = joint_id;
+    cmd.angle = angle;
     
-    // Set all legs to neutral position
-    for (int leg = 0; leg < 6; leg++) {
-        struct leg_data data = {
-            .leg_num = leg,
-            .hip_angle = 90,
-            .knee_angle = 90,
-            .ankle_angle = 90
-        };
-        
-        if (ioctl(g_fd, LEG_SET_POSITION, &data) < 0) {
-            perror("Failed to set leg position");
-            return;
-        }
+    if (ioctl(fd, IOCTL_SET_SERVO_ANGLE, &cmd) < 0) {
+        perror("IOCTL_SET_SERVO_ANGLE failed");
+        return -1;
     }
     
-    sleep(2);
-    
-    // Test simple movement for each leg
-    for (int leg = 0; leg < 6 && g_running; leg++) {
-        printf("Testing leg %d\n", leg);
-        struct leg_data data = {
-            .leg_num = leg,
-            .hip_angle = 45,
-            .knee_angle = 45,
-            .ankle_angle = 45
-        };
-        
-        if (ioctl(g_fd, LEG_SET_POSITION, &data) < 0) {
-            perror("Failed to set leg position");
-            return;
-        }
-        
-        sleep(1);
-        
-        // Return to neutral
-        data.hip_angle = 90;
-        data.knee_angle = 90;
-        data.ankle_angle = 90;
-        
-        if (ioctl(g_fd, LEG_SET_POSITION, &data) < 0) {
-            perror("Failed to set leg position");
-            return;
-        }
-        
-        sleep(1);
-    }
-}
-
-int main(void) {
-    if (initialize() < 0) {
-        return 1;
-    }
-
-    printf("Servo Test Program\n");
-    printf("Press Ctrl+C to exit\n");
-
-    while (g_running) {
-        int choice = display_menu();
-        
-        switch (choice) {
-            case OPTION_TEST_SINGLE_SERVO:
-                test_single_servo();
-                break;
-            case OPTION_TEST_LEG_MOVEMENT:
-                test_leg_movement();
-                break;
-            case OPTION_TEST_ALL_LEGS:
-                test_all_legs();
-                break;
-            case OPTION_EXIT:
-                g_running = 0;
-                break;
-            default:
-                printf("Invalid choice\n");
-                break;
-        }
-    }
-
-    cleanup();
-    printf("\nExiting servo test program\n");
     return 0;
+}
+
+static void sweep_test(int fd, unsigned char leg_id, unsigned char joint_id) {
+    short angle;
+    
+    // Sweep from -45 to +45 degrees
+    printf("Sweeping from -45 to +45 degrees...\n");
+    for (angle = -45; angle <= 45; angle += 5) {
+        if (set_servo_angle(fd, leg_id, joint_id, angle) == 0) {
+            printf("Angle: %d\n", angle);
+            usleep(100000); // 100ms delay
+        }
+    }
+    
+    // Sweep back from +45 to -45 degrees
+    printf("Sweeping from +45 to -45 degrees...\n");
+    for (angle = 45; angle >= -45; angle -= 5) {
+        if (set_servo_angle(fd, leg_id, joint_id, angle) == 0) {
+            printf("Angle: %d\n", angle);
+            usleep(100000); // 100ms delay
+        }
+    }
 }

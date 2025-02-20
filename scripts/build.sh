@@ -48,7 +48,7 @@ build_kernel_module() {
     docker run --rm \
         -v "${KERNEL_DRIVER_DIR}:/build/module" \
         -v "${DEPLOY_DIR}:/build/deploy" \
-        hexapod-builder || {
+        hexapod-builder kernel || {
         log "${RED}" "Kernel module build failed!"
         exit 1
     }
@@ -56,13 +56,14 @@ build_kernel_module() {
 
 # Function to build user space program
 build_user_space() {
-    log "${YELLOW}" "Building user space program..."
-    cd "${USER_SPACE_DIR}"
-    make clean && make || {
+    log "${YELLOW}" "Building user space programs..."
+    docker run --rm \
+        -v "${USER_SPACE_DIR}:/build/user_space" \
+        -v "${DEPLOY_DIR}:/build/deploy" \
+        hexapod-builder user_space || {
         log "${RED}" "User space program build failed!"
         exit 1
     }
-    cp servo_test "${DEPLOY_DIR}/"
 }
 
 # Function to create install script
@@ -75,52 +76,54 @@ echo "Installing Hexapod driver..."
 # Stop if any command fails
 set -e
 
-# Remove old module if loaded
-if lsmod | grep -q "hexapod_driver"; then
-    echo "Removing old module..."
-    sudo rmmod hexapod_driver
+# Check for i2c-tools
+if ! command -v i2cdetect &> /dev/null; then
+    echo "Installing i2c-tools..."
+    sudo apt-get update
+    sudo apt-get install -y i2c-tools
 fi
 
-# Load kernel module
-echo "Loading kernel module..."
+# Check I2C bus 3
+echo "Checking I2C bus 3..."
+if ! i2cdetect -l | grep -q "i2c-3"; then
+    echo "Error: I2C bus 3 not found!"
+    echo "Please enable I2C3 in your device tree overlay."
+    exit 1
+fi
+
+# Scan I2C bus 3 for devices
+echo "Scanning I2C bus 3 for devices..."
+i2cdetect -y -r 3
+
+# Check for conflicting drivers
+echo "Checking for conflicting drivers..."
+for module in inv_mpu6050_i2c inv_mpu6050 mpu6050_i2c; do
+    if lsmod | grep -q "^$module"; then
+        echo "Removing conflicting module: $module"
+        sudo rmmod $module || true
+    fi
+done
+
+# Install kernel module
+echo "Installing kernel module..."
+sudo rmmod hexapod_driver 2>/dev/null || true
+
+# Clear dmesg to make our debug messages easier to find
+sudo dmesg -C
+
+# Install the module
 sudo insmod hexapod_driver.ko
 
-# Create device node if not created automatically
-if [ ! -e /dev/hexapod ]; then
-    echo "Creating device node..."
-    major=$(grep hexapod /proc/devices | cut -d' ' -f1)
-    if [ -z "$major" ]; then
-        echo "Error: Failed to get device major number!"
-        exit 1
-    fi
-    sudo mknod /dev/hexapod c $major 0
-    sudo chmod 666 /dev/hexapod
-fi
+# Show debug messages
+echo "Driver messages:"
+sudo dmesg
 
-# Load module at boot
-if ! grep -q hexapod_driver /etc/modules; then
-    echo "Adding module to /etc/modules..."
-    echo "hexapod_driver" | sudo tee -a /etc/modules
-fi
+# Set permissions for device files
+echo "Setting up permissions..."
+sudo chmod 666 /dev/hexapod
 
-# Copy user space program
-echo "Installing servo test program..."
-sudo cp servo_test /usr/local/bin/
-sudo chmod +x /usr/local/bin/servo_test
-
-echo -e "\nInstallation completed successfully!"
-
-# Show system status
-echo -e "\nI2C devices on i2c-0:"
-i2cdetect -y -r 0
-
-echo -e "\nLoaded kernel modules:"
-lsmod | grep hexapod
-
-echo -e "\nDevice node:"
-ls -l /dev/hexapod
+echo "Installation complete!"
 EOF
-
     chmod +x "${DEPLOY_DIR}/install.sh"
 }
 
@@ -128,43 +131,66 @@ EOF
 case "$1" in
     clean)
         log "${GREEN}" "Cleaning build artifacts..."
-        # Check if Docker image exists, build if it doesn't
-        if [[ "$(docker images -q hexapod-builder 2> /dev/null)" == "" ]]; then
-            build_docker_image
-        fi
+        
+        # Clean kernel driver and user space using Docker
         docker run --rm \
             -v "${KERNEL_DRIVER_DIR}:/build/module" \
-            -v "${DEPLOY_DIR}:/build/deploy" \
-            hexapod-builder clean
-        rm -rf "${DEPLOY_DIR}"/*
-        cd "${USER_SPACE_DIR}" && make clean
+            -v "${USER_SPACE_DIR}:/build/user_space" \
+            hexapod-builder clean || {
+            # If Docker image doesn't exist, that's fine - continue cleaning
+            if [ $? -ne 125 ]; then
+                log "${RED}" "Docker clean failed!"
+                exit 1
+            fi
+        }
+        
+        # Clean deploy directory with sudo if needed
+        if [ -d "${DEPLOY_DIR}" ]; then
+            log "${GREEN}" "Cleaning deploy directory..."
+            if ! rm -rf "${DEPLOY_DIR}"/* 2>/dev/null; then
+                log "${YELLOW}" "Using sudo to clean deploy directory..."
+                sudo rm -rf "${DEPLOY_DIR}"/*
+            fi
+        fi
+        
+        # Clean user space binaries with sudo if needed
+        if [ -d "${USER_SPACE_DIR}/bin" ]; then
+            log "${GREEN}" "Cleaning user space binaries..."
+            if ! rm -rf "${USER_SPACE_DIR}/bin" 2>/dev/null; then
+                log "${YELLOW}" "Using sudo to clean user space binaries..."
+                sudo rm -rf "${USER_SPACE_DIR}/bin"
+            fi
+        fi
+        
+        # Remove Docker image if it exists
+        if docker images | grep -q hexapod-builder; then
+            log "${GREEN}" "Removing Docker image..."
+            docker rmi hexapod-builder || true
+        fi
+        
         log "${GREEN}" "Clean completed successfully!"
         exit 0
         ;;
     --no-cache)
         build_docker_image "--no-cache"
+        build_kernel_module
+        build_user_space
+        create_install_script
+        log "${GREEN}" "Build completed successfully!"
+        log "${GREEN}" "Deployment package created in: ${DEPLOY_DIR}"
         ;;
     -h|--help)
         usage
         ;;
     "")
-        # Check if Docker image exists
-        if [[ "$(docker images -q hexapod-builder 2> /dev/null)" == "" ]]; then
-            build_docker_image
-        fi
+        build_docker_image ""
+        build_kernel_module
+        build_user_space
+        create_install_script
+        log "${GREEN}" "Build completed successfully!"
+        log "${GREEN}" "Deployment package created in: ${DEPLOY_DIR}"
         ;;
     *)
         usage
         ;;
 esac
-
-# Create deploy directory
-mkdir -p "${DEPLOY_DIR}"
-
-# Build everything
-build_kernel_module
-build_user_space
-create_install_script
-
-log "${GREEN}" "Build completed successfully!"
-log "${GREEN}" "Deployment package created in: ${DEPLOY_DIR}"

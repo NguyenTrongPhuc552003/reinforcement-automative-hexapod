@@ -1,220 +1,135 @@
 #include <linux/module.h>
-#include <linux/kernel.h>
-#include <linux/init.h>
-#include <linux/delay.h>
+#include <linux/i2c.h>
 #include "servo.h"
 #include "pca9685.h"
 
-// PWM configuration for servos
-#define PWM_FREQ         50          // 50Hz
-#define PWM_PERIOD       20000      // 20ms in microseconds
-#define PWM_MIN_DUTY     1000       // 1ms in microseconds
-#define PWM_MAX_DUTY     2000       // 2ms in microseconds
-#define PWM_RESOLUTION   4096       // 12-bit resolution
+#define SERVO_MIN_PULSE    150  // Min pulse length (out of 4096)
+#define SERVO_MAX_PULSE    600  // Max pulse length (out of 4096)
+#define SERVO_MIN_ANGLE    0    // Min angle in degrees
+#define SERVO_MAX_ANGLE    180  // Max angle in degrees
 
-// PCA9685 addresses
-#define PCA9685_I2C_ADDR1    0x40
-#define PCA9685_I2C_ADDR2    0x41
+static struct i2c_adapter *i2c_adapter;
+static struct i2c_client *pca9685_clients[NUM_PCA9685];
 
-// Servo configuration structure
-struct servo_config {
-    u8 i2c_addr;        // PCA9685 I2C address
-    u8 channel;         // PCA9685 channel
-    s16 min_angle;      // Minimum angle
-    s16 max_angle;      // Maximum angle
-    s16 offset;         // Angle offset for calibration
-};
-
-// Leg configuration (3 servos per leg)
-struct leg_config {
-    struct servo_config coxa;    // Hip joint
-    struct servo_config femur;   // Thigh joint
-    struct servo_config tibia;   // Knee joint
-};
-
-// Hexapod configuration (6 legs)
-static struct leg_config legs[NUM_LEGS] = {
-    // Right front leg (ID: 0)
-    {
-        .coxa  = { .i2c_addr = PCA9685_I2C_ADDR1, .channel = 0,  .min_angle = ANGLE_MIN, .max_angle = ANGLE_MAX, .offset = 0 },
-        .femur = { .i2c_addr = PCA9685_I2C_ADDR1, .channel = 1,  .min_angle = ANGLE_MIN, .max_angle = ANGLE_MAX, .offset = 0 },
-        .tibia = { .i2c_addr = PCA9685_I2C_ADDR1, .channel = 2,  .min_angle = ANGLE_MIN, .max_angle = ANGLE_MAX, .offset = 0 }
-    },
-    // Right middle leg (ID: 1)
-    {
-        .coxa  = { .i2c_addr = PCA9685_I2C_ADDR1, .channel = 3,  .min_angle = ANGLE_MIN, .max_angle = ANGLE_MAX, .offset = 0 },
-        .femur = { .i2c_addr = PCA9685_I2C_ADDR1, .channel = 4,  .min_angle = ANGLE_MIN, .max_angle = ANGLE_MAX, .offset = 0 },
-        .tibia = { .i2c_addr = PCA9685_I2C_ADDR1, .channel = 5,  .min_angle = ANGLE_MIN, .max_angle = ANGLE_MAX, .offset = 0 }
-    },
-    // Right back leg (ID: 2)
-    {
-        .coxa  = { .i2c_addr = PCA9685_I2C_ADDR1, .channel = 6,  .min_angle = ANGLE_MIN, .max_angle = ANGLE_MAX, .offset = 0 },
-        .femur = { .i2c_addr = PCA9685_I2C_ADDR1, .channel = 7,  .min_angle = ANGLE_MIN, .max_angle = ANGLE_MAX, .offset = 0 },
-        .tibia = { .i2c_addr = PCA9685_I2C_ADDR1, .channel = 8,  .min_angle = ANGLE_MIN, .max_angle = ANGLE_MAX, .offset = 0 }
-    },
-    // Left front leg (ID: 3)
-    {
-        .coxa  = { .i2c_addr = PCA9685_I2C_ADDR1, .channel = 9,  .min_angle = ANGLE_MIN, .max_angle = ANGLE_MAX, .offset = 0 },
-        .femur = { .i2c_addr = PCA9685_I2C_ADDR1, .channel = 10, .min_angle = ANGLE_MIN, .max_angle = ANGLE_MAX, .offset = 0 },
-        .tibia = { .i2c_addr = PCA9685_I2C_ADDR1, .channel = 11, .min_angle = ANGLE_MIN, .max_angle = ANGLE_MAX, .offset = 0 }
-    },
-    // Left middle leg (ID: 4)
-    {
-        .coxa  = { .i2c_addr = PCA9685_I2C_ADDR1, .channel = 12, .min_angle = ANGLE_MIN, .max_angle = ANGLE_MAX, .offset = 0 },
-        .femur = { .i2c_addr = PCA9685_I2C_ADDR1, .channel = 13, .min_angle = ANGLE_MIN, .max_angle = ANGLE_MAX, .offset = 0 },
-        .tibia = { .i2c_addr = PCA9685_I2C_ADDR1, .channel = 14, .min_angle = ANGLE_MIN, .max_angle = ANGLE_MAX, .offset = 0 }
-    },
-    // Left back leg (ID: 5)
-    {
-        .coxa  = { .i2c_addr = PCA9685_I2C_ADDR1, .channel = 15, .min_angle = ANGLE_MIN, .max_angle = ANGLE_MAX, .offset = 0 },
-        .femur = { .i2c_addr = PCA9685_I2C_ADDR2, .channel = 0,  .min_angle = ANGLE_MIN, .max_angle = ANGLE_MAX, .offset = 0 },
-        .tibia = { .i2c_addr = PCA9685_I2C_ADDR2, .channel = 1,  .min_angle = ANGLE_MIN, .max_angle = ANGLE_MAX, .offset = 0 }
-    }
-};
-
-// Convert angle to PWM duty cycle
-static u16 angle_to_pwm(s16 angle, const struct servo_config *config)
-{
-    s32 duty_us;
-    u16 pwm_value;
-
-    // Apply offset and constrain angle
-    angle += config->offset;
-    if (angle < config->min_angle)
-        angle = config->min_angle;
-    if (angle > config->max_angle)
-        angle = config->max_angle;
-
-    // Map angle to duty cycle (microseconds)
-    duty_us = PWM_MIN_DUTY + ((angle - ANGLE_MIN) * (PWM_MAX_DUTY - PWM_MIN_DUTY)) / (ANGLE_MAX - ANGLE_MIN);
-
-    // Convert to PWM value (12-bit)
-    pwm_value = (duty_us * PWM_RESOLUTION) / PWM_PERIOD;
-    if (pwm_value >= PWM_RESOLUTION)
-        pwm_value = PWM_RESOLUTION - 1;
-
-    return pwm_value;
+/* Convert angle to PWM value */
+static u16 angle_to_pwm(s16 angle) {
+    if (angle < SERVO_MIN_ANGLE)
+        angle = SERVO_MIN_ANGLE;
+    if (angle > SERVO_MAX_ANGLE)
+        angle = SERVO_MAX_ANGLE;
+        
+    return SERVO_MIN_PULSE + ((angle * (SERVO_MAX_PULSE - SERVO_MIN_PULSE)) / SERVO_MAX_ANGLE);
 }
 
-// Get servo configuration for a specific leg and joint
-static struct servo_config *get_servo_config(u8 leg_id, u8 joint_id)
-{
-    if (leg_id >= NUM_LEGS) {
-        pr_err("Servo: Invalid leg ID %u\n", leg_id);
-        return NULL;
-    }
-
-    switch (joint_id) {
-        case JOINT_COXA:
-            return &legs[leg_id].coxa;
-        case JOINT_FEMUR:
-            return &legs[leg_id].femur;
-        case JOINT_TIBIA:
-            return &legs[leg_id].tibia;
-        default:
-            pr_err("Servo: Invalid joint ID %u\n", joint_id);
-            return NULL;
-    }
+/* Initialize servo at given PCA9685 index and channel */
+static int init_servo(int pca_idx, u8 channel) {
+    int ret;
+    
+    // Set initial position to 90 degrees
+    u16 pwm = angle_to_pwm(90);
+    ret = pca9685_set_pwm(pca9685_clients[pca_idx], channel, 0, pwm);
+    
+    return ret;
 }
 
-int servo_init_all(void)
-{
-    int ret, i;
-
-    // Initialize first PCA9685
-    ret = pca9685_device_init(PCA9685_I2C_ADDR1);
-    if (ret < 0) {
-        pr_err("Servo: Failed to initialize first PCA9685\n");
-        return ret;
-    }
-
-    // Initialize second PCA9685
-    ret = pca9685_device_init(PCA9685_I2C_ADDR2);
-    if (ret < 0) {
-        pr_err("Servo: Failed to initialize second PCA9685\n");
-        return ret;
-    }
-
-    // Move all servos to neutral position (0 degrees)
-    for (i = 0; i < NUM_LEGS; i++) {
-        ret = servo_move_leg(i, 0, 0, 0);
-        if (ret < 0) {
-            pr_err("Servo: Failed to set neutral position for leg %d\n", i);
-            return ret;
+/* Initialize all servos */
+int servo_init(void) {
+    int i, ret;
+    u8 channel;
+    
+    // Get I2C adapter
+    i2c_adapter = i2c_get_adapter(3);  // Use I2C bus 3
+    if (!i2c_adapter)
+        return -ENODEV;
+        
+    // Initialize each PCA9685
+    for (i = 0; i < NUM_PCA9685; i++) {
+        pca9685_clients[i] = (struct i2c_client *)pca9685_register(i2c_adapter, PCA9685_BASE_ADDR + i);
+        if (IS_ERR(pca9685_clients[i])) {
+            ret = PTR_ERR(pca9685_clients[i]);
+            goto error;
+        }
+            
+        // Initialize all channels
+        for (channel = 0; channel < PCA9685_NUM_CHANNELS; channel++) {
+            ret = init_servo(i, channel);
+            if (ret < 0)
+                goto error;
         }
     }
-
-    pr_info("Servo: All servos initialized successfully\n");
+    
     return 0;
+    
+error:
+    servo_cleanup();
+    return ret;
 }
 
-int servo_set_angle(u8 leg_id, u8 joint_id, s16 angle)
-{
-    struct servo_config *config;
-    u16 pwm_value;
-    int ret;
-
-    // Get servo configuration
-    config = get_servo_config(leg_id, joint_id);
-    if (!config)
+/* Set servo angle */
+int servo_set_angle(u8 leg_id, u8 joint_id, s16 angle) {
+    u8 pca9685_idx, channel;
+    u16 pwm;
+    
+    if (leg_id >= NUM_LEGS || joint_id >= JOINTS_PER_LEG)
         return -EINVAL;
-
-    // Convert angle to PWM value
-    pwm_value = angle_to_pwm(angle, config);
-
-    // Set PWM value
-    ret = pca9685_set_pwm(config->i2c_addr, config->channel, 0, pwm_value);
-    if (ret < 0) {
-        pr_err("Servo: Failed to set PWM for leg %u joint %u (angle: %d)\n", 
-               leg_id, joint_id, angle);
-        return ret;
-    }
-
-    pr_debug("Servo: Set leg %u joint %u to angle %d (PWM: %u)\n", 
-             leg_id, joint_id, angle, pwm_value);
-    return 0;
+        
+    // Calculate PCA9685 index and channel
+    pca9685_idx = (leg_id * JOINTS_PER_LEG + joint_id) / PCA9685_NUM_CHANNELS;
+    channel = (leg_id * JOINTS_PER_LEG + joint_id) % PCA9685_NUM_CHANNELS;
+    
+    // Convert angle to PWM
+    pwm = angle_to_pwm(angle);
+    
+    // Set PWM
+    return pca9685_set_pwm(pca9685_clients[pca9685_idx], channel, 0, pwm);
 }
 
-int servo_move_leg(u8 leg_id, s16 coxa_angle, s16 femur_angle, s16 tibia_angle)
-{
+/* Move an entire leg */
+int servo_move_leg(u8 leg_id, s16 coxa_angle, s16 femur_angle, s16 tibia_angle) {
     int ret;
-
-    if (leg_id >= NUM_LEGS) {
-        pr_err("Servo: Invalid leg ID %u\n", leg_id);
+    
+    if (leg_id >= NUM_LEGS)
         return -EINVAL;
-    }
-
-    // Set angles for all joints
+        
     ret = servo_set_angle(leg_id, JOINT_COXA, coxa_angle);
     if (ret < 0)
         return ret;
-
+        
     ret = servo_set_angle(leg_id, JOINT_FEMUR, femur_angle);
     if (ret < 0)
         return ret;
-
+        
     ret = servo_set_angle(leg_id, JOINT_TIBIA, tibia_angle);
     if (ret < 0)
         return ret;
-
-    pr_debug("Servo: Moved leg %u to angles: coxa=%d, femur=%d, tibia=%d\n", 
-             leg_id, coxa_angle, femur_angle, tibia_angle);
+        
     return 0;
 }
 
-void servo_cleanup(void)
-{
-    // Put all servos in neutral position
+/* Cleanup */
+void servo_cleanup(void) {
     int i;
-    for (i = 0; i < NUM_LEGS; i++) {
-        if (servo_move_leg(i, 0, 0, 0) < 0)
-            pr_err("Servo: Failed to set neutral position for leg %d during cleanup\n", i);
-    }
-    msleep(500); // Wait for servos to reach position
-
+    
     // Cleanup PCA9685 devices
-    pca9685_cleanup();
-    pr_info("Servo: Cleanup complete\n");
+    for (i = 0; i < NUM_PCA9685; i++) {
+        if (pca9685_clients[i] && !IS_ERR(pca9685_clients[i])) {
+            i2c_unregister_device(pca9685_clients[i]);
+            pca9685_clients[i] = NULL;
+        }
+    }
+    
+    // Put I2C adapter
+    if (i2c_adapter) {
+        i2c_put_adapter(i2c_adapter);
+        i2c_adapter = NULL;
+    }
 }
 
+EXPORT_SYMBOL_GPL(servo_init);
+EXPORT_SYMBOL_GPL(servo_cleanup);
+EXPORT_SYMBOL_GPL(servo_set_angle);
+EXPORT_SYMBOL_GPL(servo_move_leg);
+
 MODULE_LICENSE("GPL");
+MODULE_AUTHOR("Phuc Nguyen");
+MODULE_DESCRIPTION("Servo driver for hexapod robot");

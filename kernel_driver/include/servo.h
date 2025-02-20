@@ -1,12 +1,13 @@
-#ifndef _SERVO_H
-#define _SERVO_H
+#ifndef _SERVO_H_
+#define _SERVO_H_
 
 #include <linux/types.h>
 
 // Hexapod Configuration
 #define NUM_LEGS             6
-#define NUM_JOINTS_PER_LEG   3
-#define TOTAL_SERVOS         (NUM_LEGS * NUM_JOINTS_PER_LEG)
+#define JOINTS_PER_LEG       3
+#define TOTAL_SERVOS         (NUM_LEGS * JOINTS_PER_LEG)
+#define NUM_PCA9685          2  // Number of PCA9685 devices
 
 // Leg IDs
 #define LEG_RIGHT_FRONT     0
@@ -33,9 +34,9 @@
 #define PWM_RESOLUTION     4096  // 12-bit resolution
 
 // Function declarations
-int servo_init_all(void);
+int servo_init(void);
+void servo_cleanup(void);
 int servo_set_angle(u8 leg_id, u8 joint_id, s16 angle);
 int servo_move_leg(u8 leg_id, s16 coxa_angle, s16 femur_angle, s16 tibia_angle);
-void servo_cleanup(void);
 
-#endif /* _SERVO_H */
+#endif /* _SERVO_H_ */

@@ -16,19 +16,12 @@ log() {
     echo -e "${color}$@${NC}"
 }
 
-# Change to module directory
-cd /build/module
-
-# Common make parameters
+# Common make parameters for kernel module
 MAKE_PARAMS="ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} KERNEL_DIR=${KERNEL_DIR}"
 
 case "$1" in
-    "clean")
-        log "${GREEN}" "Cleaning kernel module..."
-        make ${MAKE_PARAMS} clean
-        log "${GREEN}" "Clean successful!"
-        ;;
-    "")
+    "kernel")
+        cd /build/module
         log "${GREEN}" "Building kernel module..."
         make ${MAKE_PARAMS} || {
             log "${RED}" "Build failed!"
@@ -36,14 +29,38 @@ case "$1" in
         }
         log "${GREEN}" "Copying built modules to deploy directory..."
         mkdir -p /build/deploy
-        cp *.ko /build/deploy/ || {
-            log "${RED}" "Failed to copy modules!"
-            exit 1
-        }
+        cp /build/module/*.ko /build/deploy/ 2>/dev/null || true
         log "${GREEN}" "Build successful!"
         ;;
+        
+    "user_space")
+        cd /build/user_space
+        log "${GREEN}" "Building user space programs..."
+        make || {
+            log "${RED}" "Build failed!"
+            exit 1
+        }
+        log "${GREEN}" "Copying programs to deploy directory..."
+        mkdir -p /build/deploy
+        cp /build/user_space/bin/* /build/deploy/ 2>/dev/null || true
+        log "${GREEN}" "Build successful!"
+        ;;
+        
+    "clean")
+        # Clean kernel module
+        cd /build/module
+        log "${GREEN}" "Cleaning kernel module..."
+        make ${MAKE_PARAMS} clean || true
+        
+        # Clean user space
+        cd /build/user_space
+        log "${GREEN}" "Cleaning user space..."
+        rm -rf bin/* 2>/dev/null || true
+        
+        log "${GREEN}" "Clean completed!"
+        ;;
+        
     *)
-        log "${RED}" "Invalid argument: $1"
-        exit 1
+        exec "$@"
         ;;
 esac
