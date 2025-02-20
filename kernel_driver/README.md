@@ -22,9 +22,9 @@ kernel_driver/
 ## Hardware Requirements
 
 ### I2C Configuration
-The driver uses I2C bus 0 on the BeagleBone Black:
-- SCL: P9_17
-- SDA: P9_18
+The driver uses I2C bus 3 on the BeagleBone Black:
+- SCL: P9_21
+- SDA: P9_22
 - VDD: P9_3 (3.3V)
 - GND: P9_1
 
