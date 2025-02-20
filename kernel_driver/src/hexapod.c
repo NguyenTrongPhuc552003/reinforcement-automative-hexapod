@@ -10,7 +10,7 @@
 #include "servo.h"
 
 #define HEXAPOD_NAME "hexapod"
-#define HEXAPOD_CLASS "hexapod"
+#define HEXAPOD_CLASS "hexapod_class"
 
 /* Per-device structure */
 struct hexapod_dev {
@@ -199,6 +199,6 @@ module_init(hexapod_init);
 module_exit(hexapod_exit);
 
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Your Name");
+MODULE_AUTHOR("Phuc Nguyen");
 MODULE_DESCRIPTION("Hexapod Robot Driver");
 MODULE_VERSION("1.0");
