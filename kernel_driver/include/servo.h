@@ -2,41 +2,30 @@
 #define _SERVO_H_
 
 #include <linux/types.h>
+#include "pca9685.h"
 
-// Hexapod Configuration
-#define NUM_LEGS             6
-#define JOINTS_PER_LEG       3
-#define TOTAL_SERVOS         (NUM_LEGS * JOINTS_PER_LEG)
-#define NUM_PCA9685          2  // Number of PCA9685 devices
+/* Hexapod Configuration */
+#define NUM_LEGS            6
+#define JOINTS_PER_LEG      3
+#define TOTAL_SERVOS        (NUM_LEGS * JOINTS_PER_LEG)
 
-// Leg IDs
-#define LEG_RIGHT_FRONT     0
-#define LEG_RIGHT_MIDDLE    1
-#define LEG_RIGHT_BACK      2
-#define LEG_LEFT_FRONT      3
-#define LEG_LEFT_MIDDLE     4
-#define LEG_LEFT_BACK       5
+/* Servo Angle Limits */
+#define SERVO_MIN_ANGLE    -90
+#define SERVO_MAX_ANGLE     90
+#define SERVO_CENTER_ANGLE  0
 
-// Joint IDs
-#define JOINT_COXA          0    // Hip joint
-#define JOINT_FEMUR         1    // Thigh joint
-#define JOINT_TIBIA         2    // Knee joint
+/* Servo Joint Types */
+#define JOINT_HIP    0
+#define JOINT_KNEE   1
+#define JOINT_ANKLE  2
 
-// Servo Angle Limits
-#define ANGLE_MIN           -90  // -90 degrees
-#define ANGLE_MAX           90   // +90 degrees
-
-// PWM Configuration
-#define PWM_FREQ           50    // 50Hz
-#define PWM_PERIOD         20000 // 20ms in microseconds
-#define PWM_MIN_DUTY       1000  // 1ms in microseconds
-#define PWM_MAX_DUTY       2000  // 2ms in microseconds
-#define PWM_RESOLUTION     4096  // 12-bit resolution
-
-// Function declarations
+/* Function Declarations */
 int servo_init(void);
 void servo_cleanup(void);
-int servo_set_angle(u8 leg_id, u8 joint_id, s16 angle);
-int servo_move_leg(u8 leg_id, s16 coxa_angle, s16 femur_angle, s16 tibia_angle);
+int servo_set_angle(u8 channel, s16 angle);
+int servo_set_pulse_ms(u8 channel, u16 ms);
+int servo_center(u8 channel);
+int leg_set_position(u8 leg_num, s16 hip_angle, s16 knee_angle, s16 ankle_angle);
+int leg_center_all(void);
 
 #endif /* _SERVO_H_ */

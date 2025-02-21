@@ -1,34 +1,30 @@
 #include <linux/module.h>
-#include <linux/platform_device.h>
-#include <linux/of.h>
-#include <linux/of_device.h>
+#include <linux/init.h>
 #include <linux/fs.h>
 #include <linux/cdev.h>
 #include <linux/uaccess.h>
-#include "mpu6050.h"
-#include "pca9685.h"
+#include <linux/delay.h>
+#include "hexapod.h"
 #include "servo.h"
+#include "mpu6050.h"
 
-#define HEXAPOD_NAME "hexapod"
-#define HEXAPOD_CLASS "hexapod"
+/* Device Info */
+#define DEVICE_NAME "hexapod"
+#define CLASS_NAME  "hexapod"
 
-/* Per-device structure */
-struct hexapod_dev {
-    struct cdev cdev;
-    struct class *class;
-    dev_t devt;
-    struct device *device;
-    struct i2c_client *mpu6050_client;
-    struct mutex lock;
-};
+/* IOCTL Commands */
+#define HEXAPOD_MAGIC 'H'
+#define SET_LEG_POSITION _IOW(HEXAPOD_MAGIC, 1, struct leg_position)
+#define GET_IMU_DATA     _IOR(HEXAPOD_MAGIC, 2, struct imu_data)
 
-static struct hexapod_dev *hexapod_device;
+/* Global Variables */
+static int major_number;
+static struct class *hexapod_class = NULL;
+static struct cdev hexapod_cdev;
 
-/* File operations */
+/* File Operations */
 static int hexapod_open(struct inode *inode, struct file *file)
 {
-    struct hexapod_dev *dev = container_of(inode->i_cdev, struct hexapod_dev, cdev);
-    file->private_data = dev;
     return 0;
 }
 
@@ -37,162 +33,129 @@ static int hexapod_release(struct inode *inode, struct file *file)
     return 0;
 }
 
-static ssize_t hexapod_read(struct file *file, char __user *buf,
-                           size_t count, loff_t *offset)
+static long hexapod_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
-    struct hexapod_dev *dev = file->private_data;
-    s16 accel_x, accel_y, accel_z;
-    s16 gyro_x, gyro_y, gyro_z;
-    s16 temp;
-    int ret;
-    char data[64];
-    int len;
-
-    mutex_lock(&dev->lock);
-    ret = mpu6050_read_all(&accel_x, &accel_y, &accel_z,
-                          &gyro_x, &gyro_y, &gyro_z,
-                          &temp);
-    mutex_unlock(&dev->lock);
-
-    if (ret < 0)
-        return ret;
-
-    len = snprintf(data, sizeof(data),
-                  "ax:%d ay:%d az:%d t:%d gx:%d gy:%d gz:%d\n",
-                  accel_x, accel_y, accel_z, temp,
-                  gyro_x, gyro_y, gyro_z);
-
-    if (*offset >= len)
-        return 0;
-
-    if (count > len - *offset)
-        count = len - *offset;
-
-    if (copy_to_user(buf, data + *offset, count))
-        return -EFAULT;
-
-    *offset += count;
-    return count;
+    int ret = 0;
+    
+    switch (cmd) {
+    case SET_LEG_POSITION: {
+        struct leg_position pos;
+        if (copy_from_user(&pos, (struct leg_position *)arg, sizeof(pos)))
+            return -EFAULT;
+            
+        ret = leg_set_position(pos.leg_num, pos.hip_angle, 
+                             pos.knee_angle, pos.ankle_angle);
+        break;
+    }
+    
+    case GET_IMU_DATA: {
+        struct imu_data data;
+        ret = mpu6050_read_all(&data.accel_x, &data.accel_y, &data.accel_z,
+                              &data.gyro_x, &data.gyro_y, &data.gyro_z);
+        if (ret < 0)
+            return ret;
+            
+        if (copy_to_user((struct imu_data *)arg, &data, sizeof(data)))
+            return -EFAULT;
+        break;
+    }
+    
+    default:
+        return -ENOTTY;
+    }
+    
+    return ret;
 }
 
+/* File Operations Structure */
 static const struct file_operations hexapod_fops = {
     .owner = THIS_MODULE,
     .open = hexapod_open,
     .release = hexapod_release,
-    .read = hexapod_read,
+    .unlocked_ioctl = hexapod_ioctl,
 };
 
-/* Platform driver probe */
-static int hexapod_probe(struct platform_device *pdev)
-{
-    int ret;
-    struct hexapod_dev *dev;
-
-    dev = devm_kzalloc(&pdev->dev, sizeof(*dev), GFP_KERNEL);
-    if (!dev)
-        return -ENOMEM;
-
-    mutex_init(&dev->lock);
-
-    /* Create character device */
-    ret = alloc_chrdev_region(&dev->devt, 0, 1, HEXAPOD_NAME);
-    if (ret < 0) {
-        dev_err(&pdev->dev, "Failed to allocate device number\n");
-        return ret;
-    }
-
-    cdev_init(&dev->cdev, &hexapod_fops);
-    dev->cdev.owner = THIS_MODULE;
-    ret = cdev_add(&dev->cdev, dev->devt, 1);
-    if (ret < 0) {
-        dev_err(&pdev->dev, "Failed to add character device\n");
-        goto err_cdev;
-    }
-
-    /* Create sysfs class */
-    dev->class = class_create(THIS_MODULE, HEXAPOD_NAME);
-    if (IS_ERR(dev->class)) {
-        ret = PTR_ERR(dev->class);
-        dev_err(&pdev->dev, "Failed to create device class\n");
-        goto err_class;
-    }
-
-    /* Create sysfs device */
-    dev->device = device_create(dev->class, NULL, dev->devt, NULL,
-                              HEXAPOD_NAME);
-    if (IS_ERR(dev->device)) {
-        ret = PTR_ERR(dev->device);
-        dev_err(&pdev->dev, "Failed to create device\n");
-        goto err_device;
-    }
-
-    platform_set_drvdata(pdev, dev);
-    hexapod_device = dev;
-
-    /* Initialize MPU6050 */
-    ret = mpu6050_init();
-    if (ret < 0) {
-        dev_err(&pdev->dev, "Failed to initialize MPU6050\n");
-        goto err_mpu;
-    }
-
-    dev_info(&pdev->dev, "Hexapod driver initialized\n");
-    return 0;
-
-err_mpu:
-    device_destroy(dev->class, dev->devt);
-err_device:
-    class_destroy(dev->class);
-err_class:
-    cdev_del(&dev->cdev);
-err_cdev:
-    unregister_chrdev_region(dev->devt, 1);
-    return ret;
-}
-
-/* Platform driver remove */
-static int hexapod_remove(struct platform_device *pdev)
-{
-    struct hexapod_dev *dev = platform_get_drvdata(pdev);
-
-    mpu6050_cleanup();
-    device_destroy(dev->class, dev->devt);
-    class_destroy(dev->class);
-    cdev_del(&dev->cdev);
-    unregister_chrdev_region(dev->devt, 1);
-    mutex_destroy(&dev->lock);
-
-    return 0;
-}
-
-/* Platform driver structure */
-static struct platform_driver hexapod_driver = {
-    .probe = hexapod_probe,
-    .remove = hexapod_remove,
-    .driver = {
-        .name = HEXAPOD_NAME,
-        .owner = THIS_MODULE,
-    },
-};
-
-/* Module initialization */
+/* Module Init */
 static int __init hexapod_init(void)
 {
     int ret;
-
-    ret = platform_driver_register(&hexapod_driver);
+    dev_t dev;
+    
+    /* Initialize MPU6050 */
+    ret = mpu6050_init();
     if (ret < 0) {
-        pr_err("Failed to register platform driver\n");
+        pr_err("Failed to initialize MPU6050\n");
         return ret;
     }
-
+    
+    /* Initialize Servo System */
+    ret = servo_init();
+    if (ret < 0) {
+        pr_err("Failed to initialize servo system\n");
+        goto cleanup_mpu6050;
+    }
+    
+    /* Allocate character device region */
+    ret = alloc_chrdev_region(&dev, 0, 1, DEVICE_NAME);
+    if (ret < 0) {
+        pr_err("Failed to allocate character device region\n");
+        goto cleanup_servo;
+    }
+    major_number = MAJOR(dev);
+    
+    /* Create device class */
+    hexapod_class = class_create(THIS_MODULE, CLASS_NAME);
+    if (IS_ERR(hexapod_class)) {
+        pr_err("Failed to create device class\n");
+        ret = PTR_ERR(hexapod_class);
+        goto cleanup_chrdev;
+    }
+    
+    /* Create device */
+    if (IS_ERR(device_create(hexapod_class, NULL, dev, NULL, DEVICE_NAME))) {
+        pr_err("Failed to create device\n");
+        ret = PTR_ERR(hexapod_class);
+        goto cleanup_class;
+    }
+    
+    /* Initialize character device */
+    cdev_init(&hexapod_cdev, &hexapod_fops);
+    hexapod_cdev.owner = THIS_MODULE;
+    ret = cdev_add(&hexapod_cdev, dev, 1);
+    if (ret < 0) {
+        pr_err("Failed to add character device\n");
+        goto cleanup_device;
+    }
+    
+    pr_info("Hexapod driver initialized\n");
     return 0;
+    
+cleanup_device:
+    device_destroy(hexapod_class, dev);
+cleanup_class:
+    class_destroy(hexapod_class);
+cleanup_chrdev:
+    unregister_chrdev_region(dev, 1);
+cleanup_servo:
+    servo_cleanup();
+cleanup_mpu6050:
+    mpu6050_cleanup();
+    return ret;
 }
 
-/* Module cleanup */
+/* Module Exit */
 static void __exit hexapod_exit(void)
 {
-    platform_driver_unregister(&hexapod_driver);
+    dev_t dev = MKDEV(major_number, 0);
+    
+    cdev_del(&hexapod_cdev);
+    device_destroy(hexapod_class, dev);
+    class_destroy(hexapod_class);
+    unregister_chrdev_region(dev, 1);
+    servo_cleanup();
+    mpu6050_cleanup();
+    
+    pr_info("Hexapod driver removed\n");
 }
 
 module_init(hexapod_init);
