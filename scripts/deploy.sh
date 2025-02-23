@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Configuration
-BEAGLEBONE_IP="192.168.1.4"  # Your BeagleBone IP
+BEAGLEBONE_IP="192.168.1.3"  # Your BeagleBone IP
 BEAGLEBONE_USER="debian"
 DEPLOY_DIR="../deploy"
 
@@ -52,7 +52,7 @@ ssh -t ${BEAGLEBONE_USER}@${BEAGLEBONE_IP} "cd ~/hexapod_driver && sudo ./instal
 
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}Deployment successful!${NC}"
-    echo -e "You can now test the driver using: ${YELLOW}test_programs{NC}"
+    echo -e "You can now test the driver using ${YELLOW}your testing programs${NC}"
 else
     echo -e "${RED}Deployment failed!${NC}"
     exit 1

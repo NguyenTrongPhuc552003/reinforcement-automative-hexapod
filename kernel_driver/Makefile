@@ -19,11 +19,12 @@ hexapod_driver-objs := \
 # Define the module
 obj-m += hexapod_driver.o
 
-# Add include directory and floating point support
-EXTRA_CFLAGS := -I$(PWD)/include
-
 # Current directory
 PWD := $(shell pwd)
+
+# Add include directory and floating point support
+EXTRA_CFLAGS := -I/build/common/include
+EXTRA_CFLAGS += -I/build/module/include
 
 # Build modules
 all:

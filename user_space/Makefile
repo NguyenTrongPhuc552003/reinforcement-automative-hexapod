@@ -1,7 +1,14 @@
 # Cross-compiler for BeagleBone
-CC = arm-linux-gnueabihf-gcc
-CFLAGS = -Wall -Wextra -O2 -I./include
-LDFLAGS = -lm
+# Check if we're in Docker build environment
+ifneq ($(wildcard /build/user_space),)
+	# We're in Docker, use the cross-compiler from the container
+	CC = arm-linux-gnueabihf-gcc
+	CFLAGS = -Wall -Wextra -O2
+	CFLAGS +=  -I/build/user_space/include -I/build/common/include
+	LDFLAGS = -lm
+else
+    $(error Please use the Docker build environment by running ./scripts/build.sh)
+endif
 
 # Source files
 SRC_DIR = src
@@ -34,7 +41,7 @@ $(BIN_DIR)/test_kinematics: $(TEST_DIR)/test_kinematics.c $(OBJS)
 $(BIN_DIR)/test_gait: $(TEST_DIR)/test_gait.c $(OBJS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
-$(BIN_DIR)/test_hexapod: $(TEST_DIR)/test_hexapod.c $(OBJS)
+$(BIN_DIR)/test_mpu6050: $(TEST_DIR)/test_mpu6050.c $(OBJS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 # Run tests

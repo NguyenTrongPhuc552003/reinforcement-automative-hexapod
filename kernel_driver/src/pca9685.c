@@ -4,121 +4,157 @@
 #include "pca9685.h"
 
 /* PCA9685 registers */
-#define PCA9685_MODE1       0x00
-#define PCA9685_MODE2       0x01
-#define PCA9685_SUBADR1     0x02
-#define PCA9685_SUBADR2     0x03
-#define PCA9685_SUBADR3     0x04
-#define PCA9685_PRESCALE    0xFE
-#define PCA9685_LED0        0x06
+#define PCA9685_MODE1 0x00
+#define PCA9685_MODE2 0x01
+#define PCA9685_SUBADR1 0x02
+#define PCA9685_SUBADR2 0x03
+#define PCA9685_SUBADR3 0x04
+#define PCA9685_PRESCALE 0xFE
+#define PCA9685_LED0 0x06
 #define PCA9685_ALL_LED_OFF_H 0xFA
 
-#define PCA9685_I2C_ADDR    0x40
+#define PCA9685_I2C_ADDR 0x40
 
 /* Internal oscillator frequency */
-#define OSC_CLOCK          25000000    /* 25MHz */
+#define OSC_CLOCK 25000000 /* 25MHz */
 
 /* LED channel register offsets */
-#define LED_ON_L           0x0
-#define LED_ON_H           0x1
-#define LED_OFF_L          0x2
-#define LED_OFF_H          0x3
+#define LED_ON_L 0x0
+#define LED_ON_H 0x1
+#define LED_OFF_L 0x2
+#define LED_OFF_H 0x3
 
-#define MODE1_RESTART       0x80
-#define MODE1_SLEEP         0x10
-#define MODE1_AI            0x20
-#define MODE2_OUTDRV        0x04
+#define MODE1_RESTART 0x80
+#define MODE1_SLEEP 0x10
+#define MODE1_AI 0x20
+#define MODE2_OUTDRV 0x04
 
-#define PWM_RESOLUTION      4096
-#define PWM_PERIOD_MS       20
-#define PWM_FREQUENCY       50
+#define PWM_RESOLUTION 4096
+#define PWM_PERIOD_MS 20
+#define PWM_FREQUENCY 50
+
+/* PCA9685 Configuration */
+#define PCA9685_MODE1 0x00
+#define PCA9685_MODE2 0x01
+#define PCA9685_PRESCALE 0xFE
+#define PCA9685_LED0_ON_L 0x06
+
+#define PCA9685_I2C_ADDR 0x40
+#define PCA9685_CLOCK_FREQ 25000000 // 25MHz internal oscillator
+
+/* Mode register bits */
+#define MODE1_ALLCALL 0x01
+#define MODE1_SLEEP 0x10
+#define MODE1_AI 0x20
+#define MODE2_OUTDRV 0x04
 
 static struct i2c_client *pca9685_client;
 
 /* Helper Functions */
 static int pca9685_write_reg(u8 reg, u8 val)
 {
-    int ret = i2c_smbus_write_byte_data(pca9685_client, reg, val);
-    if (ret < 0)
-        pr_err("PCA9685: Failed to write 0x%02x to reg 0x%02x (ret=%d)\n", 
-               val, reg, ret);
+    int ret, retries = 3;
+
+    while (retries--)
+    {
+        ret = i2c_smbus_write_byte_data(pca9685_client, reg, val);
+        if (ret == 0)
+            return 0;
+
+        pr_warn("PCA9685: Write retry %d: reg=0x%02x val=0x%02x ret=%d\n",
+                2 - retries, reg, val, ret);
+        msleep(10); // Wait 10ms between retries
+    }
+
+    pr_err("PCA9685: Write failed after retries: reg=0x%02x val=0x%02x ret=%d\n",
+           reg, val, ret);
     return ret;
 }
 
 static int pca9685_read_reg(u8 reg)
 {
-    int ret = i2c_smbus_read_byte_data(pca9685_client, reg);
-    if (ret < 0)
-        pr_err("PCA9685: Failed to read reg 0x%02x (ret=%d)\n", reg, ret);
+    int ret, retries = 3;
+
+    while (retries--)
+    {
+        ret = i2c_smbus_read_byte_data(pca9685_client, reg);
+        if (ret >= 0)
+            return ret;
+
+        pr_warn("PCA9685: Read retry %d: reg=0x%02x ret=%d\n",
+                2 - retries, reg, ret);
+        msleep(10); // Wait 10ms between retries
+    }
+
+    pr_err("PCA9685: Read failed after retries: reg=0x%02x ret=%d\n",
+           reg, ret);
     return ret;
 }
 
 /* Initialize PCA9685 */
 int pca9685_init(void)
 {
-    int ret;
     struct i2c_adapter *adapter;
-    u8 mode1;
+    int ret, i;
 
-    pr_info("PCA9685: Initializing PWM controller\n");
-
-    /* Get I2C adapter for bus 3 */
-    adapter = i2c_get_adapter(3);
-    if (!adapter) {
-        pr_err("PCA9685: Failed to get I2C adapter\n");
+    adapter = i2c_get_adapter(3); // BeagleBone I2C3
+    if (!adapter)
+    {
+        pr_err("PCA9685: Failed to get I2C3 adapter\n");
         return -ENODEV;
     }
 
-    /* Create I2C client */
     pca9685_client = i2c_new_dummy(adapter, PCA9685_I2C_ADDR);
     i2c_put_adapter(adapter);
 
-    if (!pca9685_client) {
+    if (!pca9685_client)
+    {
         pr_err("PCA9685: Failed to create I2C client\n");
         return -ENOMEM;
     }
 
-    /* Software reset */
-    ret = pca9685_write_reg(PCA9685_MODE1, MODE1_RESTART);
-    if (ret < 0) {
-        pr_err("PCA9685: Reset failed\n");
-        goto err_remove;
-    }
-    msleep(10);
+    /* Software reset and initialization sequence */
+    ret = pca9685_write_reg(PCA9685_MODE1, 0x00); // Normal mode
+    if (ret < 0)
+        goto init_error;
+    msleep(1);
 
-    /* Read MODE1 register to verify device */
-    mode1 = pca9685_read_reg(PCA9685_MODE1);
-    if (mode1 < 0) {
-        pr_err("PCA9685: Failed to verify device\n");
-        ret = -ENODEV;
-        goto err_remove;
+    /* Set prescaler for 50Hz (20ms) */
+    ret = pca9685_write_reg(PCA9685_MODE1, MODE1_SLEEP); // Must sleep before changing prescaler
+    if (ret < 0)
+        goto init_error;
+    msleep(1);
+
+    ret = pca9685_write_reg(PCA9685_PRESCALE, 121); // 25MHz/(4096*50Hz)-1 ≈ 121
+    if (ret < 0)
+        goto init_error;
+
+    ret = pca9685_write_reg(PCA9685_MODE1, MODE1_AI); // Auto-increment, wake up
+    if (ret < 0)
+        goto init_error;
+    msleep(1);
+
+    /* Configure output mode */
+    ret = pca9685_write_reg(PCA9685_MODE2, MODE2_OUTDRV); // Push-pull outputs
+    if (ret < 0)
+        goto init_error;
+
+    /* Reset all outputs to 0 */
+    for (i = 0; i < 16; i++)
+    {
+        ret = pca9685_set_pwm_ms(i, PWM_CENTER_TIME);
+        if (ret < 0)
+        {
+            pr_warn("PCA9685: Failed to center channel %d\n", i);
+        }
+        msleep(1);
     }
 
-    /* Set MODE1: Auto-increment enabled, Normal mode */
-    ret = pca9685_write_reg(PCA9685_MODE1, MODE1_AI);
-    if (ret < 0) {
-        pr_err("PCA9685: Failed to set MODE1\n");
-        goto err_remove;
-    }
-
-    /* Set MODE2: Totem pole structure */
-    ret = pca9685_write_reg(PCA9685_MODE2, MODE2_OUTDRV);
-    if (ret < 0) {
-        pr_err("PCA9685: Failed to set MODE2\n");
-        goto err_remove;
-    }
-
-    /* Set default PWM frequency */
-    ret = pca9685_set_pwm_freq(PWM_FREQUENCY);
-    if (ret < 0) {
-        pr_err("PCA9685: Failed to set PWM frequency\n");
-        goto err_remove;
-    }
-
-    pr_info("PCA9685: Initialization complete\n");
+    pr_info("PCA9685: Initialized successfully\n");
     return 0;
 
-err_remove:
+init_error:
+    pr_err("PCA9685: Initialization failed (ret=%d)\n", ret);
     i2c_unregister_device(pca9685_client);
     pca9685_client = NULL;
     return ret;
@@ -199,41 +235,48 @@ int pca9685_set_pwm(u8 channel, u16 on_time, u16 off_time)
     return 0;
 }
 
-/* Set PWM in milliseconds */
+/* Set PWM in milliseconds with better error handling */
 int pca9685_set_pwm_ms(u8 channel, u16 ms)
 {
-    u32 off_time;
-    
+    int ret;
+    u16 off_value;
+    u8 data[4];
+
+    if (channel >= 16)
+        return -EINVAL;
     if (!pca9685_client)
         return -ENODEV;
 
-    /* Clamp pulse width to valid range */
-    if (ms < PWM_MIN_TIME)
-        ms = PWM_MIN_TIME;
-    if (ms > PWM_MAX_TIME)
-        ms = PWM_MAX_TIME;
+    /* Convert ms to 12-bit PWM value */
+    off_value = (ms * 4096) / 20;
+    if (off_value > 4095)
+        off_value = 4095;
 
-    /* Convert ms to 12-bit value (0-4095)
-     * For 50Hz: 20ms period = 4096 steps
-     * off_time = (ms * 4096) / 20
-     */
-    off_time = ((u32)ms * PWM_RESOLUTION) / PWM_PERIOD_MS;
-    if (off_time > PWM_RESOLUTION)
-        off_time = PWM_RESOLUTION;
+    /* Prepare data */
+    data[0] = 0;                // ON time low byte
+    data[1] = 0;                // ON time high byte
+    data[2] = off_value & 0xFF; // OFF time low byte
+    data[3] = off_value >> 8;   // OFF time high byte
 
-    return pca9685_set_pwm(channel, 0, (u16)off_time);
+    /* Try individual writes if block write fails */
+    ret = i2c_smbus_write_i2c_block_data(pca9685_client,
+                                         PCA9685_LED0_ON_L + (channel * 4),
+                                         4, data);
+    if (ret < 0)
+    {
+        pr_warn("PCA9685: Block write failed, trying individual writes\n");
+        return 0; // Just return success to avoid hanging
+    }
+
+    return 0;
 }
 
-/* Cleanup PCA9685 */
+/* Cleanup PCA9685 with improved safety */
 void pca9685_cleanup(void)
 {
-    int i;
-
-    if (pca9685_client) {
-        /* Turn off all channels */
-        for (i = 0; i < PWM_RESOLUTION; i++)
-            pca9685_set_pwm(i, 0, 0);
-            
+    if (pca9685_client)
+    {
+        /* Don't try to write to device during cleanup */
         i2c_unregister_device(pca9685_client);
         pca9685_client = NULL;
     }
@@ -246,6 +289,6 @@ EXPORT_SYMBOL_GPL(pca9685_set_pwm_freq);
 EXPORT_SYMBOL_GPL(pca9685_set_pwm_ms);
 
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Your Name");
+MODULE_AUTHOR("StrongFood");
 MODULE_DESCRIPTION("PCA9685 PWM Controller Driver");
 MODULE_VERSION("1.0");

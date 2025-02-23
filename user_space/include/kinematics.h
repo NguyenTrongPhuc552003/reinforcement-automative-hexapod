@@ -2,24 +2,27 @@
 #define _KINEMATICS_H_
 
 #include <stdint.h>
-#include "hexapod.h"
 
 /* 3D Point Structure */
-typedef struct {
+typedef struct
+{
     double x;
     double y;
     double z;
 } point3d_t;
 
-/* Forward Kinematics */
-int forward_kinematics(const leg_position_t *angles, point3d_t *point);
+/* Leg angles structure - must match hexapod.h leg_position_t */
+typedef struct
+{
+    double hip;
+    double knee;
+    double ankle;
+} leg_angles_t;
 
-/* Inverse Kinematics */
-int inverse_kinematics(const point3d_t *point, leg_position_t *angles);
+/* Forward Kinematics: converts joint angles to cartesian position */
+int forward_kinematics(const leg_angles_t *angles, point3d_t *point);
 
-/* Utility Functions */
-double degrees_to_radians(double degrees);
-double radians_to_degrees(double radians);
-void normalize_angles(leg_position_t *angles);
+/* Inverse Kinematics: converts cartesian position to joint angles */
+int inverse_kinematics(const point3d_t *point, leg_angles_t *angles);
 
 #endif /* _KINEMATICS_H_ */

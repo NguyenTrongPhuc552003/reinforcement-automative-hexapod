@@ -28,7 +28,7 @@ RUN ln -s /usr/bin/arm-linux-gnueabihf-gcc-8 /usr/bin/arm-linux-gnueabihf-gcc
 
 # 3. Directory Structure
 WORKDIR /build
-RUN mkdir -p /build/kernel /build/module /build/deploy /build/user_space
+RUN mkdir -p /build/kernel /build/module /build/deploy /build/user_space /build/common
 
 # 4. Kernel Headers
 RUN wget https://rcn-ee.com/repos/debian/pool/main/l/linux-upstream/linux-headers-4.14.108-ti-r144_1buster_armhf.deb && dpkg -x linux-headers-4.14.108-ti-r144_1buster_armhf.deb /build/kernel
@@ -57,11 +57,11 @@ RUN cd ${KERNEL_DIR} && \
         scripts/genksyms/lex.lex.c \
         -I scripts/genksyms
 
-# 6. Build Script
+# 7. Build Script
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# Copy source files
+# 8. Copy source files
 COPY . /build/module/
 
 # Default command for kernel module build
