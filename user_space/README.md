@@ -1,144 +1,101 @@
-# Hexapod User Space Applications
+# Hexapod User-Space Applications
 
-This directory contains the user-space applications for controlling and testing the hexapod robot.
+This directory contains the user-space components of the hexapod control system.
 
 ## Directory Structure
 
 ```
-user_space/
-├── include/          # Header files
-│   ├── hexapod.h    # Main interface definitions
-│   └── patterns.h   # Movement pattern definitions
-├── src/             # Source files
-│   ├── servo_test.c # Servo testing utility
-│   └── hexapod.c    # Main control application
-└── test/            # Test programs and utilities
+.
+├── include/        # Header files
+│   ├── gait.h     # Gait control interface
+│   ├── hexapod.h  # Main control interface
+│   └── protocol.h # Communication protocol
+├── src/           # Source files
+│   ├── gait.c     # Gait implementation
+│   └── hexapod.c  # Main control implementation
+└── test/          # Test applications
+    ├── test_servo.c
+    ├── test_mpu6050.c
+    ├── test_gait.c
+    └── test_kinematics.c
 ```
 
-## Components
+## Features
 
-### Servo Test Utility
-The `servo_test` program provides an interactive menu-driven interface for testing the hexapod:
+### Gait Control
+- Tripod gait (alternating groups of 3 legs)
+- Wave gait (sequential leg movement)
+- Ripple gait (2-4-6 sequence)
+- Dynamic gait transitions
 
-Features:
-1. Test Single Servo
-   - Control individual servos by leg and joint
-   - Set specific angles for precise positioning
-   - Real-time feedback on servo movement
+### Position Control
+- Forward/inverse kinematics
+- Joint angle limits
+- Smooth movement transitions
 
-2. Test Leg Movement
-   - Control all joints of a leg simultaneously
-   - Set hip, knee, and ankle angles
-   - Smooth sequential movement
-
-3. Movement Patterns
-   - Tripod gait (alternating groups of 3 legs)
-   - Wave gait (sequential leg movement)
-   - Ripple gait (2-4-6 sequence)
-   - Adjustable speed and direction
-
-4. MPU6050 Sensor Reading
-   - Read accelerometer data
-   - Read gyroscope data
-   - Read temperature data
-   - Real-time sensor feedback
-
-5. Full System Test
-   - Test all legs in sequence
-   - Automatic movement through test positions
-   - Return to neutral position
-
-### Main Control Application
-The main hexapod control application provides:
-- High-level movement control
-- Sensor data processing
-- Movement pattern execution
-- Debug interface
+### Hardware Interface
+- Servo control via kernel driver
+- IMU data reading
+- Error handling and recovery
 
 ## Building
 
-Build all user-space applications:
 ```bash
-make
+make           # Build all components
+make test     # Build test applications
+make clean    # Clean build files
 ```
 
-Build specific components:
+## Testing
+
+Run individual tests:
 ```bash
-make servo_test    # Build servo test utility only
-make hexapod      # Build main application only
+sudo ./test_servo       # Test servo control
+sudo ./test_mpu6050    # Test IMU sensor
+sudo ./test_gait       # Test gait patterns
+sudo ./test_kinematics # Test kinematics
 ```
 
 ## Usage
 
-### Servo Test
-Run the interactive test program:
-```bash
-sudo ./servo_test
+### Library Usage
+```c
+#include "hexapod.h"
+
+int main() {
+    hexapod_init();
+    // Control code here
+    hexapod_cleanup();
+    return 0;
+}
 ```
 
-The program will present a menu with the following options:
-1. Test single servo
-   - Enter leg number (0-5)
-   - Enter joint number (0-2)
-   - Enter angle (-90 to 90)
+### Gait Control
+```c
+gait_params_t params = {
+    .type = GAIT_TRIPOD,
+    .step_height = 30.0,
+    .step_length = 50.0,
+    .cycle_time = 1.0
+};
 
-2. Test leg movement
-   - Enter leg number (0-5)
-   - Enter hip angle (-90 to 90)
-   - Enter knee angle (-90 to 90)
-   - Enter ankle angle (-90 to 90)
-
-3. Test movement pattern
-   - Enter pattern type (0-2):
-     * 0: Tripod gait
-     * 1: Wave gait
-     * 2: Ripple gait
-   - Enter speed (1-100)
-   - Enter direction (-1: reverse, 0: stop, 1: forward)
-
-4. Read MPU6050 data
-   - Displays current accelerometer readings
-   - Displays current gyroscope readings
-   - Displays current temperature
-
-5. Test all legs
-   - Automatically tests each leg
-   - Moves through test positions
-   - Returns to neutral position
-
-0. Exit program
-
-Notes:
-- Press Ctrl+C at any time to safely stop the program
-- The program requires root privileges to access the hardware
-- Invalid inputs will be rejected with appropriate error messages
-
-### Main Application
-```bash
-# Start hexapod control application
-sudo ./hexapod
-
-# Start in debug mode
-sudo ./hexapod -d
+gait_init(&params);
+gait_update(time, &state);
 ```
+
+## API Documentation
+
+See [API Documentation](../docs/api/user/README.md) for detailed interface descriptions.
 
 ## Development
 
-### Adding New Movement Patterns
-1. Define pattern in `include/patterns.h`
-2. Implement pattern in `src/patterns.c`
-3. Add pattern ID to command interface
+### Adding New Gaits
+1. Define gait type in `include/gait.h`
+2. Implement gait in `src/gait.c`
+3. Add test cases in `test/test_gait.c`
 
-### Testing
-Run the test suite:
-```bash
-make test
-```
-
-### Error Handling
-The test utility includes comprehensive error handling:
-- Device availability checking
-- Input validation
-- Safe shutdown on Ctrl+C
-- Clear error messages
-- Recovery from invalid states
+### Testing Guidelines
+- Test all new functions
+- Verify angle limits
+- Check error handling
+- Test edge cases
