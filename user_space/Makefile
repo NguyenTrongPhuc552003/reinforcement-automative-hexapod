@@ -1,7 +1,11 @@
 # Cross-compiler for BeagleBone
 CC = arm-linux-gnueabihf-gcc
-CFLAGS = -Wall -Wextra -O2 -I./include
+CFLAGS = -Wall -Wextra -O2 -I./include -I/build/common/include
+CFLAGS += -march=armv7-a -mfpu=vfp -mfloat-abi=hard
 LDFLAGS = -lm
+
+# Add library linking with rpath
+LDFLAGS += -L/build/deploy -Wl,-rpath=/usr/local/lib -lhexapod
 
 # Source files
 SRC_DIR = src
@@ -23,18 +27,12 @@ all: dirs $(TEST_BINS)
 dirs:
 	@mkdir -p $(BIN_DIR) $(OBJ_DIR)
 
-# Compile source files
+# Compile source files with explicit floating-point flags
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Link test executables
-$(BIN_DIR)/test_kinematics: $(TEST_DIR)/test_kinematics.c $(OBJS)
-	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
-
-$(BIN_DIR)/test_gait: $(TEST_DIR)/test_gait.c $(OBJS)
-	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
-
-$(BIN_DIR)/test_hexapod: $(TEST_DIR)/test_hexapod.c $(OBJS)
+# Link test executables with explicit floating-point flags
+$(BIN_DIR)/test_%: $(TEST_DIR)/test_%.c $(OBJS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 # Run tests
