@@ -30,10 +30,12 @@ static void test_inverse_kinematics(void)
 {
     // Test positions that should be reachable
     point3d_t test_positions[] = {
-        {90.0, 0.0, -70.0},  // Straight forward, mid height
-        {70.0, 0.0, -60.0},  // Closer position
-        {50.0, 50.0, -50.0}, // 45-degree angle
-        {120.0, 0.0, -40.0}  // Extended reach
+        {90.0, 0.0, -70.0},    // Straight forward, mid height
+        {70.0, 0.0, -60.0},    // Closer position
+        {50.0, 50.0, -50.0},   // 45-degree angle
+        {120.0, 0.0, -40.0},   // Extended reach
+        {100.0, -50.0, -45.0}, // Side reach
+        {80.0, 30.0, -80.0}    // Combined movement
     };
 
     printf("\nInverse Kinematics Tests:\n");
@@ -62,9 +64,37 @@ static void test_inverse_kinematics(void)
                        verification.x, verification.y, verification.z);
                 printf("Position error: %.2f mm\n", error);
 
+                if (error >= TOLERANCE)
+                {
+                    printf("Error: Position error %.2f mm exceeds tolerance %.2f mm\n", error, TOLERANCE);
+                }
+
                 assert(error < TOLERANCE);
             }
         }
+    }
+}
+
+// Add new function to test edge cases
+static void test_edge_cases(void)
+{
+    printf("\nTesting edge cases:\n");
+
+    // Test unreachable positions
+    point3d_t invalid_positions[] = {
+        {200.0, 0.0, 0.0}, // Too far
+        {0.0, 0.0, 0.0},   // Too close
+        {50.0, 50.0, 50.0} // Too high
+    };
+
+    for (size_t i = 0; i < sizeof(invalid_positions) / sizeof(invalid_positions[0]); i++)
+    {
+        leg_position_t angles;
+        int result = inverse_kinematics(&invalid_positions[i], &angles);
+        printf("Testing invalid position (%.1f, %.1f, %.1f) - Expected failure: %s\n",
+               invalid_positions[i].x, invalid_positions[i].y, invalid_positions[i].z,
+               (result < 0) ? "PASS" : "FAIL");
+        assert(result < 0);
     }
 }
 
@@ -72,9 +102,13 @@ int main(void)
 {
     printf("Starting kinematics tests...\n");
 
+    assert(hexapod_init() == 0); // Changed to use real hardware init
+
     test_forward_kinematics();
     test_inverse_kinematics();
+    test_edge_cases();
 
+    hexapod_cleanup();
     printf("All kinematics tests passed!\n");
     return 0;
 }

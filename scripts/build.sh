@@ -20,9 +20,10 @@ DEPLOY_DIR="${PROJECT_ROOT}/deploy"
 usage() {
     echo "Usage: $0 [OPTIONS]"
     echo "Options:"
+    echo "  (no argument) Build all components"
     echo "  clean         Clean build artifacts"
-    echo "  --no-cache   Build Docker image without cache"
-    echo "  -h, --help   Show this help message"
+    echo "  --no-cache    Build Docker image without cache"
+    echo "  -h, --help    Show this help message"
     exit 1
 }
 
@@ -183,7 +184,7 @@ case "$1" in
         
         # Clean deploy directory with sudo if needed
         if [ -d "${DEPLOY_DIR}" ]; then
-            log "${GREEN}" "Cleaning deploy directory..."
+            log "${YELLOW}" "Cleaning deploy directory..."
             if ! rm -rf "${DEPLOY_DIR}"/* 2>/dev/null; then
                 log "${YELLOW}" "Using sudo to clean deploy directory..."
                 sudo rm -rf "${DEPLOY_DIR}"/*

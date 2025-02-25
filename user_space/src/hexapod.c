@@ -9,7 +9,6 @@
 #include "protocol.h"
 
 static int device_fd = -1;
-static hexapod_state_t current_state = {0};
 
 int hexapod_init(void)
 {
@@ -19,8 +18,6 @@ int hexapod_init(void)
         fprintf(stderr, "Failed to open hexapod device: %s\n", strerror(errno));
         return -1;
     }
-
-    current_state.initialized = 1;
     return hexapod_center_all_legs();
 }
 
@@ -32,12 +29,11 @@ void hexapod_cleanup(void)
         close(device_fd);
         device_fd = -1;
     }
-    current_state.initialized = 0;
 }
 
 int hexapod_set_leg_position(uint8_t leg_num, const leg_position_t *position)
 {
-    if (!current_state.initialized || !position || leg_num >= NUM_LEGS)
+    if (device_fd < 0 || !position || leg_num >= NUM_LEGS)
     {
         return -1;
     }
@@ -55,24 +51,22 @@ int hexapod_set_leg_position(uint8_t leg_num, const leg_position_t *position)
         return -1;
     }
 
-    current_state.legs[leg_num] = *position;
     return 0;
 }
 
 int hexapod_get_leg_position(uint8_t leg_num, leg_position_t *position)
 {
-    if (!current_state.initialized || !position || leg_num >= NUM_LEGS)
+    if (device_fd < 0 || !position || leg_num >= NUM_LEGS)
     {
         return -EINVAL;
     }
 
-    *position = current_state.legs[leg_num];
     return 0;
 }
 
 int hexapod_get_imu_data(imu_data_t *data)
 {
-    if (!current_state.initialized || !data)
+    if (device_fd < 0 || !data)
     {
         return -EINVAL;
     }
@@ -83,13 +77,12 @@ int hexapod_get_imu_data(imu_data_t *data)
         return -1;
     }
 
-    current_state.imu_data = *data;
     return 0;
 }
 
 int hexapod_center_all_legs(void)
 {
-    if (!current_state.initialized)
+    if (device_fd < 0)
     {
         return -EINVAL;
     }
