@@ -6,14 +6,16 @@
 #include "kinematics.h"
 
 /* Gait Types */
-typedef enum {
+typedef enum
+{
     GAIT_TRIPOD,
     GAIT_WAVE,
     GAIT_RIPPLE
 } gait_type_t;
 
 /* Gait Parameters */
-typedef struct {
+typedef struct
+{
     gait_type_t type;
     double step_height;
     double step_length;
@@ -30,10 +32,11 @@ void gait_cleanup(void);
 int tripod_gait_step(int step, const gait_params_t *params);
 int wave_gait_step(int step, const gait_params_t *params);
 int ripple_gait_step(int step, const gait_params_t *params);
+void gait_transition_to_wave(const gait_params_t *params); // Add this line
 
 /* Trajectory Generation */
-int generate_trajectory(const point3d_t *start, const point3d_t *end, 
-                      double duration, uint32_t num_points,
-                      point3d_t *trajectory);
+int generate_trajectory(const point3d_t *start, const point3d_t *end,
+                        double duration, uint32_t num_points,
+                        point3d_t *trajectory);
 
 #endif /* _GAIT_H_ */

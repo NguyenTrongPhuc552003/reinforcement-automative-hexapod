@@ -65,7 +65,7 @@ int main(void)
         usleep(50000); // 50ms delay (20Hz reading rate)
     }
 
-    printf("\n\nTest completed\n");
+    printf("\nTest completed\n");
     hexapod_cleanup();
     return 0;
 }

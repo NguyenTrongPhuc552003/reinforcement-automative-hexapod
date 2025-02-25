@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <math.h>
 #include <string.h>
+#include <unistd.h> // Add this include for usleep
 #include "gait.h"
 
 /* Gait state */
@@ -275,4 +276,14 @@ int ripple_gait_step(int step, const gait_params_t *params)
     }
 
     return 0;
+}
+
+void gait_transition_to_wave(const gait_params_t *params)
+{
+    // Center all legs before transitioning
+    hexapod_center_all_legs();
+    usleep(500000); // Wait for movement to complete
+
+    // Start wave gait from initial position
+    wave_gait_step(0, params);
 }
