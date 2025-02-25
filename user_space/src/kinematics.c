@@ -17,7 +17,7 @@ static double radians_to_degrees(double radians)
     return radians * 180.0 / M_PI;
 }
 
-int forward_kinematics(const leg_angles_t *angles, point3d_t *point)
+int forward_kinematics(const leg_position_t *angles, point3d_t *point)
 {
     if (!angles || !point)
         return -1;
@@ -42,7 +42,7 @@ int forward_kinematics(const leg_angles_t *angles, point3d_t *point)
     return 0;
 }
 
-int inverse_kinematics(const point3d_t *point, leg_angles_t *angles)
+int inverse_kinematics(const point3d_t *point, leg_position_t *angles)
 {
     if (!point || !angles)
         return -1;

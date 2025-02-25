@@ -6,7 +6,7 @@
 #include <errno.h>
 #include <sys/ioctl.h>
 #include "hexapod.h"
-#include "hexapod_utils.h"
+#include "protocol.h"
 
 static int device_fd = -1;
 static hexapod_state_t current_state = {0};
@@ -35,22 +35,23 @@ void hexapod_cleanup(void)
     current_state.initialized = 0;
 }
 
-int hexapod_set_leg_position(uint8_t leg_num, const leg_command *position)
+int hexapod_set_leg_position(uint8_t leg_num, const leg_position_t *position)
 {
     if (!current_state.initialized || !position || leg_num >= NUM_LEGS)
     {
-        return -EINVAL;
+        return -1;
     }
 
     struct leg_command cmd = {
         .leg_num = leg_num,
-        .hip_angle = degrees_to_cents(position->hip),
-        .knee_angle = degrees_to_cents(position->knee),
-        .ankle_angle = degrees_to_cents(position->ankle)};
+        .position = {
+            .hip = position->hip * 100, // Convert to centidegrees
+            .knee = position->knee * 100,
+            .ankle = position->ankle * 100}};
 
     if (ioctl(device_fd, SET_LEG_POSITION, &cmd) < 0)
     {
-        fprintf(stderr, "Failed to set leg position: %s\n", strerror(errno));
+        perror("Failed to set leg position");
         return -1;
     }
 

@@ -9,7 +9,7 @@
 
 static void test_forward_kinematics(void)
 {
-    leg_angles_t angles = {
+    leg_position_t angles = {
         .hip = 45.0,
         .knee = 90.0,
         .ankle = -30.0};
@@ -41,7 +41,7 @@ static void test_inverse_kinematics(void)
     for (size_t i = 0; i < sizeof(test_positions) / sizeof(test_positions[0]); i++)
     {
         point3d_t target = test_positions[i];
-        leg_angles_t angles;
+        leg_position_t angles;
         point3d_t verification;
 
         printf("\nTest %zu:\nTarget position: (%.2f, %.2f, %.2f)\n",

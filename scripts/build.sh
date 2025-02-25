@@ -137,6 +137,17 @@ sudo dmesg
 echo "Setting up permissions..."
 sudo chmod 666 /dev/hexapod
 
+# Install libraries
+echo "Installing libraries..."
+sudo cp libhexapod.* /usr/local/lib/
+sudo ldconfig
+
+# Set up library path
+if ! grep -q "/usr/local/lib" /etc/ld.so.conf.d/hexapod.conf 2>/dev/null; then
+    echo "/usr/local/lib" | sudo tee /etc/ld.so.conf.d/hexapod.conf
+    sudo ldconfig
+fi
+
 echo "Installation complete!"
 EOF
     chmod +x "${DEPLOY_DIR}/install.sh"

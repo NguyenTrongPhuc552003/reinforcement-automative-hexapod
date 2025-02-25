@@ -5,7 +5,15 @@
 
 #ifdef __KERNEL__
 #include <linux/fs.h>
+#else
+#include <sys/types.h>
+struct inode;
+struct file;
 #endif
+
+/* PWM definitions */
+#define PWM_CENTER_US 1500
+#define SERVO_CENTER_PWM PWM_CENTER_US
 
 /* Conversion utilities */
 double cents_to_degrees(int32_t cents);

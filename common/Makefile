@@ -1,8 +1,9 @@
-# Compiler settings
-CC ?= arm-linux-gnueabihf-gcc
-AR ?= arm-linux-gnueabihf-ar
-CFLAGS += -Wall -Wextra -I./include -fPIC
-ARFLAGS = rcs
+# Compiler settings - explicitly set cross compiler
+CC = arm-linux-gnueabihf-gcc
+AR = arm-linux-gnueabihf-ar
+CFLAGS = -Wall -Wextra -I./include -fPIC
+CFLAGS += -march=armv7-a
+LDFLAGS = -shared
 
 # Library settings
 LIB_NAME = hexapod
@@ -23,7 +24,7 @@ $(STATIC_LIB): $(OBJS)
 	$(AR) $(ARFLAGS) $@ $^
 
 $(SHARED_LIB): $(OBJS)
-	$(CC) -shared -o $@ $^
+	$(CC) -shared -o $@ $^ $(LDFLAGS)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -MMD -MP -c $< -o $@

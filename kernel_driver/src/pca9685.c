@@ -282,13 +282,9 @@ void pca9685_cleanup(void)
     }
 }
 
+/* Export symbols for other parts of the driver */
 EXPORT_SYMBOL_GPL(pca9685_init);
 EXPORT_SYMBOL_GPL(pca9685_cleanup);
 EXPORT_SYMBOL_GPL(pca9685_set_pwm);
-EXPORT_SYMBOL_GPL(pca9685_set_pwm_freq);
 EXPORT_SYMBOL_GPL(pca9685_set_pwm_ms);
-
-MODULE_LICENSE("GPL");
-MODULE_AUTHOR("StrongFood");
-MODULE_DESCRIPTION("PCA9685 PWM Controller Driver");
-MODULE_VERSION("1.0");
+EXPORT_SYMBOL_GPL(pca9685_set_pwm_freq);

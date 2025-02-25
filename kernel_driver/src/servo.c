@@ -212,8 +212,3 @@ EXPORT_SYMBOL_GPL(servo_set_angle);
 EXPORT_SYMBOL_GPL(servo_center);
 EXPORT_SYMBOL_GPL(leg_set_position);
 EXPORT_SYMBOL_GPL(leg_center_all);
-
-MODULE_LICENSE("GPL");
-MODULE_AUTHOR("StrongFood");
-MODULE_DESCRIPTION("Servo Driver for Hexapod Robot");
-MODULE_VERSION("1.0");

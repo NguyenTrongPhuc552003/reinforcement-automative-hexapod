@@ -1,4 +1,5 @@
 #include "hexapod_utils.h"
+#include "protocol.h"
 
 double cents_to_degrees(int32_t centidegrees)
 {
@@ -12,7 +13,11 @@ int32_t degrees_to_cents(double degrees)
 
 uint16_t angle_to_pwm(double angle)
 {
-    // Convert -90 to +90 degrees to PWM range
+    if (angle < -90.0)
+        angle = -90.0;
+    if (angle > 90.0)
+        angle = 90.0;
+
     return SERVO_CENTER_PWM + (int16_t)(angle * 1000.0 / 90.0);
 }
 

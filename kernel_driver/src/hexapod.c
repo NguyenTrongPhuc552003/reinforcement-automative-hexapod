@@ -44,11 +44,10 @@ static long hexapod_ioctl(struct file *file, unsigned int cmd, unsigned long arg
         if (copy_from_user(&cmd, (void __user *)arg, sizeof(cmd)))
             return -EFAULT;
 
-        pr_info("hexapod: SET_LEG_POSITION - leg: %d, angles: (%d, %d, %d)\n",
-                cmd.leg_num, cmd.hip_angle, cmd.knee_angle, cmd.ankle_angle);
-
-        ret = leg_set_position(cmd.leg_num, cmd.hip_angle,
-                               cmd.knee_angle, cmd.ankle_angle);
+        ret = leg_set_position(cmd.leg_num,
+                               cmd.position.hip,
+                               cmd.position.knee,
+                               cmd.position.ankle);
         break;
     }
 
@@ -167,6 +166,10 @@ static void __exit hexapod_exit(void)
     mpu6050_cleanup();
     pr_info("Hexapod driver removed\n");
 }
+
+/* Module dependencies */
+MODULE_SOFTDEP("pre: i2c_bcm2835");
+MODULE_SOFTDEP("pre: i2c_dev");
 
 module_init(hexapod_init);
 module_exit(hexapod_exit);
