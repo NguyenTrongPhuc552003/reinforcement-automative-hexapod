@@ -98,15 +98,52 @@ static void test_edge_cases(void)
     }
 }
 
+static void test_calibration_positions(void)
+{
+    printf("\nTesting calibration positions...\n");
+
+    // Test positions based on actual leg dimensions
+    point3d_t calibration_positions[] = {
+        {100.0, 0.0, 0.0},   // Straight out
+        {0.0, 100.0, 0.0},   // Side position
+        {70.0, 0.0, -100.0}, // Down position
+        {50.0, 50.0, -70.0}  // Combined movement
+    };
+
+    for (size_t i = 0; i < sizeof(calibration_positions) / sizeof(calibration_positions[0]); i++)
+    {
+        point3d_t target = calibration_positions[i];
+        leg_position_t angles;
+
+        printf("\nCalibration Test %zu:\n", i + 1);
+        printf("Target: (%.1f, %.1f, %.1f)\n", target.x, target.y, target.z);
+
+        if (inverse_kinematics(&target, &angles) == 0)
+        {
+            printf("Servo angles: hip=%.1f°, knee=%.1f°, ankle=%.1f°\n",
+                   angles.hip, angles.knee, angles.ankle);
+
+            // Physical verification prompt
+            printf("Please verify physical position and press Enter...\n");
+            getchar();
+        }
+        else
+        {
+            printf("Position unreachable with current dimensions\n");
+        }
+    }
+}
+
 int main(void)
 {
     printf("Starting kinematics tests...\n");
 
-    assert(hexapod_init() == 0); // Changed to use real hardware init
+    assert(hexapod_init() == 0);
 
     test_forward_kinematics();
     test_inverse_kinematics();
     test_edge_cases();
+    test_calibration_positions(); // Add this line
 
     hexapod_cleanup();
     printf("All kinematics tests passed!\n");
