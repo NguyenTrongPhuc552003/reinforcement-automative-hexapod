@@ -82,18 +82,24 @@ static void test_edge_cases(void)
 
     // Test unreachable positions
     point3d_t invalid_positions[] = {
-        {200.0, 0.0, 0.0}, // Too far
-        {0.0, 0.0, 0.0},   // Too close
-        {50.0, 50.0, 50.0} // Too high
+        {200.0, 0.0, 0.0},     // Too far
+        {20.0, 0.0, 0.0},      // Too close (inside coxa offset)
+        {50.0, 50.0, 150.0},   // Too high
+        {150.0, 150.0, -50.0}, // Too far diagonally
+        {100.0, 0.0, -200.0}   // Too low
     };
 
     for (size_t i = 0; i < sizeof(invalid_positions) / sizeof(invalid_positions[0]); i++)
     {
         leg_position_t angles;
+        printf("\nTesting position %zu: (%.1f, %.1f, %.1f)\n",
+               i + 1,
+               invalid_positions[i].x,
+               invalid_positions[i].y,
+               invalid_positions[i].z);
+
         int result = inverse_kinematics(&invalid_positions[i], &angles);
-        printf("Testing invalid position (%.1f, %.1f, %.1f) - Expected failure: %s\n",
-               invalid_positions[i].x, invalid_positions[i].y, invalid_positions[i].z,
-               (result < 0) ? "PASS" : "FAIL");
+        printf("Result: %s\n", (result < 0) ? "PASS (unreachable)" : "FAIL (shouldn't be reachable)");
         assert(result < 0);
     }
 }

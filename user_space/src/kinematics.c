@@ -53,24 +53,40 @@ int inverse_kinematics(const point3d_t *point, leg_position_t *angles)
         return -1;
 
     // Calculate hip angle (rotation in XY plane)
+    double total_xy = sqrt(point->x * point->x + point->y * point->y);
+
+    // Stricter XY plane validation
+    if (total_xy > (FEMUR_LENGTH + TIBIA_LENGTH) * 0.9 || // 90% of max reach
+        total_xy < COXA_OFFSET * 1.2)                     // 120% of min reach
+    {
+        printf("Point unreachable in XY plane. Distance: %.2f mm\n", total_xy);
+        return -1;
+    }
+
     double hip_rad = atan2(point->y, point->x);
 
     // Adjust target point to leg's local coordinate system
-    double total_xy = sqrt(point->x * point->x + point->y * point->y);
-    double local_x = total_xy - COXA_OFFSET; // Remove coxa offset
-    double local_z = -point->z;              // Invert Z axis
+    double local_x = total_xy - COXA_OFFSET;
+    double local_z = -point->z;
 
     // Calculate length from femur-tibia joint to end point
     double L = sqrt(local_x * local_x + local_z * local_z);
 
-    // Check if point is reachable
-    double max_reach = FEMUR_LENGTH + TIBIA_LENGTH;
-    double min_reach = fabs(FEMUR_LENGTH - TIBIA_LENGTH);
+    // Stricter reach validation with more conservative limits
+    double max_reach = (FEMUR_LENGTH + TIBIA_LENGTH) * 0.85;    // 85% of theoretical max
+    double min_reach = fabs(FEMUR_LENGTH - TIBIA_LENGTH) * 1.2; // 120% of theoretical min
 
     if (L > max_reach || L < min_reach)
     {
-        printf("Point (%.2f, %.2f) unreachable. L=%.2f, range=[%.2f, %.2f]\n",
-               local_x, local_z, L, min_reach, max_reach);
+        printf("Point unreachable. Required leg length %.2f mm outside valid range [%.2f, %.2f]\n",
+               L, min_reach, max_reach);
+        return -1;
+    }
+
+    // Z-axis validation (height limits)
+    if (fabs(point->z) > (FEMUR_LENGTH + TIBIA_LENGTH) * 0.6) // 60% of max height
+    {
+        printf("Z coordinate %.2f mm exceeds safe working height\n", point->z);
         return -1;
     }
 
