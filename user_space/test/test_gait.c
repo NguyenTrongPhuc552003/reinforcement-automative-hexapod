@@ -10,8 +10,6 @@ static void test_tripod_gait(void)
 {
     printf("Testing tripod gait...\n");
 
-    assert(hexapod_init() == 0); // Use real hardware
-
     gait_params_t params = {
         .step_height = 30.0,
         .step_length = 50.0,
@@ -24,15 +22,12 @@ static void test_tripod_gait(void)
         usleep(100000); // 100ms delay between steps
     }
 
-    hexapod_cleanup();
     printf("Tripod gait test completed\n");
 }
 
 static void test_wave_gait(void)
 {
     printf("Testing wave gait...\n");
-
-    assert(hexapod_init() == 0); // Use real hardware
 
     gait_params_t params = {
         .step_height = 20.0,
@@ -46,15 +41,12 @@ static void test_wave_gait(void)
         usleep(200000); // 200ms delay between steps
     }
 
-    hexapod_cleanup();
     printf("Wave gait test completed\n");
 }
 
 static void test_gait_transition(void)
 {
     printf("Testing gait transition...\n");
-
-    assert(hexapod_init() == 0); // Use real hardware
 
     gait_params_t params = {
         .step_height = 25.0,
@@ -80,13 +72,13 @@ static void test_gait_transition(void)
         usleep(200000);
     }
 
-    hexapod_cleanup();
     printf("Gait transition test completed\n");
 }
 
 int main(void)
 {
     printf("Starting gait tests...\n");
+    assert(hexapod_init() == 0);
 
     test_tripod_gait();
     test_wave_gait();

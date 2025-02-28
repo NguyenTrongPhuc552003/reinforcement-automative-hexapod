@@ -9,6 +9,7 @@
 #include "protocol.h"
 
 static int device_fd = -1;
+static leg_position_t last_positions[NUM_LEGS] = {0}; // Add this to track positions
 
 int hexapod_init(void)
 {
@@ -35,6 +36,8 @@ int hexapod_set_leg_position(uint8_t leg_num, const leg_position_t *position)
 {
     if (device_fd < 0 || !position || leg_num >= NUM_LEGS)
     {
+        fprintf(stderr, "ERROR: Invalid parameters (fd=%d, leg=%d)\n",
+                device_fd, leg_num);
         return -1;
     }
 
@@ -45,12 +48,20 @@ int hexapod_set_leg_position(uint8_t leg_num, const leg_position_t *position)
             .knee = position->knee * 100,
             .ankle = position->ankle * 100}};
 
-    if (ioctl(device_fd, SET_LEG_POSITION, &cmd) < 0)
+    // printf("DEBUG: hexapod_set_leg_position: fd=%d, leg=%d, angles=(%.2f,%.2f,%.2f)\n",
+    //        device_fd, leg_num, position->hip, position->knee, position->ankle);
+    // printf("DEBUG: Sending IOCTL cmd=0x%x\n", SET_LEG_POSITION);
+
+    int ret = ioctl(device_fd, SET_LEG_POSITION, &cmd);
+    // printf("DEBUG: ioctl SET_LEG_POSITION returned %d\n", ret);
+    if (ret < 0)
     {
-        perror("Failed to set leg position");
+        fprintf(stderr, "ERROR: IOCTL failed: %s\n", strerror(errno));
         return -1;
     }
 
+    // Store the position
+    last_positions[leg_num] = *position;
     return 0;
 }
 
@@ -61,6 +72,8 @@ int hexapod_get_leg_position(uint8_t leg_num, leg_position_t *position)
         return -EINVAL;
     }
 
+    // Return the last known position
+    *position = last_positions[leg_num];
     return 0;
 }
 

@@ -143,7 +143,6 @@ static void test_calibration_positions(void)
 int main(void)
 {
     printf("Starting kinematics tests...\n");
-
     assert(hexapod_init() == 0);
 
     test_forward_kinematics();

@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y \
     kmod \
     cpio \
     rsync \
+    libmicrohttpd-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # 2. Install ARM cross-compiler toolchain for BeagleBone (GLIBC 2.28 compatible)

@@ -112,9 +112,11 @@ int inverse_kinematics(const point3d_t *point, leg_position_t *angles)
     angles->knee = radians_to_degrees(femur_angle);
     angles->ankle = radians_to_degrees(ankle_angle);
 
+    #ifdef DEBUG
     printf("Debug - Target: (%.2f, %.2f, %.2f)\n", point->x, point->y, point->z);
     printf("Debug - Local coords: (%.2f, %.2f)\n", local_x, local_z);
     printf("Debug - L=%.2f, beta=%.3f, gamma=%.3f\n", L, beta, gamma);
+    #endif
 
     return 0;
 }

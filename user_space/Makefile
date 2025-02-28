@@ -7,6 +7,9 @@ LDFLAGS = -lm
 # Add library linking with rpath
 LDFLAGS += -L/build/deploy -Wl,-rpath=/usr/local/lib -lhexapod
 
+# Add pthread to LDFLAGS
+LDFLAGS += -pthread
+
 # Source files
 SRC_DIR = src
 TEST_DIR = test
@@ -34,7 +37,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 # Link test executables with explicit floating-point flags
 $(BIN_DIR)/test_%: $(TEST_DIR)/test_%.c $(OBJS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
-
+	
 # Run tests
 test: all
 	@echo "Running tests..."
