@@ -2,13 +2,16 @@
 #include <unistd.h>
 #include <signal.h>
 #include <stdbool.h>
+#include <assert.h>
 #include "hexapod.h"
 
+/* The status program */
 static volatile bool running = true;
 
+/* Signal handler */
 static void sigint_handler(int sig)
 {
-    printf("\nStopping MPU6050 test with signal %d...\n", sig);
+    printf("\nStopping this testing program with signal %d...\n", sig);
     running = false;
 }
 
@@ -26,22 +29,11 @@ static double raw_to_dps(int16_t raw)
     return (double)raw / 65.5;
 }
 
-int main(void)
+static void test_mpu6050(void)
 {
     imu_data_t data;
     int count = 0;
-
-    printf("Starting MPU6050 test...\n");
-
-    // Set up Ctrl+C handler
-    signal(SIGINT, sigint_handler);
-
-    if (hexapod_init() < 0)
-    {
-        printf("Failed to initialize hexapod\n");
-        return 1;
-    }
-
+    
     printf("\nReading MPU6050 data (Ctrl+C to stop)...\n");
     printf("\nAccelerometer data in g's, Gyroscope data in degrees/second\n");
 
@@ -64,8 +56,19 @@ int main(void)
         }
         usleep(50000); // 50ms delay (20Hz reading rate)
     }
+}
 
-    printf("\nTest completed\n");
+int main(void)
+{
+    printf("Starting MPU6050 test...\n");
+
+    // Set up Ctrl+C handler
+    signal(SIGINT, sigint_handler);
+    assert(hexapod_init() == 0); // Use real hardware
+
+    test_mpu6050();
+
     hexapod_cleanup();
+    printf("\nTest completed\n");
     return 0;
 }

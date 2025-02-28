@@ -9,7 +9,7 @@ static void test_single_servo(uint8_t leg_num, double hip, double knee, double a
         .knee = knee,
         .ankle = ankle};
 
-    printf("Setting leg %d to position: hip=%.1f, knee=%.1f, ankle=%.1f\n",
+    printf("Setting leg %d to position:    hip=%.1f, knee=%.1f, ankle=%.1f\n",
            leg_num, hip, knee, ankle);
 
     if (hexapod_set_leg_position(leg_num, &position) < 0)
@@ -25,7 +25,7 @@ static void test_single_servo(uint8_t leg_num, double hip, double knee, double a
     leg_position_t current;
     if (hexapod_get_leg_position(leg_num, &current) == 0)
     {
-        printf("Current leg position: hip=%.1f, knee=%.1f, ankle=%.1f\n",
+        printf("Getting current leg position: hip=%.1f, knee=%.1f, ankle=%.1f\n",
                current.hip, current.knee, current.ankle);
     }
 }
@@ -47,6 +47,7 @@ int main(void)
         test_single_servo(i, 45.0, 0.0, 0.0); // Move hip
         test_single_servo(i, 0.0, 45.0, 0.0); // Move knee
         test_single_servo(i, 0.0, 0.0, 45.0); // Move ankle
+        printf("\n");
         sleep(1);
     }
 
