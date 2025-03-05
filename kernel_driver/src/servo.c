@@ -4,211 +4,115 @@
 #include "servo.h"
 #include "pca9685.h"
 
-/* Servo Configuration */
-#define NUM_LEGS 6
-#define JOINTS_PER_LEG 3
-#define TOTAL_SERVOS (NUM_LEGS * JOINTS_PER_LEG)
-
-/* Channel mapping for servos */
-static const u8 servo_channels[NUM_LEGS][JOINTS_PER_LEG] = {
-    {0, 1, 2},    /* Leg 0: channels 0-2  (Group 0) */
-    {3, 4, 5},    /* Leg 1: channels 3-5  (Group 1) */
-    {6, 7, 8},    /* Leg 2: channels 6-8  (Group 2) */
-    {9, 10, 11},  /* Leg 3: channels 9-11 (Group 2-3) */
-    {12, 13, 14}, /* Leg 4: channels 12-14 (Group 3) */
-    {15, 0, 1}    /* Leg 5: channels 15,0,1 (Group 3-0) */
+/* Naming inconsistency: Using NUM_JOINTS_PER_LEG vs JOINTS_PER_LEG */
+// Servo channel mapping
+static const u8 servo_map[NUM_LEGS][NUM_JOINTS_PER_LEG] = {
+    {0,  1,  2},    /* Leg 0 */
+    {3,  4,  5},    /* Leg 1 */
+    {6,  7,  8},    /* Leg 2 */
+    {9,  10, 11},  /* Leg 3 */
+    {12, 13, 14}, /* Leg 4 */
+    {15, 0,  1}  /* Leg 5 */
 };
 
-/* Servo calibration values */
-static const struct
-{
-    s16 min_angle;
-    s16 max_angle;
-    s16 center_offset;
-} servo_cal[TOTAL_SERVOS] = {
-    /* Leg 0 */
-    {-90, 90, 0},
-    {-90, 90, 0},
-    {-90, 90, 0},
-    /* Leg 1 */
-    {-90, 90, 0},
-    {-90, 90, 0},
-    {-90, 90, 0},
-    /* Leg 2 */
-    {-90, 90, 0},
-    {-90, 90, 0},
-    {-90, 90, 0},
-    /* Leg 3 */
-    {-90, 90, 0},
-    {-90, 90, 0},
-    {-90, 90, 0},
-    /* Leg 4 */
-    {-90, 90, 0},
-    {-90, 90, 0},
-    {-90, 90, 0},
-    /* Leg 5 */
-    {-90, 90, 0},
-    {-90, 90, 0},
-    {-90, 90, 0}};
+/* Servo calibration data */
+static s16 servo_offset[NUM_LEGS][NUM_JOINTS_PER_LEG] = {0};
+static bool servo_reverse[NUM_LEGS][NUM_JOINTS_PER_LEG] = {false};
 
 /* Initialize servo subsystem */
 int servo_init(void)
 {
     int ret;
 
-    pr_info("Servo: Initializing servo subsystem\n");
-
-    /* Initialize PCA9685 */
     ret = pca9685_init();
     if (ret < 0)
     {
-        pr_err("Servo: Failed to initialize PCA9685 (ret=%d)\n", ret);
+        pr_err("Failed to initialize PCA9685\n");
         return ret;
     }
 
-    /* Give some time for PCA9685 to stabilize */
-    msleep(100);
-
-    /* Center all servos one by one */
-    ret = leg_center_all();
+    /* Set servo frequency */
+    ret = pca9685_set_pwm_freq(PCA9685_FREQ);
     if (ret < 0)
     {
-        pr_err("Servo: Failed to center servos (ret=%d)\n", ret);
+        pr_err("Failed to set PWM frequency\n");
         pca9685_cleanup();
         return ret;
     }
 
-    pr_info("Servo: Initialization complete\n");
+    /* Center all servos */
+    ret = servo_center_all();
+    if (ret < 0)
+    {
+        pr_err("Failed to center servos\n");
+        pca9685_cleanup();
+        return ret;
+    }
+
+    pr_info("Servo subsystem initialized\n");
     return 0;
 }
 
-/* Get channel number for a servo */
-static u8 get_servo_channel(u8 leg, u8 joint)
+/* Clean up servo subsystem */
+void servo_cleanup(void)
 {
-    if (leg >= NUM_LEGS || joint >= JOINTS_PER_LEG)
-    {
-        pr_err("Servo: Invalid leg %d or joint %d\n", leg, joint);
-        return 0xFF;
-    }
-    return servo_channels[leg][joint];
+    servo_center_all();
+    pca9685_cleanup();
 }
 
-/* Set servo angle with improved error handling */
-int servo_set_angle(u8 channel, s16 angle)
+/* Update function naming for consistency */
+int servo_set_angle(uint8_t leg, uint8_t joint, int16_t angle)
 {
-    u16 pulse_width;
-    int ret;
+    u8 channel;
 
-    if (channel >= TOTAL_SERVOS)
+    if (leg >= NUM_LEGS || joint >= NUM_JOINTS_PER_LEG)
         return -EINVAL;
 
-    /* Convert angle to pulse width (500-2500us) */
-    pulse_width = 1500 + (angle * 1000) / 90; // Simplified conversion
-    if (pulse_width < 500)
-        pulse_width = 500;
-    if (pulse_width > 2500)
-        pulse_width = 2500;
+    /* Apply limits */
+    if (angle < SERVO_MIN_ANGLE)
+        angle = SERVO_MIN_ANGLE;
+    if (angle > SERVO_MAX_ANGLE)
+        angle = SERVO_MAX_ANGLE;
 
-    ret = pca9685_set_pwm_ms(channel, pulse_width);
-    if (ret < 0)
-    {
-        pr_warn("Servo: Failed to set channel %d angle %d (non-fatal)\n",
-                channel, angle);
-        return 0; // Return success to avoid hanging
-    }
+    /* Apply calibration */
+    if (servo_reverse[leg][joint])
+        angle = -angle;
+    angle += servo_offset[leg][joint];
 
+    /* Get physical channel */
+    channel = servo_map[leg][joint];
+
+    /* Convert angle to PWM */
+    return pca9685_set_pwm_ms(channel % SERVO_CHANNELS_PER_CONTROLLER,
+                              PCA9685_MID_PULSE + (angle * (PCA9685_MAX_PULSE - PCA9685_MID_PULSE) / 90));
+}
+
+/* Get servo angle */
+/* int servo_get_angle(uint8_t leg, uint8_t joint, int16_t *angle)
+{
     return 0;
-}
-
-/* Center a servo */
-int servo_center(u8 channel)
-{
-    if (channel >= TOTAL_SERVOS)
-    {
-        pr_err("Servo: Invalid channel %d\n", channel);
-        return -EINVAL;
-    }
-
-    return servo_set_angle(channel, 0);
-}
-
-/* Set leg position with retries */
-int leg_set_position(u8 leg_num, s16 hip_angle, s16 knee_angle, s16 ankle_angle)
-{
-    u8 hip_channel, knee_channel, ankle_channel;
-    int ret;
-
-    if (leg_num >= NUM_LEGS)
-    {
-        pr_err("Servo: Invalid leg number %d\n", leg_num);
-        return -EINVAL;
-    }
-
-    hip_channel = get_servo_channel(leg_num, 0);
-    knee_channel = get_servo_channel(leg_num, 1);
-    ankle_channel = get_servo_channel(leg_num, 2);
-
-    if (hip_channel == 0xFF || knee_channel == 0xFF || ankle_channel == 0xFF)
-        return -EINVAL;
-
-    /* Add delays between joint movements */
-    ret = servo_set_angle(hip_channel, hip_angle);
-    if (ret < 0)
-        return ret;
-    msleep(50); // Wait 50ms between joints
-
-    ret = servo_set_angle(knee_channel, knee_angle);
-    if (ret < 0)
-        return ret;
-    msleep(50);
-
-    ret = servo_set_angle(ankle_channel, ankle_angle);
-    if (ret < 0)
-        return ret;
-
-    return 0;
-}
+} */
 
 /* Center all servos */
-int leg_center_all(void)
+int servo_center_all(void)
 {
-    int leg, joint;
-    u8 channel;
-    int ret;
+    int leg, joint, ret;
 
     for (leg = 0; leg < NUM_LEGS; leg++)
     {
-        for (joint = 0; joint < JOINTS_PER_LEG; joint++)
+        for (joint = 0; joint < NUM_JOINTS_PER_LEG; joint++)
         {
-            channel = get_servo_channel(leg, joint);
-            if (channel == 0xFF)
-                continue;
-
-            ret = servo_center(channel);
+            ret = servo_set_angle(leg, joint, 0);
             if (ret < 0)
-            {
-                pr_err("Servo: Failed to center leg %d joint %d (ret=%d)\n",
-                       leg, joint, ret);
                 return ret;
-            }
-            msleep(50); /* Small delay between servos */
+            msleep(10);
         }
     }
-
     return 0;
-}
-
-/* Cleanup servo subsystem with improved safety */
-void servo_cleanup(void)
-{
-    /* Don't try to center servos during cleanup - it might hang */
-    pca9685_cleanup();
-    pr_info("Servo: Cleanup complete\n");
 }
 
 EXPORT_SYMBOL_GPL(servo_init);
 EXPORT_SYMBOL_GPL(servo_cleanup);
 EXPORT_SYMBOL_GPL(servo_set_angle);
-EXPORT_SYMBOL_GPL(servo_center);
-EXPORT_SYMBOL_GPL(leg_set_position);
-EXPORT_SYMBOL_GPL(leg_center_all);
+// EXPORT_SYMBOL_GPL(servo_get_angle);
+EXPORT_SYMBOL_GPL(servo_center_all);

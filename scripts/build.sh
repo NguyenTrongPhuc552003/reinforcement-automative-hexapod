@@ -21,6 +21,9 @@ usage() {
     echo "Usage: $0 [OPTIONS]"
     echo "Options:"
     echo "  (no argument) Build all components"
+    echo "  common        Build common library"
+    echo "  kernel        Build kernel module"
+    echo "  user          Build user space programs"
     echo "  clean         Clean build artifacts"
     echo "  --no-cache    Build Docker image without cache"
     echo "  -h, --help    Show this help message"
@@ -122,13 +125,13 @@ done
 
 # Install kernel module
 echo "Installing kernel module..."
-sudo rmmod hexapod_driver 2>/dev/null || true
+sudo rmmod hexapod-driver 2>/dev/null || true
 
 # Clear dmesg to make our debug messages easier to find
 sudo dmesg -C
 
 # Install the module
-sudo insmod hexapod_driver.ko
+sudo insmod hexapod-driver.ko
 
 # Show debug messages
 echo "Driver messages:"
@@ -229,6 +232,21 @@ case "$1" in
         create_install_script
         log "${GREEN}" "Build completed successfully!"
         log "${GREEN}" "Deployment package created in: ${DEPLOY_DIR}"
+        ;;
+    common)
+        build_docker_image ""
+        build_common_library
+        log "${GREEN}" "Common library build completed successfully!"
+        ;;
+    kernel)
+        build_docker_image ""
+        build_kernel_module
+        log "${GREEN}" "Kernel module build completed successfully!"
+        ;;
+    user)
+        build_docker_image ""
+        build_user_space
+        log "${GREEN}" "User space program build completed successfully!"
         ;;
     *)
         usage

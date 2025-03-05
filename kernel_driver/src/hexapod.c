@@ -1,180 +1,144 @@
 #include <linux/module.h>
-#include <linux/init.h>
 #include <linux/fs.h>
-#include <linux/cdev.h>
+#include <linux/device.h>
+#include <linux/i2c.h>
 #include <linux/uaccess.h>
-#include <linux/delay.h>
+#include <linux/miscdevice.h>
 #include "hexapod.h"
-#include "servo.h"
 #include "mpu6050.h"
+#include "servo.h"
+#include "pca9685.h"
 
-/* Device Info */
-#define DEVICE_NAME "hexapod"
-#define CLASS_NAME "hexapod"
+#define DRIVER_NAME "hexapod"
 
-/* Global Variables */
-static int major_number;
-static struct class *hexapod_class = NULL;
-static struct cdev hexapod_cdev;
+/* Global variables */
+static struct hexapod_dev hexapod_device;
 
-/* File Operations */
-static int hexapod_open(struct inode *inode, struct file *file)
-{
-    // Opening the hexapod device
-    pr_info("hexapod: Device opened\n");
-    return 0;
-}
-
-static int hexapod_release(struct inode *inode, struct file *file)
-{
-    // Closing the hexapod device
-    pr_info("hexapod: Device closed\n");
-    return 0;
-}
-
+/* IOCTL handler */
 static long hexapod_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
+    void __user *argp = (void __user *)arg;
     int ret = 0;
+
+    mutex_lock(&hexapod_device.lock);
 
     switch (cmd)
     {
     case SET_LEG_POSITION:
     {
-        struct leg_command cmd;
-        if (copy_from_user(&cmd, (void __user *)arg, sizeof(cmd)))
-            return -EFAULT;
-
-        ret = leg_set_position(cmd.leg_num,
-                               cmd.position.hip,
-                               cmd.position.knee,
-                               cmd.position.ankle);
+        struct leg_command command;
+        if (copy_from_user(&command, argp, sizeof(command)))
+        {
+            ret = -EFAULT;
+            goto out;
+        }
+        ret = hexapod_set_leg_position(command.leg_num, &command.position);
         break;
     }
 
     case GET_IMU_DATA:
     {
         struct imu_data data;
-        ret = mpu6050_read_all(&data.accel_x, &data.accel_y, &data.accel_z,
-                               &data.gyro_x, &data.gyro_y, &data.gyro_z);
-        if (ret < 0)
-            return ret;
-
-        if (copy_to_user((void __user *)arg, &data, sizeof(data)))
-            return -EFAULT;
+        ret = hexapod_get_imu_data(&data);
+        if (ret == 0)
+        {
+            if (copy_to_user(argp, &data, sizeof(data)))
+                ret = -EFAULT;
+        }
         break;
     }
 
     default:
-        return -ENOTTY;
+        ret = -ENOTTY;
     }
 
+out:
+    mutex_unlock(&hexapod_device.lock);
     return ret;
 }
 
-/* File Operations Structure */
+/* File operations */
 static const struct file_operations hexapod_fops = {
     .owner = THIS_MODULE,
-    .open = hexapod_open,
-    .release = hexapod_release,
     .unlocked_ioctl = hexapod_ioctl,
+    .open = nonseekable_open,
+    .llseek = no_llseek,
 };
 
-/* Module Init */
+/* Misc device structure */
+static struct miscdevice hexapod_miscdev = {
+    .minor = MISC_DYNAMIC_MINOR,
+    .name = DRIVER_NAME,
+    .fops = &hexapod_fops,
+};
+
+/* Init/Exit functions */
 static int __init hexapod_init(void)
 {
     int ret;
-    dev_t dev;
+    struct i2c_adapter *adapter;
 
-    /* Initialize MPU6050 */
-    ret = mpu6050_init();
+    // Initialize mutex
+    mutex_init(&hexapod_device.lock);
+
+    // Register misc device
+    ret = misc_register(&hexapod_miscdev);
+    if (ret)
+    {
+        pr_err("Failed to register misc device: %d\n", ret);
+        return ret;
+    }
+
+    // Get I2C adapter
+    adapter = i2c_get_adapter(HEXAPOD_I2C_BUS);
+    if (!adapter)
+    {
+        pr_err("Failed to get I2C adapter %d\n", HEXAPOD_I2C_BUS);
+        ret = -ENODEV;
+        goto fail_i2c;
+    }
+
+    // Initialize MPU6050
+    ret = mpu6050_probe(adapter);
     if (ret < 0)
     {
-        pr_err("Failed to initialize MPU6050\n");
-        goto cleanup_mpu6050;
+        pr_err("Failed to initialize MPU6050: %d\n", ret);
+        goto fail_mpu;
     }
 
-    /* Initialize Servo System */
-    ret = servo_init();
+    // Initialize servo subsystem
+    ret = servo_init(adapter);
     if (ret < 0)
     {
-        pr_err("Failed to initialize servo system\n");
-        goto cleanup_servo;
+        pr_err("Failed to initialize servo subsystem: %d\n", ret);
+        goto fail_servo;
     }
 
-    /* Allocate character device region */
-    ret = alloc_chrdev_region(&dev, 0, 1, DEVICE_NAME);
-    if (ret < 0)
-    {
-        pr_err("Failed to allocate character device region\n");
-        goto cleanup_servo;
-    }
-    major_number = MAJOR(dev);
-
-    /* Create device class */
-    hexapod_class = class_create(THIS_MODULE, CLASS_NAME);
-    if (IS_ERR(hexapod_class))
-    {
-        pr_err("Failed to create device class\n");
-        ret = PTR_ERR(hexapod_class);
-        goto cleanup_chrdev;
-    }
-
-    /* Create device */
-    if (IS_ERR(device_create(hexapod_class, NULL, dev, NULL, DEVICE_NAME)))
-    {
-        pr_err("Failed to create device\n");
-        ret = PTR_ERR(hexapod_class);
-        goto cleanup_class;
-    }
-
-    /* Initialize character device */
-    cdev_init(&hexapod_cdev, &hexapod_fops);
-    hexapod_cdev.owner = THIS_MODULE;
-    ret = cdev_add(&hexapod_cdev, dev, 1);
-    if (ret < 0)
-    {
-        pr_err("Failed to add character device\n");
-        goto cleanup_device;
-    }
-
-    pr_info("Hexapod driver initialized\n");
+    i2c_put_adapter(adapter);
+    pr_info("Hexapod driver initialized successfully\n");
     return 0;
 
-cleanup_device:
-    device_destroy(hexapod_class, dev);
-cleanup_class:
-    class_destroy(hexapod_class);
-cleanup_chrdev:
-    unregister_chrdev_region(dev, 1);
-cleanup_servo:
-    servo_cleanup();
-cleanup_mpu6050:
-    mpu6050_cleanup();
+fail_servo:
+    mpu6050_shutdown();
+fail_mpu:
+    i2c_put_adapter(adapter);
+fail_i2c:
+    misc_deregister(&hexapod_miscdev);
     return ret;
 }
 
-/* Module Exit */
 static void __exit hexapod_exit(void)
 {
-    dev_t dev = MKDEV(major_number, 0);
-
-    cdev_del(&hexapod_cdev);
-    device_destroy(hexapod_class, dev);
-    class_destroy(hexapod_class);
-    unregister_chrdev_region(dev, 1);
     servo_cleanup();
-    mpu6050_cleanup();
+    mpu6050_shutdown();
+    misc_deregister(&hexapod_miscdev);
     pr_info("Hexapod driver removed\n");
 }
-
-/* Module dependencies */
-MODULE_SOFTDEP("pre: i2c_bcm2835");
-MODULE_SOFTDEP("pre: i2c_dev");
 
 module_init(hexapod_init);
 module_exit(hexapod_exit);
 
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("StrongFood");
-MODULE_DESCRIPTION("Hexapod Robot Driver");
+MODULE_AUTHOR("Your Name");
+MODULE_DESCRIPTION("Hexapod Robot Control Driver");
 MODULE_VERSION("1.0");

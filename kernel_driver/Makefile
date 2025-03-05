@@ -10,21 +10,21 @@ endif
 SRC_DIR := src
 
 # Define objects from source files
-hexapod_driver-objs := \
+hexapod-driver-objs := \
                 $(SRC_DIR)/hexapod.o \
                 $(SRC_DIR)/mpu6050.o \
                 $(SRC_DIR)/pca9685.o \
                 $(SRC_DIR)/servo.o
 
 # Define the module
-obj-m += hexapod_driver.o
+obj-m += hexapod-driver.o
 
 # Current directory
 PWD := $(shell pwd)
 
 # Add include directory and build options
-EXTRA_CFLAGS := -I/build/common/include
-EXTRA_CFLAGS += -I/build/module/include
+EXTRA_CFLAGS := -I/build/common/inc
+EXTRA_CFLAGS += -I/build/module/inc
 EXTRA_CFLAGS += -DDEBUG
 EXTRA_CFLAGS += -mfpu=vfp -mfloat-abi=softfp
 

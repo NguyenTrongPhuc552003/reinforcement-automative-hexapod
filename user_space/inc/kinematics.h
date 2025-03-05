@@ -3,9 +3,11 @@
 
 #include <stdint.h>
 #include "protocol.h"
+#include "hexapod.h"
 
+#ifndef M_PI
 #define M_PI 3.14159265358979323846
-// #define DEBUG
+#endif
 
 /* 3D Point Structure */
 typedef struct point3d
@@ -15,13 +17,12 @@ typedef struct point3d
     double z;
 } point3d_t;
 
-/* Use the same leg_position struct from protocol.h */
-typedef struct leg_position leg_position_t;
-
-/* Forward Kinematics: converts joint angles to cartesian position */
+/* Kinematics API */
 int forward_kinematics(const leg_position_t *angles, point3d_t *point);
-
-/* Inverse Kinematics: converts cartesian position to joint angles */
 int inverse_kinematics(const point3d_t *point, leg_position_t *angles);
+
+/* Utility functions */
+double degrees_to_radians(double degrees);
+double radians_to_degrees(double radians);
 
 #endif /* _KINEMATICS_H_ */
