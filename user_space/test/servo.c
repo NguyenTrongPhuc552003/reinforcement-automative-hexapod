@@ -2,14 +2,14 @@
 #include <unistd.h>
 #include "hexapod.h"
 
-static void test_single_servo(uint8_t leg_num, double hip, double knee, double ankle)
+static void test_single_servo(uint8_t leg_num, int16_t hip, int16_t knee, int16_t ankle)
 {
     leg_position_t position = {
         .hip = hip,
         .knee = knee,
         .ankle = ankle};
 
-    printf("Setting leg %d to position:    hip=%.1f, knee=%.1f, ankle=%.1f\n",
+    printf("Setting leg %d to position: hip=%d, knee=%d, ankle=%d\n",
            leg_num, hip, knee, ankle);
 
     if (hexapod_set_leg_position(leg_num, &position) < 0)
@@ -25,7 +25,7 @@ static void test_single_servo(uint8_t leg_num, double hip, double knee, double a
     leg_position_t current;
     if (hexapod_get_leg_position(leg_num, &current) == 0)
     {
-        printf("Getting current leg position: hip=%.1f, knee=%.1f, ankle=%.1f\n",
+        printf("Current leg position: hip=%d, knee=%d, ankle=%d\n",
                current.hip, current.knee, current.ankle);
     }
 }
@@ -44,9 +44,10 @@ int main(void)
     printf("\nTesting individual servos...\n");
     for (int i = 0; i < NUM_LEGS; i++)
     {
-        test_single_servo(i, 45.0, 0.0, 0.0); // Move hip
-        test_single_servo(i, 0.0, 45.0, 0.0); // Move knee
-        test_single_servo(i, 0.0, 0.0, 45.0); // Move ankle
+        test_single_servo(i, 45, 0, 0); // Move hip +45 degrees
+        test_single_servo(i, 0, 45, 0); // Move knee +45 degrees
+        test_single_servo(i, 0, 0, 45); // Move ankle +45 degrees
+        test_single_servo(i, 0, 0, 0);    // Return to center
         printf("\n");
         sleep(1);
     }

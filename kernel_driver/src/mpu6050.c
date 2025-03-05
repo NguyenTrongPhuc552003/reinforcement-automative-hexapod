@@ -1,158 +1,189 @@
 #include <linux/module.h>
 #include <linux/i2c.h>
 #include <linux/delay.h>
+#include <linux/math64.h>
 #include "mpu6050.h"
 
-/* MPU6050 registers */
-#define MPU6050_WHO_AM_I 0x75
-#define MPU6050_PWR_MGMT_1 0x6B
-#define MPU6050_CONFIG 0x1A
-#define MPU6050_GYRO_CONFIG 0x1B
-#define MPU6050_ACCEL_CONFIG 0x1C
-#define MPU6050_ACCEL_XOUT_H 0x3B
-#define MPU6050_GYRO_XOUT_H 0x43
-
-/* Device info */
-#define MPU6050_I2C_ADDR 0x68
-#define MPU6050_DEVICE_ID_1 0x68 /* Common device ID */
-#define MPU6050_DEVICE_ID_2 0x98 /* Alternate device ID for some MPU6050 versions */
-
-/* Configuration values */
-#define MPU6050_RESET 0x80     /* Reset bit in PWR_MGMT_1 */
-#define MPU6050_CLOCK_PLL 0x01 /* PLL with X axis gyroscope reference */
-#define MPU6050_DLPF_CFG 0x03  /* Digital Low Pass Filter ~44Hz */
-#define MPU6050_FS_SEL 0x08    /* Gyro Full Scale = ±500°/s */
-#define MPU6050_AFS_SEL 0x08   /* Accel Full Scale = ±4g */
-
-static struct i2c_client *mpu6050_client;
-
-/* Helper Functions */
-static int mpu6050_write_reg(u8 reg, u8 val)
+/* Helper functions for I2C operations */
+static inline int mpu6050_write_reg(struct i2c_client *client, u8 reg, u8 value)
 {
-    int ret = i2c_smbus_write_byte_data(mpu6050_client, reg, val);
+    int ret = i2c_smbus_write_byte_data(client, reg, value);
     if (ret < 0)
-        pr_err("Failed to write 0x%02x to reg 0x%02x\n", val, reg);
+        dev_err(&client->dev, "Write to reg 0x%02x failed: %d\n", reg, ret);
     return ret;
 }
 
-static int mpu6050_read_reg(u8 reg)
+static inline int mpu6050_read_reg(struct i2c_client *client, u8 reg)
 {
-    int ret = i2c_smbus_read_byte_data(mpu6050_client, reg);
+    int ret = i2c_smbus_read_byte_data(client, reg);
     if (ret < 0)
-        pr_err("Failed to read reg 0x%02x\n", reg);
+        dev_err(&client->dev, "Read from reg 0x%02x failed: %d\n", reg, ret);
     return ret;
 }
 
-/* Initialize MPU6050 */
-int mpu6050_init(void)
+static int mpu6050_read_block(struct i2c_client *client, u8 reg, u8 len, u8 *buf)
+{
+    int ret = i2c_smbus_read_i2c_block_data(client, reg, len, buf);
+    if (ret < 0)
+        dev_err(&client->dev, "Block read from reg 0x%02x failed: %d\n", reg, ret);
+    return ret;
+}
+
+/* Power management functions */
+static int mpu6050_set_power_mode(struct i2c_client *client, bool on)
 {
     int ret;
-    struct i2c_adapter *adapter;
-    u8 device_id;
+    u8 pwr_mgmt = on ? MPU6050_CLOCK_PLL : MPU6050_SLEEP_MODE;
 
-    /* Get I2C adapter for bus 3 */
-    adapter = i2c_get_adapter(3);
-    if (!adapter)
+    ret = mpu6050_write_reg(client, MPU6050_PWR_MGMT_1, pwr_mgmt);
+    if (ret < 0)
+        return ret;
+
+    if (on)
+        msleep(100); // Wait for oscillators to stabilize
+
+    return 0;
+}
+
+/* Device initialization */
+int mpu6050_init(struct i2c_client *client)
+{
+    int ret;
+    int retries;
+    u8 id = 0; /* Initialize to avoid warning */
+
+    if (!client)
+        return -EINVAL;
+
+    /* Verify device ID with retries */
+    retries = 3;
+    while (retries--)
     {
-        pr_err("Failed to get I2C adapter\n");
+        ret = mpu6050_read_reg(client, MPU6050_WHO_AM_I);
+        if (ret < 0)
+        {
+            dev_err(&client->dev, "Failed to read WHO_AM_I: %d\n", ret);
+            continue;
+        }
+
+        id = (u8)ret;
+        if (id == MPU6050_DEVICE_ID || id == MPU6050_DEVICE_ID_ALT)
+        {
+            dev_info(&client->dev, "MPU6050 ID verified: 0x%02x\n", id);
+            break;
+        }
+        msleep(10);
+    }
+
+    if (retries < 0)
+    {
+        dev_err(&client->dev, "Invalid device ID: %02x\n", id);
         return -ENODEV;
     }
 
-    /* Create I2C client */
-    mpu6050_client = i2c_new_dummy(adapter, MPU6050_I2C_ADDR);
-    i2c_put_adapter(adapter);
+    /* Reset device */
+    ret = mpu6050_write_reg(client, MPU6050_PWR_MGMT_1, MPU6050_RESET);
+    if (ret < 0)
+        return ret;
+    msleep(100);
 
+    /* Initialize device */
+    ret = mpu6050_set_power_mode(client, true);
+    if (ret < 0)
+        return ret;
+
+    /* Configure sensors */
+    ret = mpu6050_write_reg(client, MPU6050_GYRO_CONFIG, MPU6050_GYRO_FS_500);
+    if (ret < 0)
+        return ret;
+
+    ret = mpu6050_write_reg(client, MPU6050_ACCEL_CONFIG, MPU6050_ACCEL_FS_2G);
+    if (ret < 0)
+        return ret;
+
+    /* Set sample rate divider for 100Hz operation */
+    ret = mpu6050_write_reg(client, MPU6050_SMPLRT_DIV, 9);
+    if (ret < 0)
+        return ret;
+
+    /* Configure digital low-pass filter */
+    ret = mpu6050_write_reg(client, MPU6050_CONFIG, MPU6050_DLPF_10HZ);
+    if (ret < 0)
+        return ret;
+
+    dev_info(&client->dev, "MPU6050 initialized successfully\n");
+    return 0;
+}
+
+/* Cleanup function */
+void mpu6050_remove(struct i2c_client *client)
+{
+    mpu6050_set_power_mode(client, false);
+}
+
+/* Sensor reading with integer math for kernel */
+int mpu6050_read_sensors(struct i2c_client *client, struct imu_data *data)
+{
+    u8 buf[14];
+    int ret;
+    // s16 raw_val;
+
+    if (!client || !data)
+        return -EINVAL;
+
+    ret = mpu6050_read_block(client, MPU6050_ACCEL_XOUT_H, 14, buf);
+    if (ret < 0)
+        return ret;
+
+    /* Raw data conversion - store raw values in kernel space */
+    data->accel_x = (s16)((buf[0] << 8) | buf[1]);
+    data->accel_y = (s16)((buf[2] << 8) | buf[3]);
+    data->accel_z = (s16)((buf[4] << 8) | buf[5]);
+    data->gyro_x = (s16)((buf[8] << 8) | buf[9]);
+    data->gyro_y = (s16)((buf[10] << 8) | buf[11]);
+    data->gyro_z = (s16)((buf[12] << 8) | buf[13]);
+
+    return 0;
+}
+
+static struct i2c_client *mpu6050_client;
+
+int mpu6050_probe(struct i2c_adapter *adapter)
+{
+    if (!adapter)
+        return -EINVAL;
+
+    mpu6050_client = i2c_new_dummy(adapter, MPU6050_I2C_ADDR);
     if (!mpu6050_client)
     {
-        pr_err("Failed to create I2C client\n");
+        pr_err("Failed to create MPU6050 I2C client\n");
         return -ENOMEM;
     }
 
-    /* Check device ID */
-    device_id = mpu6050_read_reg(MPU6050_WHO_AM_I);
-    if (device_id != MPU6050_DEVICE_ID_1 && device_id != MPU6050_DEVICE_ID_2)
-    {
-        pr_err("Invalid device ID: 0x%02x (expected 0x%02x or 0x%02x)\n",
-               device_id, MPU6050_DEVICE_ID_1, MPU6050_DEVICE_ID_2);
-        ret = -ENODEV;
-        goto err_remove;
-    }
-    pr_info("MPU6050 device ID: 0x%02x\n", device_id);
-
-    /* Reset device */
-    ret = mpu6050_write_reg(MPU6050_PWR_MGMT_1, MPU6050_RESET);
-    if (ret < 0)
-        goto err_remove;
-    msleep(100); /* Wait for reset to complete */
-
-    /* Wake up device and set clock source */
-    ret = mpu6050_write_reg(MPU6050_PWR_MGMT_1, MPU6050_CLOCK_PLL);
-    if (ret < 0)
-        goto err_remove;
-
-    /* Set DLPF config */
-    ret = mpu6050_write_reg(MPU6050_CONFIG, MPU6050_DLPF_CFG);
-    if (ret < 0)
-        goto err_remove;
-
-    /* Configure gyroscope range */
-    ret = mpu6050_write_reg(MPU6050_GYRO_CONFIG, MPU6050_FS_SEL);
-    if (ret < 0)
-        goto err_remove;
-
-    /* Configure accelerometer range */
-    ret = mpu6050_write_reg(MPU6050_ACCEL_CONFIG, MPU6050_AFS_SEL);
-    if (ret < 0)
-        goto err_remove;
-
-    pr_info("MPU6050 initialized successfully\n");
-    return 0;
-
-err_remove:
-    i2c_unregister_device(mpu6050_client);
-    return ret;
+    return mpu6050_init(mpu6050_client);
 }
 
-/* Read all sensor data */
-int mpu6050_read_all(s16 *accel_x, s16 *accel_y, s16 *accel_z,
-                     s16 *gyro_x, s16 *gyro_y, s16 *gyro_z)
-{
-    u8 data[14];
-    int ret;
-
-    /* Read all sensor data in one transaction */
-    ret = i2c_smbus_read_i2c_block_data(mpu6050_client,
-                                        MPU6050_ACCEL_XOUT_H,
-                                        14, data);
-    if (ret < 0)
-    {
-        pr_err("Failed to read sensor data\n");
-        return ret;
-    }
-
-    /* Combine high and low bytes */
-    *accel_x = (s16)((data[0] << 8) | data[1]);
-    *accel_y = (s16)((data[2] << 8) | data[3]);
-    *accel_z = (s16)((data[4] << 8) | data[5]);
-    /* Skip temperature data at data[6] and data[7] */
-    *gyro_x = (s16)((data[8] << 8) | data[9]);
-    *gyro_y = (s16)((data[10] << 8) | data[11]);
-    *gyro_z = (s16)((data[12] << 8) | data[13]);
-
-    return 0;
-}
-
-/* Cleanup MPU6050 */
-void mpu6050_cleanup(void)
+void mpu6050_shutdown(void)
 {
     if (mpu6050_client)
     {
-        /* Put device in sleep mode */
-        mpu6050_write_reg(MPU6050_PWR_MGMT_1, 0x40);
+        mpu6050_remove(mpu6050_client);
         i2c_unregister_device(mpu6050_client);
+        mpu6050_client = NULL;
     }
 }
 
+int mpu6050_read_imu_data(struct imu_data *data)
+{
+    if (!mpu6050_client || !data)
+        return -EINVAL;
+
+    return mpu6050_read_sensors(mpu6050_client, data);
+}
+
 EXPORT_SYMBOL_GPL(mpu6050_init);
-EXPORT_SYMBOL_GPL(mpu6050_cleanup);
-EXPORT_SYMBOL_GPL(mpu6050_read_all);
+EXPORT_SYMBOL_GPL(mpu6050_remove);
+EXPORT_SYMBOL_GPL(mpu6050_read_sensors);
+EXPORT_SYMBOL_GPL(mpu6050_probe);
+EXPORT_SYMBOL_GPL(mpu6050_shutdown);
+EXPORT_SYMBOL_GPL(mpu6050_read_imu_data);

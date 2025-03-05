@@ -8,115 +8,109 @@
 #define TIBIA_LENGTH 123.0
 #define COXA_OFFSET COXA_LENGTH
 
-static double degrees_to_radians(double degrees)
+/* Workspace limits */
+#define MIN_REACH 45.0    /* Minimum reach distance */
+#define MAX_REACH 180.0   /* Maximum reach distance */
+#define MAX_HEIGHT 70.0   /* Maximum height */
+#define MIN_HEIGHT -150.0 /* Minimum height (negative = below base) */
+
+/* Convert degrees to radians */
+static double deg_to_rad(double degrees)
 {
     return degrees * M_PI / 180.0;
 }
 
-static double radians_to_degrees(double radians)
+/* Convert radians to degrees */
+static double rad_to_deg(double radians)
 {
     return radians * 180.0 / M_PI;
 }
 
-int forward_kinematics(const leg_position_t *angles, point3d_t *point)
+int forward_kinematics(const leg_position_t *angles, point3d_t *position)
 {
-    if (!angles || !point)
+    if (!angles || !position)
         return -1;
 
-    double hip_rad = degrees_to_radians(angles->hip);
-    double knee_rad = degrees_to_radians(angles->knee);
-    double ankle_rad = degrees_to_radians(angles->ankle);
+    /* Convert angles to radians */
+    double hip_rad = deg_to_rad(angles->hip);
+    double knee_rad = deg_to_rad(angles->knee);
+    double ankle_rad = deg_to_rad(angles->ankle);
 
-    // First, calculate position from coxa joint
+    /* Calculate intermediate positions of each joint */
     double coxa_x = COXA_LENGTH * cos(hip_rad);
     double coxa_y = COXA_LENGTH * sin(hip_rad);
 
-    // Calculate femur endpoint
-    double femur_proj = FEMUR_LENGTH * cos(knee_rad);
-    double femur_x = coxa_x + femur_proj * cos(hip_rad);
-    double femur_y = coxa_y + femur_proj * sin(hip_rad);
-    double femur_z = -FEMUR_LENGTH * sin(knee_rad);
+    double femur_angle = hip_rad + knee_rad;
+    double femur_x = coxa_x + FEMUR_LENGTH * cos(femur_angle);
+    double femur_y = coxa_y + FEMUR_LENGTH * sin(femur_angle);
 
-    // Calculate tibia endpoint
-    double tibia_angle = knee_rad + ankle_rad;
-    double tibia_proj = TIBIA_LENGTH * cos(tibia_angle);
-    point->x = femur_x + tibia_proj * cos(hip_rad);
-    point->y = femur_y + tibia_proj * sin(hip_rad);
-    point->z = femur_z - TIBIA_LENGTH * sin(tibia_angle);
+    double tibia_angle = femur_angle + ankle_rad;
+
+    /* Calculate end position */
+    position->x = femur_x + TIBIA_LENGTH * cos(tibia_angle);
+    position->y = femur_y + TIBIA_LENGTH * sin(tibia_angle);
+    position->z = 0.0; /* Assuming Z is perpendicular to the X-Y plane */
 
     return 0;
 }
 
-int inverse_kinematics(const point3d_t *point, leg_position_t *angles)
+int inverse_kinematics(const point3d_t *position, leg_position_t *angles)
 {
-    if (!point || !angles)
+    if (!position || !angles)
         return -1;
 
-    // Calculate hip angle (rotation in XY plane)
-    double total_xy = sqrt(point->x * point->x + point->y * point->y);
+    /* Calculate distance from origin to target */
+    double x = position->x;
+    double y = position->y;
+    double z = position->z;
 
-    // Stricter XY plane validation
-    if (total_xy > (FEMUR_LENGTH + TIBIA_LENGTH) * 0.9 || // 90% of max reach
-        total_xy < COXA_OFFSET * 1.2)                     // 120% of min reach
+    double distance_xy = sqrt(x * x + y * y);
+
+    /* Check if point is within reachable workspace */
+    if (distance_xy < MIN_REACH || distance_xy > MAX_REACH ||
+        z > MAX_HEIGHT || z < MIN_HEIGHT)
     {
-        printf("Point unreachable in XY plane. Distance: %.2f mm\n", total_xy);
-        return -1;
+        return -1; /* Point is outside workspace */
     }
 
-    double hip_rad = atan2(point->y, point->x);
+    /* Calculate hip angle */
+    double hip_angle = atan2(y, x);
 
-    // Adjust target point to leg's local coordinate system
-    double local_x = total_xy - COXA_OFFSET;
-    double local_z = -point->z;
+    /* Adjust distances for hip joint offset */
+    double coxa_offset_x = COXA_LENGTH * cos(hip_angle);
+    double coxa_offset_y = COXA_LENGTH * sin(hip_angle);
 
-    // Calculate length from femur-tibia joint to end point
-    double L = sqrt(local_x * local_x + local_z * local_z);
+    /* Target for knee/ankle joints */
+    double target_x = x - coxa_offset_x;
+    double target_y = y - coxa_offset_y;
+    double target_dist_xy = sqrt(target_x * target_x + target_y * target_y);
+    double target_dist = sqrt(target_dist_xy * target_dist_xy + z * z);
 
-    // Stricter reach validation with more conservative limits
-    double max_reach = (FEMUR_LENGTH + TIBIA_LENGTH) * 0.85;    // 85% of theoretical max
-    double min_reach = fabs(FEMUR_LENGTH - TIBIA_LENGTH) * 1.2; // 120% of theoretical min
-
-    if (L > max_reach || L < min_reach)
+    /* Check if target is reachable by femur+tibia */
+    if (target_dist > FEMUR_LENGTH + TIBIA_LENGTH)
     {
-        printf("Point unreachable. Required leg length %.2f mm outside valid range [%.2f, %.2f]\n",
-               L, min_reach, max_reach);
-        return -1;
+        return -1; /* Target too far */
     }
 
-    // Z-axis validation (height limits)
-    if (fabs(point->z) > (FEMUR_LENGTH + TIBIA_LENGTH) * 0.6) // 60% of max height
-    {
-        printf("Z coordinate %.2f mm exceeds safe working height\n", point->z);
-        return -1;
-    }
+    /* Law of cosines to find knee angle */
+    double knee_angle = acos(
+        (FEMUR_LENGTH * FEMUR_LENGTH + TIBIA_LENGTH * TIBIA_LENGTH - target_dist * target_dist) /
+        (2 * FEMUR_LENGTH * TIBIA_LENGTH));
 
-    // Calculate knee angle using law of cosines
-    double knee_angle = acos((FEMUR_LENGTH * FEMUR_LENGTH +
-                              TIBIA_LENGTH * TIBIA_LENGTH -
-                              L * L) /
-                             (2 * FEMUR_LENGTH * TIBIA_LENGTH));
+    /* Angle of the leg, accounting for XY plane and Z height */
+    double leg_angle = atan2(-z, target_dist_xy);
 
-    // Calculate ankle components
-    double beta = acos((FEMUR_LENGTH * FEMUR_LENGTH +
-                        L * L -
-                        TIBIA_LENGTH * TIBIA_LENGTH) /
-                       (2 * FEMUR_LENGTH * L));
-    double gamma = atan2(local_z, local_x);
+    /* Use law of sines to find angle between femur and target line */
+    double inner_angle = asin(
+        TIBIA_LENGTH * sin(knee_angle) / target_dist);
 
-    // Calculate final angles
-    double ankle_angle = -(M_PI - knee_angle); // Keep foot parallel to ground
-    double femur_angle = gamma + beta;
+    /* Calculate femur angle */
+    double femur_angle = leg_angle + inner_angle;
 
-    // Convert to degrees and store
-    angles->hip = radians_to_degrees(hip_rad);
-    angles->knee = radians_to_degrees(femur_angle);
-    angles->ankle = radians_to_degrees(ankle_angle);
-
-    #ifdef DEBUG
-    printf("Debug - Target: (%.2f, %.2f, %.2f)\n", point->x, point->y, point->z);
-    printf("Debug - Local coords: (%.2f, %.2f)\n", local_x, local_z);
-    printf("Debug - L=%.2f, beta=%.3f, gamma=%.3f\n", L, beta, gamma);
-    #endif
+    /* Calculate final angles in degrees */
+    angles->hip = rad_to_deg(hip_angle);
+    angles->knee = rad_to_deg(femur_angle - hip_angle);
+    angles->ankle = rad_to_deg(M_PI - knee_angle - femur_angle);
 
     return 0;
 }
