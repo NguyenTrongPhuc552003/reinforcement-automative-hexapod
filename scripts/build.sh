@@ -109,13 +109,13 @@ done
 
 # Install kernel module
 echo "Installing kernel module..."
-sudo rmmod hexapod-driver 2>/dev/null || true
+sudo rmmod hexapod_driver 2>/dev/null || true
 
 # Clear dmesg to make our debug messages easier to find
 sudo dmesg -C
 
 # Install the module
-sudo insmod hexapod-driver.ko
+sudo insmod hexapod_driver.ko
 
 # Show debug messages
 echo "Driver messages:"
@@ -128,6 +128,30 @@ sudo chmod 666 /dev/hexapod
 echo "Installation complete!"
 EOF
     chmod +x "${DEPLOY_DIR}/install.sh"
+}
+
+# Function to uninstall the driver and its dependencies
+create_uninstall_script() {
+    cat > "${DEPLOY_DIR}/uninstall.sh" << 'EOF'
+#!/bin/bash
+
+# Check if the driver is installed
+if ! lsmod | grep -q hexapod_driver; then
+    echo "Hexapod driver is not installed!"
+    exit 1
+fi
+echo "Uninstalling Hexapod driver..."
+
+# Stop if any command fails
+set -e
+
+# Remove the module
+echo "Removing kernel module..."
+sudo rmmod hexapod_driver 2>/dev/null || true
+
+echo "Uninstallation complete!"
+EOF
+    chmod +x "${DEPLOY_DIR}/uninstall.sh"
 }
 
 # Parse command line arguments
@@ -179,6 +203,7 @@ case "$1" in
         build_kernel_module
         build_user_space
         create_install_script
+        create_uninstall_script
         log "${GREEN}" "Build completed successfully!"
         log "${GREEN}" "Deployment package created in: ${DEPLOY_DIR}"
         ;;
@@ -190,6 +215,7 @@ case "$1" in
         build_kernel_module
         build_user_space
         create_install_script
+        create_uninstall_script
         log "${GREEN}" "Build completed successfully!"
         log "${GREEN}" "Deployment package created in: ${DEPLOY_DIR}"
         ;;

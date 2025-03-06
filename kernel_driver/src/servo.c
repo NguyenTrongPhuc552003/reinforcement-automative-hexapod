@@ -117,8 +117,8 @@ int servo_center_all(void)
             if (ret)
                 return ret;
 
-            /* Small delay between servo movements */
-            msleep(10);
+            /* Use schedule() instead of msleep for better system responsiveness */
+            schedule_timeout_interruptible(msecs_to_jiffies(5));
         }
     }
 
@@ -133,4 +133,4 @@ EXPORT_SYMBOL_GPL(servo_center_all);
 
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("Hexapod Servo Control");
-MODULE_AUTHOR("Your Name");
+MODULE_AUTHOR("StrongFood");

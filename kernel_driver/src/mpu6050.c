@@ -24,7 +24,9 @@ static int mpu6050_write_reg(struct i2c_client *client, u8 reg, u8 val)
 
         dev_err(&client->dev, "Write retry %d for reg 0x%02x\n",
                 2 - retries, reg);
-        msleep(10);
+        // msleep(10);
+        /* Use schedule_timeout_interruptible() instead of msleep() */
+        schedule_timeout_interruptible(msecs_to_jiffies(10));
     }
 
     return ret;
@@ -49,7 +51,9 @@ static int mpu6050_read_reg(struct i2c_client *client, u8 reg)
 
         dev_err(&client->dev, "Read retry %d for reg 0x%02x\n",
                 2 - retries, reg);
-        msleep(10);
+        // msleep(10);
+        /* Use schedule_timeout_interruptible() instead of msleep() */
+        schedule_timeout_interruptible(msecs_to_jiffies(10));
     }
 
     return ret;
@@ -119,7 +123,9 @@ int mpu6050_init(struct i2c_client *client)
         dev_err(&client->dev, "Failed to reset device: %d\n", ret);
         return ret;
     }
-    msleep(100); /* Wait for reset to complete */
+    // msleep(100); /* Wait for reset to complete */
+    /* Use schedule_timeout_interruptible() instead of msleep() */
+    schedule_timeout_interruptible(msecs_to_jiffies(100));
 
     /* Wake up device and select best clock source */
     ret = mpu6050_write_reg(client, MPU6050_PWR_MGMT_1, MPU6050_CLOCK_PLL);
@@ -128,7 +134,9 @@ int mpu6050_init(struct i2c_client *client)
         dev_err(&client->dev, "Failed to wake up device: %d\n", ret);
         return ret;
     }
-    msleep(10);
+    // msleep(10);
+    /* Use schedule_timeout_interruptible() instead of msleep() */
+    schedule_timeout_interruptible(msecs_to_jiffies(10));
 
     /* Configure gyroscope range */
     ret = mpu6050_write_reg(client, MPU6050_GYRO_CONFIG,
@@ -224,4 +232,4 @@ EXPORT_SYMBOL_GPL(mpu6050_read_sensors);
 
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("MPU6050 IMU Driver");
-MODULE_AUTHOR("Your Name");
+MODULE_AUTHOR("StrongFood");

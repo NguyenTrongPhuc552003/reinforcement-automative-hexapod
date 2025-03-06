@@ -10,14 +10,14 @@ endif
 SRC_DIR := src
 
 # Define objects from source files
-hexapod-driver-objs := \
+hexapod_driver-objs := \
                 $(SRC_DIR)/hexapod.o \
                 $(SRC_DIR)/mpu6050.o \
                 $(SRC_DIR)/pca9685.o \
                 $(SRC_DIR)/servo.o
 
 # Define the module
-obj-m += hexapod-driver.o
+obj-m += hexapod_driver.o
 
 # Current directory
 PWD := $(shell pwd)
