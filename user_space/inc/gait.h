@@ -23,7 +23,7 @@ typedef struct
 } gait_params_t;
 
 /* Gait control functions */
-int gait_init(hexapod_t *hexapod, const gait_params_t *params);
+int gait_init(hexapod_t *hexapod, gait_params_t *params);
 int gait_update(hexapod_t *hexapod, double time, double direction, double speed);
 void gait_cleanup(void);
 int gait_center(hexapod_t *hexapod);

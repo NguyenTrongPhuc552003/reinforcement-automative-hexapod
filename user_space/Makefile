@@ -7,9 +7,6 @@ CFLAGS += -march=armv7-a -mfpu=vfp -mfloat-abi=hard
 # Add library linking with rpath
 LDFLAGS = -lm -L/build/deploy
 
-# Add pthread to LDFLAGS if needed
-# LDFLAGS += -pthread
-
 # Directories
 SRC_DIR = src
 TEST_DIR = test
@@ -24,8 +21,21 @@ OBJS = $(SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 TEST_SRCS = $(wildcard $(TEST_DIR)/*.c)
 TEST_BINS = $(TEST_SRCS:$(TEST_DIR)/%.c=$(BIN_DIR)/test_%)
 
+# Common source files (exclude main.c)
+COMMON_SRCS = $(filter-out $(SRC_DIR)/main.c, $(wildcard $(SRC_DIR)/*.c))
+COMMON_OBJS = $(COMMON_SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
+
+# Test-specific object files
+TEST_OBJS = $(TEST_SRCS:$(TEST_DIR)/%.c=$(OBJ_DIR)/test_%.o)
+
+# Main program object
+MAIN_OBJ = $(OBJ_DIR)/main.o
+
+# Main program
+MAIN_PROG = $(BIN_DIR)/hexapod_controller
+
 # Main targets
-all: dirs $(TEST_BINS)
+all: dirs $(TEST_BINS) $(MAIN_PROG)
 
 dirs:
 	@mkdir -p $(BIN_DIR) $(OBJ_DIR)
@@ -34,8 +44,20 @@ dirs:
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Link test executables with "test_" prefix
-$(BIN_DIR)/test_%: $(TEST_DIR)/%.c $(OBJS)
+# Compile test files
+$(OBJ_DIR)/test_%.o: $(TEST_DIR)/%.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Link test executables with only their specific objects
+$(BIN_DIR)/test_%: $(OBJ_DIR)/test_%.o $(COMMON_OBJS)
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+
+# Compile main program
+$(MAIN_OBJ): $(SRC_DIR)/main.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Link main controller program
+$(MAIN_PROG): $(MAIN_OBJ) $(COMMON_OBJS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 # Run tests
@@ -49,4 +71,10 @@ test: all
 clean:
 	rm -rf $(BIN_DIR) $(OBJ_DIR)
 
-.PHONY: all clean test dirs
+# Install target (optional)
+install: all
+	install -d $(DESTDIR)/usr/local/bin
+	install -m 755 $(MAIN_PROG) $(DESTDIR)/usr/local/bin/
+	install -m 755 $(TEST_BINS) $(DESTDIR)/usr/local/bin/
+
+.PHONY: all clean test dirs install

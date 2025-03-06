@@ -25,7 +25,9 @@ static int pca9685_write_reg(u8 reg, u8 val)
             return 0;
 
         /* Delay before retry */
-        msleep(5);
+        // msleep(5);
+        /* Use schedule_timeout_interruptible() instead of msleep() */
+        schedule_timeout_interruptible(msecs_to_jiffies(5));
     }
 
     pr_err("PCA9685: Failed to write to register 0x%02x: %d\n", reg, ret);
@@ -50,7 +52,9 @@ static int pca9685_read_reg(u8 reg)
             return ret;
 
         /* Delay before retry */
-        msleep(5);
+        // msleep(5);
+        /* Use schedule_timeout_interruptible() instead of msleep() */
+        schedule_timeout_interruptible(msecs_to_jiffies(5));
     }
 
     pr_err("PCA9685: Failed to read register 0x%02x: %d\n", reg, ret);
@@ -88,7 +92,9 @@ int pca9685_init(void)
     ret = pca9685_write_reg(PCA9685_MODE1, 0x80); /* Set reset bit */
     if (ret < 0)
         goto error;
-    msleep(10); /* Wait for reset to complete */
+    // msleep(10); /* Wait for reset to complete */
+    /* Use schedule_timeout_interruptible() instead of msleep() */
+    schedule_timeout_interruptible(msecs_to_jiffies(10));
 
     /* Set to sleep mode (required to change prescale) */
     ret = pca9685_write_reg(PCA9685_MODE1, MODE1_SLEEP);
@@ -107,7 +113,9 @@ int pca9685_init(void)
     ret = pca9685_write_reg(PCA9685_MODE1, MODE1_AI);
     if (ret < 0)
         goto error;
-    msleep(10); /* Wait for oscillator */
+    // msleep(10); /* Wait for oscillator */
+    /* Use schedule_timeout_interruptible() instead of msleep() */
+    schedule_timeout_interruptible(msecs_to_jiffies(10));
 
     /* Set output mode to totem pole (default) */
     ret = pca9685_write_reg(PCA9685_MODE2, MODE2_OUTDRV);
@@ -169,7 +177,9 @@ int pca9685_set_pwm_freq(u16 freq_hz)
     ret = pca9685_write_reg(PCA9685_MODE1, oldmode);
     if (ret < 0)
         return ret;
-    msleep(10); /* Wait for oscillator */
+    // msleep(10); /* Wait for oscillator */
+    /* Use schedule_timeout_interruptible() instead of msleep() */
+    schedule_timeout_interruptible(msecs_to_jiffies(10));
 
     /* Restart */
     ret = pca9685_write_reg(PCA9685_MODE1, oldmode | MODE1_RESTART);
@@ -265,4 +275,4 @@ EXPORT_SYMBOL_GPL(pca9685_set_pwm_us);
 
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("PCA9685 PWM Controller Driver");
-MODULE_AUTHOR("Your Name");
+MODULE_AUTHOR("StrongFood");

@@ -33,7 +33,7 @@ static struct
 } gait_state;
 
 /* Initialize gait controller */
-int gait_init(hexapod_t *hexapod, const gait_params_t *params)
+int gait_init(hexapod_t *hexapod, gait_params_t *params)
 {
     if (!hexapod || !params)
         return -EINVAL;
@@ -59,12 +59,14 @@ int gait_init(hexapod_t *hexapod, const gait_params_t *params)
 
     case GAIT_WAVE:
         /* Each leg is 1/6 cycle out of phase with the next */
-        gait_state.phase_offset[0] = 0.0;
-        gait_state.phase_offset[1] = 0.166;
-        gait_state.phase_offset[2] = 0.333;
-        gait_state.phase_offset[3] = 0.5;
-        gait_state.phase_offset[4] = 0.667;
-        gait_state.phase_offset[5] = 0.833;
+        gait_state.phase_offset[0] = 0.0; /* Front right */
+        gait_state.phase_offset[2] = 0.2; /* Middle right */
+        gait_state.phase_offset[4] = 0.4; /* Back right */
+        gait_state.phase_offset[1] = 0.5; /* Front left */
+        gait_state.phase_offset[3] = 0.7; /* Middle left */
+        gait_state.phase_offset[5] = 0.9; /* Back left */
+        params->duty_factor = 0.85;       /* Increase stance phase */
+        params->step_height = 40.0;       /* Higher steps for better clearance */
         break;
 
     case GAIT_RIPPLE:

@@ -284,6 +284,6 @@ module_init(hexapod_init);
 module_exit(hexapod_cleanup);
 
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Your Name");
+MODULE_AUTHOR("StrongFood");
 MODULE_DESCRIPTION("Hexapod Robot Control Driver");
 MODULE_VERSION("1.0");
