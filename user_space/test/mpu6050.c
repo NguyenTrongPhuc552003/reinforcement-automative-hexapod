@@ -1,74 +1,79 @@
 #include <stdio.h>
-#include <unistd.h>
+#include <stdlib.h>
 #include <signal.h>
-#include <stdbool.h>
-#include <assert.h>
+#include <unistd.h>
+#include <math.h>
 #include "hexapod.h"
 
-/* The status program */
-static volatile bool running = true;
+/* Global flag for termination */
+static volatile int running = 1;
 
 /* Signal handler */
-static void sigint_handler(int sig)
+void handle_signal(int sig)
 {
-    printf("\nStopping this testing program with signal %d...\n", sig);
-    running = false;
+    printf("\nReceived signal %d, shutting down...\n", sig);
+    running = 0;
 }
 
-// Convert raw accelerometer data to g's
-static double raw_to_g(int16_t raw)
+/* Convert raw accelerometer data to g's */
+float accel_to_g(int16_t raw)
 {
-    // ±2g range, 16-bit signed value
-    return (double)raw / 16384.0;
+    return raw / 16384.0f;  /* For ±2g range */
 }
 
-// Convert raw gyroscope data to degrees/second
-static double raw_to_dps(int16_t raw)
+/* Convert raw gyroscope data to degrees/second */
+float gyro_to_dps(int16_t raw)
 {
-    // ±500 degrees/sec range, 16-bit signed value
-    return (double)raw / 65.5;
-}
-
-static void test_mpu6050(void)
-{
-    imu_data_t data;
-    int count = 0;
-    
-    printf("\nReading MPU6050 data (Ctrl+C to stop)...\n");
-    printf("\nAccelerometer data in g's, Gyroscope data in degrees/second\n");
-
-    while (running)
-    {
-        if (hexapod_get_imu_data(&data) < 0)
-        {
-            printf("Failed to read IMU data\n");
-            break;
-        }
-
-        // Print every 10th reading (about twice per second)
-        if (count++ % 10 == 0)
-        {
-            printf("\033[2K\r"); // Clear line and return cursor
-            printf("Acc (g): X=%.2f Y=%.2f Z=%.2f | Gyro (°/s): X=%.1f Y=%.1f Z=%.1f",
-                   raw_to_g(data.accel_x), raw_to_g(data.accel_y), raw_to_g(data.accel_z),
-                   raw_to_dps(data.gyro_x), raw_to_dps(data.gyro_y), raw_to_dps(data.gyro_z));
-            fflush(stdout);
-        }
-        usleep(50000); // 50ms delay (20Hz reading rate)
-    }
+    return raw / 65.5f;  /* For ±500°/s range */
 }
 
 int main(void)
 {
-    printf("Starting MPU6050 test...\n");
-
-    // Set up Ctrl+C handler
-    signal(SIGINT, sigint_handler);
-    assert(hexapod_init() == 0); // Use real hardware
-
-    test_mpu6050();
-
-    hexapod_cleanup();
-    printf("\nTest completed\n");
+    hexapod_t hex;
+    imu_data_t imu_data;
+    int ret;
+    
+    /* Set up signal handler for clean termination */
+    signal(SIGINT, handle_signal);
+    
+    /* Initialize hexapod */
+    ret = hexapod_init(&hex);
+    if (ret < 0) {
+        fprintf(stderr, "Failed to initialize hexapod: %s\n", 
+                hexapod_error_string(ret));
+        return 1;
+    }
+    
+    printf("IMU Test - Press Ctrl+C to exit\n");
+    printf("================================\n");
+    
+    /* Main loop */
+    while (running) {
+        /* Get IMU data */
+        ret = hexapod_get_imu_data(&hex, &imu_data);
+        if (ret < 0) {
+            fprintf(stderr, "Failed to read IMU: %s\n", 
+                    hexapod_error_string(ret));
+            break;
+        }
+        
+        /* Print formatted IMU data */
+        printf("\rAccel: X=%+6.2fg Y=%+6.2fg Z=%+6.2fg | Gyro: X=%+7.2f° Y=%+7.2f° Z=%+7.2f°/s",
+               accel_to_g(imu_data.accel_x),
+               accel_to_g(imu_data.accel_y),
+               accel_to_g(imu_data.accel_z),
+               gyro_to_dps(imu_data.gyro_x),
+               gyro_to_dps(imu_data.gyro_y),
+               gyro_to_dps(imu_data.gyro_z));
+        fflush(stdout);
+        
+        /* Short delay */
+        usleep(100000); /* 100ms */
+    }
+    
+    printf("\n\nExiting...\n");
+    
+    /* Cleanup */
+    hexapod_cleanup(&hex);
     return 0;
 }

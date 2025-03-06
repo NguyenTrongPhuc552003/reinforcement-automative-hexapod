@@ -29,7 +29,7 @@ RUN ln -s /usr/bin/arm-linux-gnueabihf-gcc-8 /usr/bin/arm-linux-gnueabihf-gcc
 
 # 3. Directory Structure
 WORKDIR /build
-RUN mkdir -p /build/kernel /build/module /build/deploy /build/user_space /build/common
+RUN mkdir -p /build/kernel /build/module /build/deploy /build/user_space
 
 # 4. Kernel Headers
 RUN wget https://rcn-ee.com/repos/debian/pool/main/l/linux-upstream/linux-headers-4.14.108-ti-r144_1buster_armhf.deb && dpkg -x linux-headers-4.14.108-ti-r144_1buster_armhf.deb /build/kernel

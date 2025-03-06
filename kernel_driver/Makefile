@@ -23,16 +23,15 @@ obj-m += hexapod-driver.o
 PWD := $(shell pwd)
 
 # Add include directory and build options
-EXTRA_CFLAGS := -I/build/common/inc
-EXTRA_CFLAGS += -I/build/module/inc
+EXTRA_CFLAGS = -I/build/module/inc
 EXTRA_CFLAGS += -DDEBUG
-EXTRA_CFLAGS += -mfpu=vfp -mfloat-abi=softfp
+EXTRA_CFLAGS += -march=armv7-a -mfpu=vfp -mfloat-abi=softfp
 
 # Add ARM libgcc path
 EXTRA_LDFLAGS := -L/usr/lib/gcc-cross/arm-linux-gnueabihf/8
 
 # Add dependency handling
-KBUILD_EXTRA_SYMBOLS := $(shell find /build/common -name Module.symvers)
+KBUILD_EXTRA_SYMBOLS := $(shell find /build/module -name Module.symvers)
 
 # Build modules with verbose output
 all:

@@ -13,7 +13,6 @@ NC='\033[0m'
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 KERNEL_DRIVER_DIR="${PROJECT_ROOT}/kernel_driver"
 USER_SPACE_DIR="${PROJECT_ROOT}/user_space"
-COMMON_DIR="${PROJECT_ROOT}/common"
 DEPLOY_DIR="${PROJECT_ROOT}/deploy"
 
 # Function to show usage
@@ -21,8 +20,7 @@ usage() {
     echo "Usage: $0 [OPTIONS]"
     echo "Options:"
     echo "  (no argument) Build all components"
-    echo "  common        Build common library"
-    echo "  kernel        Build kernel module"
+    echo "  driver        Build kernel module"
     echo "  user          Build user space programs"
     echo "  clean         Clean build artifacts"
     echo "  --no-cache    Build Docker image without cache"
@@ -47,24 +45,11 @@ build_docker_image() {
     }
 }
 
-# Function to build common library
-build_common_library() {
-    log "${YELLOW}" "Preparing common library..."
-    docker run --rm \
-        -v "${COMMON_DIR}:/build/common" \
-        -v "${DEPLOY_DIR}:/build/deploy" \
-        hexapod-builder common || {
-        log "${RED}" "Common library build failed!"
-        exit 1
-    }
-}
-
 # Function to build kernel module
 build_kernel_module() {
     log "${YELLOW}" "Preparing kernel module..."
     docker run --rm \
         -v "${KERNEL_DRIVER_DIR}:/build/module" \
-        -v "${COMMON_DIR}:/build/common" \
         -v "${DEPLOY_DIR}:/build/deploy" \
         hexapod-builder kernel || {
         log "${RED}" "Kernel module build failed!"
@@ -77,7 +62,6 @@ build_user_space() {
     log "${YELLOW}" "Preparing user space programs..."
     docker run --rm \
         -v "${USER_SPACE_DIR}:/build/user_space" \
-        -v "${COMMON_DIR}:/build/common" \
         -v "${DEPLOY_DIR}:/build/deploy" \
         hexapod-builder user_space || {
         log "${RED}" "User space program build failed!"
@@ -141,17 +125,6 @@ sudo dmesg
 echo "Setting up permissions..."
 sudo chmod 666 /dev/hexapod
 
-# Install libraries
-echo "Installing libraries..."
-sudo cp libhexapod.* /usr/local/lib/
-sudo ldconfig
-
-# Set up library path
-if ! grep -q "/usr/local/lib" /etc/ld.so.conf.d/hexapod.conf 2>/dev/null; then
-    echo "/usr/local/lib" | sudo tee /etc/ld.so.conf.d/hexapod.conf
-    sudo ldconfig
-fi
-
 echo "Installation complete!"
 EOF
     chmod +x "${DEPLOY_DIR}/install.sh"
@@ -161,17 +134,6 @@ EOF
 case "$1" in
     clean)
         log "${YELLOW}" "Cleaning build artifacts..."
-
-        # Clean common library using Docker
-        docker run --rm \
-            -v "${COMMON_DIR}:/build/common" \
-            hexapod-builder clean || {
-            # If Docker image doesn't exist, that's fine - continue cleaning
-            if [ $? -ne 125 ]; then
-                log "${RED}" "Docker clean failed!"
-                exit 1
-            fi
-        }
         
         # Clean kernel driver and user space using Docker
         docker run --rm \
@@ -214,7 +176,6 @@ case "$1" in
         ;;
     --no-cache)
         build_docker_image "--no-cache"
-        build_common_library
         build_kernel_module
         build_user_space
         create_install_script
@@ -226,19 +187,13 @@ case "$1" in
         ;;
     "")
         build_docker_image ""
-        build_common_library
         build_kernel_module
         build_user_space
         create_install_script
         log "${GREEN}" "Build completed successfully!"
         log "${GREEN}" "Deployment package created in: ${DEPLOY_DIR}"
         ;;
-    common)
-        build_docker_image ""
-        build_common_library
-        log "${GREEN}" "Common library build completed successfully!"
-        ;;
-    kernel)
+    driver)
         build_docker_image ""
         build_kernel_module
         log "${GREEN}" "Kernel module build completed successfully!"
