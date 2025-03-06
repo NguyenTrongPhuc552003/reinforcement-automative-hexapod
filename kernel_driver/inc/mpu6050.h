@@ -25,10 +25,7 @@
 #define MPU6050_DLPF_10HZ 0x05   /* 10Hz low-pass filter */
 
 /* Device identification */
-#define MPU6050_DEVICE_ID 0x68
-#define MPU6050_DEVICE_ID_ALT 0x72  /* Some MPU6050 variants return this ID */
-#define MPU6050_DEVICE_ID_ALT2 0x98 /* BeagleBone AI variant */
-#define MPU9250_DEVICE_ID 0x71      /* For MPU9250 compatibility */
+#define MPU6050_DEVICE_ID 0x98
 
 /* Function declarations */
 int mpu6050_init(struct i2c_client *client);

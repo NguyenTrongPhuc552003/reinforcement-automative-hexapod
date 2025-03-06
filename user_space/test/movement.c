@@ -257,7 +257,7 @@ int main(int argc, char *argv[])
         else
         {
             printf("Unknown test: %s\n", argv[1]);
-            printf("Available tests: leg, imu, tripod, wave, ripple\n");
+            printf("Available tests: leg, tripod, wave, ripple\n");
         }
     }
     else

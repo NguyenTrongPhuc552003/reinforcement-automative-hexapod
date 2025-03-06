@@ -106,10 +106,7 @@ int mpu6050_init(struct i2c_client *client)
     dev_info(&client->dev, "Device ID: 0x%02x\n", id);
 
     /* Accept various device IDs - MPU6050, MPU9250, and variants */
-    if (id != MPU6050_DEVICE_ID &&
-        id != MPU6050_DEVICE_ID_ALT &&
-        id != MPU6050_DEVICE_ID_ALT2 &&
-        id != MPU9250_DEVICE_ID)
+    if (id != MPU6050_DEVICE_ID)
     {
         dev_err(&client->dev, "Unsupported device ID: 0x%02x\n", id);
         return -ENODEV;
