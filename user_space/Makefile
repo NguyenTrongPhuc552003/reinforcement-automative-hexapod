@@ -5,13 +5,12 @@ CFLAGS += -I/build/common/inc
 CFLAGS += -march=armv7-a -mfpu=vfp -mfloat-abi=hard
 
 # Add library linking with rpath
-LDFLAGS = -lm
-LDFLAGS += -L/build/deploy -Wl,-rpath=/usr/local/lib -lhexapod
+LDFLAGS = -lm -L/build/deploy
 
-# Add pthread to LDFLAGS
-LDFLAGS += -pthread
+# Add pthread to LDFLAGS if needed
+# LDFLAGS += -pthread
 
-# Source files
+# Directories
 SRC_DIR = src
 TEST_DIR = test
 BIN_DIR = bin
@@ -19,12 +18,11 @@ OBJ_DIR = obj
 
 # Source files
 SRCS = $(wildcard $(SRC_DIR)/*.c)
-OBJS = $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRCS))
+OBJS = $(SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 
-# Test files - get the base name without extension
+# Test files - add "test_" prefix to output binary names
 TEST_SRCS = $(wildcard $(TEST_DIR)/*.c)
-TEST_BASES = $(basename $(notdir $(TEST_SRCS)))
-TEST_BINS = $(addprefix $(BIN_DIR)/test_,$(TEST_BASES))
+TEST_BINS = $(TEST_SRCS:$(TEST_DIR)/%.c=$(BIN_DIR)/test_%)
 
 # Main targets
 all: dirs $(TEST_BINS)
@@ -38,7 +36,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 
 # Link test executables with "test_" prefix
 $(BIN_DIR)/test_%: $(TEST_DIR)/%.c $(OBJS)
-	$(CC) $(CFLAGS) $< $(OBJS) -o $@ $(LDFLAGS)
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 # Run tests
 test: all

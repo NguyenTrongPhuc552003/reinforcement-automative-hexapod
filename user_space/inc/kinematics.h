@@ -1,28 +1,26 @@
-#ifndef _KINEMATICS_H_
-#define _KINEMATICS_H_
+#ifndef KINEMATICS_H
+#define KINEMATICS_H
 
-#include <stdint.h>
-#include "protocol.h"
 #include "hexapod.h"
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
-
-/* 3D Point Structure */
-typedef struct point3d
+/* 3D point structure */
+typedef struct
 {
     double x;
     double y;
     double z;
 } point3d_t;
 
-/* Kinematics API */
-int forward_kinematics(const leg_position_t *angles, point3d_t *point);
-int inverse_kinematics(const point3d_t *point, leg_position_t *angles);
+/* Kinematics functions */
+int forward_kinematics(const leg_position_t *angles, point3d_t *position);
+int inverse_kinematics(const point3d_t *position, leg_position_t *angles);
+
+/* Vector operations */
+double point3d_distance(const point3d_t *p1, const point3d_t *p2);
+int point3d_normalize(point3d_t *vec);
+void point3d_print(const point3d_t *point);
 
 /* Utility functions */
-double degrees_to_radians(double degrees);
-double radians_to_degrees(double radians);
+int is_position_reachable(const point3d_t *position);
 
-#endif /* _KINEMATICS_H_ */
+#endif /* KINEMATICS_H */

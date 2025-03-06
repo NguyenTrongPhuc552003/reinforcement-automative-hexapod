@@ -20,19 +20,6 @@ log() {
 MAKE_PARAMS="ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} KERNEL_DIR=${KERNEL_DIR}"
 
 case "$1" in
-    "common")
-        cd /build/common
-        log "${GREEN}" "Building common library..."
-        make || {
-            log "${RED}" "Build failed!"
-            exit 1
-        }
-        log "${GREEN}" "Copying common library to deploy directory..."
-        mkdir -p /build/deploy
-        cp /build/common/{*.so,*.a} /build/deploy/ 2>/dev/null || true
-        log "${GREEN}" "Build successful!"
-        ;;
-
     "kernel")
         cd /build/module
         log "${GREEN}" "Building kernel module..."
@@ -60,11 +47,6 @@ case "$1" in
         ;;
         
     "clean")
-        # Clean common library
-        cd /build/common
-        log "${GREEN}" "Cleaning common library..."
-        make clean || true
-        
         # Clean kernel module
         cd /build/module
         log "${GREEN}" "Cleaning kernel module..."
