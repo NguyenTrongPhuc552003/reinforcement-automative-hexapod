@@ -26,6 +26,7 @@ RUN apt-get update && apt-get install -y \
 
 # Create symlink for cross-compiler
 RUN ln -s /usr/bin/arm-linux-gnueabihf-gcc-8 /usr/bin/arm-linux-gnueabihf-gcc
+RUN ln -s /usr/bin/arm-linux-gnueabihf-g++-8 /usr/bin/arm-linux-gnueabihf-g++
 
 # 3. Directory Structure
 WORKDIR /build

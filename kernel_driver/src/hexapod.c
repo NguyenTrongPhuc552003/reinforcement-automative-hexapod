@@ -29,7 +29,7 @@ int hexapod_set_leg_position(struct hexapod_data *dev, u8 leg, struct hexapod_le
         pos->ankle < MIN_ANGLE || pos->ankle > MAX_ANGLE)
         return -EINVAL;
 
-    /* Set angles */
+    /* Lock the device */
     mutex_lock(&dev->lock);
 
     /* Store the position */
