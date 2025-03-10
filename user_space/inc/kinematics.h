@@ -4,7 +4,7 @@
 #include "hexapod.h"
 
 /* 3D point structure */
-typedef struct
+typedef struct point3d
 {
     double x;
     double y;

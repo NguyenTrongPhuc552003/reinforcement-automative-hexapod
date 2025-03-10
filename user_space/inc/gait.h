@@ -5,7 +5,7 @@
 #include "kinematics.h"
 
 /* Gait types */
-typedef enum
+typedef enum gait_type
 {
     GAIT_TRIPOD, /* Alternating tripod (3 legs at a time) */
     GAIT_WAVE,   /* Wave gait (one leg at a time) */
@@ -13,7 +13,7 @@ typedef enum
 } gait_type_t;
 
 /* Gait parameters */
-typedef struct
+typedef struct gait_params
 {
     gait_type_t type;   /* Type of gait pattern */
     double step_height; /* Maximum step height (mm) */

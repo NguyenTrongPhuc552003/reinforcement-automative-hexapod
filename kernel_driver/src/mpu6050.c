@@ -3,7 +3,6 @@
 #include <linux/delay.h>
 #include <linux/slab.h>
 #include "mpu6050.h"
-#include "hexapod.h"
 
 /**
  * Write to an MPU6050 register
@@ -183,7 +182,6 @@ int mpu6050_init(struct i2c_client *client)
     dev_info(&client->dev, "MPU6050/MPU9250 initialized successfully\n");
     return 0;
 }
-EXPORT_SYMBOL_GPL(mpu6050_init);
 
 /**
  * Remove the MPU6050
@@ -196,7 +194,6 @@ void mpu6050_remove(struct i2c_client *client)
     /* Put device in sleep mode to save power */
     mpu6050_write_reg(client, MPU6050_PWR_MGMT_1, MPU6050_SLEEP_MODE);
 }
-EXPORT_SYMBOL_GPL(mpu6050_remove);
 
 /**
  * Read sensor data from MPU6050
@@ -228,6 +225,9 @@ int mpu6050_read_sensors(struct i2c_client *client, struct hexapod_imu_data *dat
 
     return 0;
 }
+
+EXPORT_SYMBOL_GPL(mpu6050_init);
+EXPORT_SYMBOL_GPL(mpu6050_remove);
 EXPORT_SYMBOL_GPL(mpu6050_read_sensors);
 
 MODULE_LICENSE("GPL");

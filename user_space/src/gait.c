@@ -5,8 +5,6 @@
 #include <unistd.h>
 #include <errno.h>
 #include "gait.h"
-#include "hexapod.h"
-#include "kinematics.h"
 
 /* Default leg positions (standing stance) */
 static const point3d_t default_positions[NUM_LEGS] = {

@@ -4,7 +4,6 @@
 #include <linux/kernel.h>
 #include "servo.h"
 #include "pca9685.h"
-#include "hexapod.h"
 
 /* Servo mapping - which channel for each servo */
 static const u8 servo_map[NUM_LEGS][NUM_JOINTS_PER_LEG] = {

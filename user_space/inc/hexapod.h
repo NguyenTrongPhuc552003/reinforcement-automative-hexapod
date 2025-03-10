@@ -22,14 +22,14 @@
 #define ANKLE_MAX_ANGLE 90
 
 /* Structures for communication */
-typedef struct
+typedef struct leg_position
 {
     int16_t hip;
     int16_t knee;
     int16_t ankle;
 } leg_position_t;
 
-typedef struct
+typedef struct imu_data
 {
     int16_t accel_x;
     int16_t accel_y;
@@ -39,13 +39,13 @@ typedef struct
     int16_t gyro_z;
 } imu_data_t;
 
-typedef struct
+typedef struct leg_command
 {
     uint8_t leg_num;
     leg_position_t position;
 } leg_command_t;
 
-typedef struct
+typedef struct calibration
 {
     uint8_t leg_num;
     int16_t hip_offset;
@@ -54,7 +54,7 @@ typedef struct
 } calibration_t;
 
 /* Hexapod state */
-typedef struct
+typedef struct hexapod
 {
     int fd;                                 /* File descriptor for device */
     int initialized;                        /* Initialization flag */

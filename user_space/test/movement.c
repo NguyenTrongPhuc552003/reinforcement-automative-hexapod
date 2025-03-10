@@ -5,8 +5,6 @@
 #include <signal.h>
 #include <time.h>
 #include <math.h>
-#include "hexapod.h"
-#include "kinematics.h"
 #include "gait.h"
 
 /* Signal flag for graceful termination */
