@@ -3,7 +3,8 @@
 #include <unistd.h>
 #include <signal.h>
 #include <fcntl.h>
-#include "controller.h"
+#include "hexapod.hpp"
+#include "controller.hpp"
 
 static volatile int running = 1;
 
@@ -15,27 +16,22 @@ void handle_signal(int sig)
 
 int main(void)
 {
-    hexapod_t hex; // this is used to store the hexapod state
-    int ret;
-    char key;
-
     signal(SIGINT, handle_signal);
 
-    /* Initialize hexapod */
-    ret = hexapod_init(&hex);
-    if (ret != 0)
+    // Initialize hexapod
+    Hexapod hexapod;
+    if (!hexapod.init())
     {
         fprintf(stderr, "Failed to initialize hexapod: %s\n",
-                hexapod_error_string(ret));
+                hexapod.getLastErrorMessage().c_str());
         return 1;
     }
 
-    /* Initialize controller */
-    ret = controller_init(&hex);
-    if (ret != 0)
+    // Initialize controller
+    Controller controller(hexapod);
+    if (!controller.init())
     {
-        fprintf(stderr, "Failed to initialize controller: %d\n", ret);
-        hexapod_cleanup(&hex);
+        fprintf(stderr, "Failed to initialize controller\n");
         return 1;
     }
 
@@ -48,39 +44,36 @@ int main(void)
     printf("  Space: Stop\n");
     printf("  Ctrl+C: Exit\n\n");
 
-    /* Set up non-blocking input */
+    // Set up non-blocking input
     int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
     fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
 
-    /* Main control loop */
+    // Main control loop
     while (running)
     {
-        /* Check for keyboard input (non-blocking) */
+        // Check for keyboard input (non-blocking)
+        char key;
         if (read(STDIN_FILENO, &key, 1) > 0)
         {
-            ret = controller_process_key(key);
-            if (ret != 0)
+            if (!controller.processKey(key))
             {
-                fprintf(stderr, "Control error: %d\n", ret);
+                fprintf(stderr, "Control error\n");
                 break;
             }
         }
 
-        /* Update hexapod state (now called regularly regardless of keypresses) */
-        ret = controller_update();
-        if (ret != 0)
+        // Update hexapod state (now called regularly regardless of keypresses)
+        if (!controller.update())
         {
-            fprintf(stderr, "Update error: %d\n", ret);
+            fprintf(stderr, "Update error\n");
             break;
         }
 
-        /* Small delay to prevent CPU overload */
-        usleep(10000); /* 10ms */
+        // Small delay to prevent CPU overload
+        usleep(10000); // 10ms
     }
 
-    /* Cleanup */
-    controller_cleanup();
-    hexapod_cleanup(&hex);
+    // Controller will be cleaned up automatically in destructor
     printf("\nShutdown complete\n");
 
     return 0;
