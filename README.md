@@ -2,7 +2,7 @@
 
 A comprehensive control system for a six-legged robot (hexapod) using BeagleBone Black, featuring both kernel-space drivers and user-space applications.
 
-![Hexapod Robot](docs/images/hexapod_diagram.png)
+![Hexapod Robot](resource/overview.jpg)
 
 ## Project Overview
 
