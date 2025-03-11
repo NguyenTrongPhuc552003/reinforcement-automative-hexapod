@@ -69,11 +69,22 @@ public:
     {
         if (!initialized)
         {
+            fprintf(stderr, "Gait not initialized\n");
             return false;
         }
 
         // Calculate global phase (0.0 - 1.0)
         double phase = std::fmod(time / params.cycleTime, 1.0);
+
+#ifdef DEBUG_GAIT
+        // Print debug info less frequently (changed from 50 to 200 calls)
+        static int debugCounter = 0;
+        if (++debugCounter % 200 == 0)
+        { // Print every ~200 calls instead of 50
+            fprintf(stderr, "Gait update: time=%.2f, phase=%.2f, dir=%.1f, speed=%.2f\n",
+                    time, phase, direction, speed);
+        }
+#endif
 
         // Store current time
         lastTime = time;
@@ -90,8 +101,26 @@ public:
                 defaultPositions[i].y,
                 defaultPositions[i].z);
 
+#ifdef DEBUG_GAIT
+            // Debug: print original position occasionally
+            if (debugCounter % 50 == 0 && i == 0)
+            {
+                fprintf(stderr, "Leg %d initial pos: (%.1f, %.1f, %.1f), phase: %.2f\n",
+                        i, footPos.x, footPos.y, footPos.z, legPhase);
+            }
+#endif
+
             // Apply stride pattern
             computeLegTrajectory(footPos, legPhase, direction, speed);
+
+#ifdef DEBUG_GAIT
+            // Debug: print modified position occasionally
+            if (debugCounter % 50 == 0 && i == 0)
+            {
+                fprintf(stderr, "Leg %d computed pos: (%.1f, %.1f, %.1f)\n",
+                        i, footPos.x, footPos.y, footPos.z);
+            }
+#endif
 
             // Convert position to joint angles
             LegPosition angles;
@@ -109,7 +138,6 @@ public:
                 return false;
             }
         }
-
         return true;
     }
 
@@ -140,7 +168,6 @@ public:
             // Small delay between legs for smoother movement
             usleep(50000);
         }
-
         return true;
     }
 
@@ -158,7 +185,6 @@ public:
             // Need to reconfigure gait pattern for new type
             configureGaitPattern(newParams.type);
         }
-
         params = newParams;
         return true;
     }
@@ -167,19 +193,46 @@ private:
     // Compute leg trajectory for a given phase
     void computeLegTrajectory(Point3D &position, double phase, double direction, double speed)
     {
-        // Convert direction from degrees to radians
-        double angleRad = direction * M_PI / 180.0;
+        // Convert direction from degrees to radians - precalculate when direction changes
+        static double lastDirection = -999.0;
+        static double sinAngle = 0.0, cosAngle = 1.0;
+
+        if (direction != lastDirection)
+        {
+            double angleRad = direction * M_PI / 180.0;
+            sinAngle = sin(angleRad);
+            cosAngle = cos(angleRad);
+            lastDirection = direction;
+        }
+
         double strideLength = params.stepLength * speed;
 
-        // Calculate stride vector components
-        double strideX = strideLength * cos(angleRad);
-        double strideY = strideLength * sin(angleRad);
+        // Calculate stride vector components using precalculated sin/cos
+        double strideX = strideLength * cosAngle;
+        double strideY = strideLength * sinAngle;
+
+        // Remove unused variables that were causing warnings
+        // double origX = position.x;
+        // double origY = position.y;
+        // double origZ = position.z;
+
+        // Use a constant precomputed duty factor to avoid division
+        const double dutyFactor = params.dutyFactor;
+        const double invDutyFactor = 1.0 / dutyFactor;
+        const double invSwingFactor = 1.0 / (1.0 - dutyFactor);
+
+        // Store initial position for trajectory verification (in debug mode only)
+#ifdef DEBUG_TRAJECTORY
+        double origX = position.x;
+        double origY = position.y;
+        double origZ = position.z;
+#endif
 
         // Determine if stance or swing phase
-        if (phase < params.dutyFactor)
+        if (phase < dutyFactor)
         {
             // Stance phase - foot is on ground, moving backward
-            double stancePhase = phase / params.dutyFactor;
+            double stancePhase = phase * invDutyFactor;
             position.x += strideX * (0.5 - stancePhase);
             position.y += strideY * (0.5 - stancePhase);
             // Height is constant during stance phase
@@ -187,13 +240,25 @@ private:
         else
         {
             // Swing phase - foot is in air, moving forward
-            double swingPhase = (phase - params.dutyFactor) / (1.0 - params.dutyFactor);
+            double swingPhase = (phase - dutyFactor) * invSwingFactor;
             position.x += strideX * (swingPhase - 0.5);
             position.y += strideY * (swingPhase - 0.5);
 
-            // Add vertical component - parabolic trajectory for swing
-            position.z += params.stepHeight * (1.0 - 4.0 * pow(swingPhase - 0.5, 2.0));
+            // Add vertical component - optimize parabolic trajectory calculation
+            // Original: position.z += params.stepHeight * (1.0 - 4.0 * pow(swingPhase - 0.5, 2.0));
+            double swingOffset = swingPhase - 0.5;
+            position.z += params.stepHeight * (1.0 - 4.0 * (swingOffset * swingOffset));
         }
+
+#ifdef DEBUG_TRAJECTORY
+        // Less frequent but more informative debug output
+        static int debugCount = 0;
+        if (++debugCount % 500 == 0)
+        {
+            fprintf(stderr, "Trajectory for phase=%.2f: delta=(%.2f,%.2f,%.2f)\n",
+                    phase, position.x - origX, position.y - origY, position.z - origZ);
+        }
+#endif
     }
 
     // Member variables

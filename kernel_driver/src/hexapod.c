@@ -179,6 +179,7 @@ static int __init hexapod_init(void)
     int ret;
     struct i2c_adapter *adapter;
 
+    // Simplified message - less verbose
     pr_info("Hexapod: initializing driver\n");
 
     /* Initialize the data structure */
@@ -206,8 +207,8 @@ static int __init hexapod_init(void)
         goto fail_i2c;
     }
 
-    /* Initialize MPU6050 */
-    hexapod_dev.mpu6050 = i2c_new_dummy(adapter, MPU6050_I2C_ADDR);
+    /* Initialize MPU6050 - use i2c_new_dummy_device instead of deprecated i2c_new_dummy */
+    hexapod_dev.mpu6050 = i2c_new_dummy_device(adapter, MPU6050_I2C_ADDR);
     if (!hexapod_dev.mpu6050)
     {
         pr_err("Hexapod: failed to create MPU6050 I2C client\n");
@@ -240,7 +241,8 @@ static int __init hexapod_init(void)
 
     i2c_put_adapter(adapter);
     hexapod_dev.initialized = true;
-    pr_info("Hexapod: driver initialized successfully\n");
+    // Simplified success message
+    pr_info("Hexapod: driver initialized\n");
     return 0;
 
 fail_servo:

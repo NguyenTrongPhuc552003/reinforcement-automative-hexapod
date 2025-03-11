@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Configuration
-BEAGLEBONE_IP="192.168.1.6"  # Your BeagleBone IP
+BEAGLEBONE_IP="192.168.1.4"  # Your BeagleBone IP
 BEAGLEBONE_USER="debian"
 DEPLOY_DIR="../deploy"
 
@@ -33,9 +33,12 @@ echo -e "${YELLOW}Getting kernel version from BeagleBone...${NC}"
 KERNEL_VERSION=$(ssh ${BEAGLEBONE_USER}@${BEAGLEBONE_IP} 'uname -r')
 echo -e "BeagleBone kernel version: ${GREEN}${KERNEL_VERSION}${NC}"
 
-# Create remote directory
-echo "Creating remote directory..."
-ssh ${BEAGLEBONE_USER}@${BEAGLEBONE_IP} "mkdir -p ~/hexapod_driver"
+# Check if hexapod driver directory exists, if not create it
+echo -e "${YELLOW}Checking if hexapod driver directory exists...${NC}"
+if ! ssh ${BEAGLEBONE_USER}@${BEAGLEBONE_IP} '[ -d ~/hexapod_driver ]'; then
+    echo -e "${YELLOW}Creating hexapod driver directory...${NC}"
+    ssh ${BEAGLEBONE_USER}@${BEAGLEBONE_IP} 'mkdir ~/hexapod_driver'
+fi
 
 # Deploy to BeagleBone
 echo "Deploying to BeagleBone..."

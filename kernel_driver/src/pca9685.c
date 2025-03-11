@@ -6,6 +6,19 @@
 
 /* Global variables */
 static struct i2c_client *pca9685_client;
+// Add support for secondary controller
+static struct i2c_client *pca9685_secondary_client;
+
+// Add a function to select the appropriate client based on channel number
+static struct i2c_client *pca9685_get_client(u8 channel)
+{
+    // Use primary controller for channels 0-15
+    // Use secondary controller for channels 16-31 (mapped to 0-15 internally)
+    if (channel < 16)
+        return pca9685_client;
+    else
+        return pca9685_secondary_client;
+}
 
 /**
  * Write to a PCA9685 register with error handling
@@ -13,14 +26,15 @@ static struct i2c_client *pca9685_client;
 static int pca9685_write_reg(u8 reg, u8 val)
 {
     int ret, retries = 3;
+    struct i2c_client *client = pca9685_get_client(reg / 4);
 
-    if (!pca9685_client)
+    if (!client)
         return -ENODEV;
 
     /* Try up to 3 times with delay between retries */
     while (retries--)
     {
-        ret = i2c_smbus_write_byte_data(pca9685_client, reg, val);
+        ret = i2c_smbus_write_byte_data(client, reg, val);
         if (ret == 0)
             return 0;
 
@@ -40,14 +54,15 @@ static int pca9685_write_reg(u8 reg, u8 val)
 static int pca9685_read_reg(u8 reg)
 {
     int ret, retries = 3;
+    struct i2c_client *client = pca9685_get_client(reg / 4);
 
-    if (!pca9685_client)
+    if (!client)
         return -ENODEV;
 
     /* Try up to 3 times with delay between retries */
     while (retries--)
     {
-        ret = i2c_smbus_read_byte_data(pca9685_client, reg);
+        ret = i2c_smbus_read_byte_data(client, reg);
         if (ret >= 0)
             return ret;
 
@@ -78,8 +93,8 @@ int pca9685_init(void)
         return -ENODEV;
     }
 
-    /* Create I2C client */
-    pca9685_client = i2c_new_dummy(adapter, PCA9685_I2C_ADDR);
+    /* Create I2C client - use i2c_new_dummy_device instead of i2c_new_dummy */
+    pca9685_client = i2c_new_dummy_device(adapter, PCA9685_I2C_ADDR);
     i2c_put_adapter(adapter);
 
     if (!pca9685_client)
@@ -186,7 +201,8 @@ int pca9685_set_pwm_freq(u16 freq_hz)
     if (ret < 0)
         return ret;
 
-    pr_info("PCA9685: Set frequency to %d Hz (prescale %d)\n", freq_hz, prescale);
+    // Simplify the debug message - remove excessive details
+    pr_info("PCA9685: Set frequency to %d Hz\n", freq_hz);
     return 0;
 }
 
@@ -197,26 +213,41 @@ int pca9685_set_pwm(u8 channel, u16 on, u16 off)
 {
     int ret;
     u8 reg;
+    u8 data[4];
 
-    if (channel > 15 || on > 4095 || off > 4095)
+    if (channel > 31 || on > 4095 || off > 4095)
         return -EINVAL;
 
-    reg = PCA9685_LED0_ON_L + (channel * 4);
+    reg = PCA9685_LED0_ON_L + ((channel % 16) * 4);
 
-    /* Write all 4 registers */
-    ret = pca9685_write_reg(reg, on & 0xFF);
+    /* Prepare data for all 4 registers at once */
+    data[0] = on & 0xFF;
+    data[1] = (on >> 8) & 0x0F;
+    data[2] = off & 0xFF;
+    data[3] = (off >> 8) & 0x0F;
+
+    /* Write all 4 registers in a single block write if possible */
+    if (i2c_check_functionality(pca9685_get_client(channel)->adapter, I2C_FUNC_SMBUS_WRITE_I2C_BLOCK))
+    {
+        ret = i2c_smbus_write_i2c_block_data(pca9685_get_client(channel), reg, 4, data);
+        if (ret == 0)
+            return 0;
+    }
+
+    /* Fall back to individual writes if block write fails */
+    ret = pca9685_write_reg(reg, data[0]);
     if (ret < 0)
         return ret;
 
-    ret = pca9685_write_reg(reg + 1, (on >> 8) & 0x0F);
+    ret = pca9685_write_reg(reg + 1, data[1]);
     if (ret < 0)
         return ret;
 
-    ret = pca9685_write_reg(reg + 2, off & 0xFF);
+    ret = pca9685_write_reg(reg + 2, data[2]);
     if (ret < 0)
         return ret;
 
-    ret = pca9685_write_reg(reg + 3, (off >> 8) & 0x0F);
+    ret = pca9685_write_reg(reg + 3, data[3]);
     if (ret < 0)
         return ret;
 
@@ -230,7 +261,7 @@ int pca9685_set_pwm_us(u8 channel, u16 us)
 {
     unsigned int pulse;
 
-    if (channel > 15)
+    if (channel > 31)
         return -EINVAL;
 
     /* Ensure pulse width is within limits */
@@ -263,6 +294,17 @@ void pca9685_cleanup(void)
         /* Unregister client */
         i2c_unregister_device(pca9685_client);
         pca9685_client = NULL;
+    }
+
+    if (pca9685_secondary_client)
+    {
+        /* Turn off all outputs */
+        pca9685_write_reg(PCA9685_ALL_LED_OFF_L, 0);
+        pca9685_write_reg(PCA9685_ALL_LED_OFF_H, 0x10); /* Full off */
+
+        /* Unregister client */
+        i2c_unregister_device(pca9685_secondary_client);
+        pca9685_secondary_client = NULL;
     }
 }
 

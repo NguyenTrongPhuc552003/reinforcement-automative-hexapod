@@ -39,18 +39,51 @@ log() {
 build_docker_image() {
     local cache_flag=$1
     log "${YELLOW}" "Preparing Docker image..."
+    
+    # Check if Docker is installed and running
+    if ! command -v docker &> /dev/null; then
+        log "${RED}" "Docker is not installed or not in PATH"
+        exit 1
+    fi
+    
+    # Verify docker-entrypoint.sh exists
+    if [ ! -f "${PROJECT_ROOT}/docker-entrypoint.sh" ]; then
+        log "${RED}" "docker-entrypoint.sh not found in project root!"
+        exit 1
+    fi
+    
+    # Build the Docker image
     docker build ${cache_flag} -t hexapod-builder "${PROJECT_ROOT}" || {
         log "${RED}" "Docker build failed!"
         exit 1
     }
+    
+    # Verify image was created
+    if ! docker images | grep -q hexapod-builder; then
+        log "${RED}" "Failed to create Docker image 'hexapod-builder'"
+        exit 1
+    fi
+    
+    log "${GREEN}" "Docker image 'hexapod-builder' created successfully"
 }
 
 # Function to build kernel module
 build_kernel_module() {
     log "${YELLOW}" "Preparing kernel module..."
+    
+    # Release build by default, add DEBUG=1 for debug build
+    local build_type="release"
+    if [ "$DEBUG" = "1" ]; then
+        build_type="debug"
+        log "${YELLOW}" "Building DEBUG version of kernel module..."
+    else
+        log "${YELLOW}" "Building RELEASE version of kernel module..."
+    fi
+    
     docker run --rm \
         -v "${KERNEL_DRIVER_DIR}:/build/module" \
         -v "${DEPLOY_DIR}:/build/deploy" \
+        -e BUILD_TYPE=${build_type} \
         hexapod-builder kernel || {
         log "${RED}" "Kernel module build failed!"
         exit 1
@@ -60,9 +93,30 @@ build_kernel_module() {
 # Function to build user space program
 build_user_space() {
     log "${YELLOW}" "Preparing user space programs..."
+    
+    # Check if Docker image exists
+    if ! docker images | grep -q hexapod-builder; then
+        log "${YELLOW}" "Docker image not found. Building it first..."
+        build_docker_image ""
+    fi
+    
+    # Release build by default, add DEBUG=1 for debug build
+    local env_params=""
+    if [ "$DEBUG" = "1" ]; then
+        env_params="-e DEBUG=1"
+        log "${YELLOW}" "Building DEBUG version of user space programs..."
+    else
+        log "${YELLOW}" "Building RELEASE version of user space programs..."
+    fi
+    
+    # Create deploy directory if it doesn't exist
+    mkdir -p "${DEPLOY_DIR}"
+    
+    # Run Docker with proper command format
     docker run --rm \
         -v "${USER_SPACE_DIR}:/build/user_space" \
         -v "${DEPLOY_DIR}:/build/deploy" \
+        ${env_params} \
         hexapod-builder user_space || {
         log "${RED}" "User space program build failed!"
         exit 1
@@ -70,94 +124,24 @@ build_user_space() {
 }
 
 # Function to create install script
-create_install_script() {
-    cat > "${DEPLOY_DIR}/install.sh" << 'EOF'
-#!/bin/bash
-
-echo "Installing Hexapod driver..."
-
-# Stop if any command fails
-set -e
-
-# Check for i2c-tools
-if ! command -v i2cdetect &> /dev/null; then
-    echo "Installing i2c-tools..."
-    sudo apt-get update
-    sudo apt-get install -y i2c-tools
-fi
-
-# Check I2C bus 3
-echo "Checking I2C bus 3..."
-if ! i2cdetect -l | grep -q "i2c-3"; then
-    echo "Error: I2C bus 3 not found!"
-    echo "Please enable I2C3 in your device tree overlay."
-    exit 1
-fi
-
-# Scan I2C bus 3 for devices
-echo "Scanning I2C bus 3 for devices..."
-i2cdetect -y -r 3
-
-# Check for conflicting drivers
-echo "Checking for conflicting drivers..."
-for module in inv_mpu6050_i2c inv_mpu6050 mpu6050_i2c; do
-    if lsmod | grep -q "^$module"; then
-        echo "Removing conflicting module: $module"
-        sudo rmmod $module || true
-    fi
-done
-
-# Install kernel module
-echo "Installing kernel module..."
-sudo rmmod hexapod_driver 2>/dev/null || true
-
-# Clear dmesg to make our debug messages easier to find
-sudo dmesg -C
-
-# Install the module
-sudo insmod hexapod_driver.ko
-
-# Show debug messages
-echo "Driver messages:"
-sudo dmesg
-
-# Set permissions for device files
-echo "Setting up permissions..."
-sudo chmod 666 /dev/hexapod
-
-echo "Installation complete!"
-EOF
+copy_install_script() {
+    log "${YELLOW}" "Copying installation script..."
+    local script_dir="$(dirname "${BASH_SOURCE[0]}")"
+    cp "${script_dir}/install.sh" "${DEPLOY_DIR}/"
     chmod +x "${DEPLOY_DIR}/install.sh"
-}
-
-# Function to uninstall the driver and its dependencies
-create_uninstall_script() {
-    cat > "${DEPLOY_DIR}/uninstall.sh" << 'EOF'
-#!/bin/bash
-
-# Check if the driver is installed
-if ! lsmod | grep -q hexapod_driver; then
-    echo "Hexapod driver is not installed!"
-    exit 1
-fi
-echo "Uninstalling Hexapod driver..."
-
-# Stop if any command fails
-set -e
-
-# Remove the module
-echo "Removing kernel module..."
-sudo rmmod hexapod_driver 2>/dev/null || true
-
-echo "Uninstallation complete!"
-EOF
-    chmod +x "${DEPLOY_DIR}/uninstall.sh"
+    log "${GREEN}" "Installation script copied successfully"
 }
 
 # Parse command line arguments
 case "$1" in
     clean)
         log "${YELLOW}" "Cleaning build artifacts..."
+
+        # Check if Docker image exists before cleaning
+        if ! docker images | grep -q hexapod-builder; then
+            log "${YELLOW}" "Docker image doesn't exist, build first!"
+            exit 0
+        fi
         
         # Clean kernel driver and user space using Docker
         docker run --rm \
@@ -202,8 +186,7 @@ case "$1" in
         build_docker_image "--no-cache"
         build_kernel_module
         build_user_space
-        create_install_script
-        create_uninstall_script
+        copy_install_script
         log "${GREEN}" "Build completed successfully!"
         log "${GREEN}" "Deployment package created in: ${DEPLOY_DIR}"
         ;;
@@ -214,8 +197,7 @@ case "$1" in
         build_docker_image ""
         build_kernel_module
         build_user_space
-        create_install_script
-        create_uninstall_script
+        copy_install_script
         log "${GREEN}" "Build completed successfully!"
         log "${GREEN}" "Deployment package created in: ${DEPLOY_DIR}"
         ;;
