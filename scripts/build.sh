@@ -15,6 +15,12 @@ KERNEL_MODULE_DIR="${PROJECT_ROOT}/driver"
 USER_SPACE_DIR="${PROJECT_ROOT}/app"
 DEPLOY_DIR="${PROJECT_ROOT}/deploy"
 
+# Create deploy directory with "whoami" user permission if it doesn't exist
+if [ ! -d "${DEPLOY_DIR}" ]; then
+    mkdir -p "${DEPLOY_DIR}"
+    chown -R "$(whoami)":"$(whoami)" "${DEPLOY_DIR}"
+fi
+
 # Function to show usage
 usage() {
     echo "Usage: $0 [OPTIONS]"
@@ -23,6 +29,7 @@ usage() {
     echo "  -m, module        Build kernel modules"
     echo "  -u, user          Build user space programs"
     echo "  -c, clean         Clean build artifacts"
+    echo "  -i, install       Create installation script"
     echo "  -n, --no-cache    Build all without cache"
     echo "  -h, --help        Show this help message"
     exit 1
@@ -103,9 +110,6 @@ build_user_space() {
         log "${YELLOW}" "Building RELEASE version of user space programs..."
     fi
     
-    # Create deploy directory if it doesn't exist
-    mkdir -p "${DEPLOY_DIR}"
-    
     # Run Docker with proper command format
     docker run --rm \
         -v "${USER_SPACE_DIR}:/build/user" \
@@ -118,7 +122,7 @@ build_user_space() {
 }
 
 # Function to create install script
-copy_install_script() {
+build_install_script() {
     log "${YELLOW}" "Copying installation script..."
     local script_dir="$(dirname "${BASH_SOURCE[0]}")"
     cp "${script_dir}/install.sh" "${DEPLOY_DIR}/"
@@ -167,21 +171,21 @@ case "$1" in
             fi
         fi
         
-        # Remove Docker image if it exists
-        if docker images | grep -q hexapod-builder; then
-            log "${GREEN}" "Removing Docker image..."
-            docker rmi hexapod-builder || true
-        fi
-        
         log "${GREEN}" "Clean completed successfully!"
         exit 0
         ;;
 
     -n | --no-cache)
+        # Remove Docker image if it exists
+        if docker images | grep -q hexapod-builder; then
+            log "${GREEN}" "Removing Docker image..."
+            docker rmi hexapod-builder || true
+        fi
+
         build_docker_image "--no-cache"
         build_kernel_module
         build_user_space
-        copy_install_script
+        build_install_script
         log "${GREEN}" "Build completed successfully!"
         log "${GREEN}" "Deployment package created in: ${DEPLOY_DIR}"
         ;;
@@ -198,11 +202,16 @@ case "$1" in
         log "${GREEN}" "User space programs build completed successfully!"
         ;;
 
+    -i | install)
+        build_install_script
+        log "${GREEN}" "Installation script created successfully!"
+        ;;
+
     "")
         build_docker_image ""
         build_kernel_module
         build_user_space
-        copy_install_script
+        build_install_script
         log "${GREEN}" "Build completed successfully!"
         log "${GREEN}" "Deployment package created in: ${DEPLOY_DIR}"
         ;;
