@@ -20,7 +20,7 @@ log() {
 MAKE_PARAMS="ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} KERNEL_DIR=${KERNEL_DIR}"
 
 case "$1" in
-    "kernel")
+    "module")
         cd /build/module
         log "${GREEN}" "Building kernel module..."
         
@@ -45,8 +45,8 @@ case "$1" in
         log "${GREEN}" "Build successful!"
         ;;
         
-    "user_space")
-        cd /build/user_space
+    "user")
+        cd /build/user
         log "${GREEN}" "Building user space programs..."
         
         # Set debug flag if specified
@@ -64,19 +64,19 @@ case "$1" in
         
         log "${GREEN}" "Copying programs to deploy directory..."
         mkdir -p /build/deploy
-        cp /build/user_space/bin/* /build/deploy/ 2>/dev/null || true
+        cp /build/user/bin/* /build/deploy/ 2>/dev/null || true
         log "${GREEN}" "Build successful!"
         ;;
         
     "clean")
-        # Clean kernel module
+        # Clean kernel modules
         cd /build/module
-        log "${GREEN}" "Cleaning kernel module..."
+        log "${GREEN}" "Cleaning kernel modules..."
         make ${MAKE_PARAMS} clean || true
         
-        # Clean user space
-        cd /build/user_space
-        log "${GREEN}" "Cleaning user space..."
+        # Clean user space programs
+        cd /build/user
+        log "${GREEN}" "Cleaning user space programs..."
         make clean || true
         
         log "${GREEN}" "Clean completed!"

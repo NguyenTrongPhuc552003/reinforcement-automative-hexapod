@@ -11,20 +11,20 @@ NC='\033[0m'
 
 # Get the project root directory
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-KERNEL_DRIVER_DIR="${PROJECT_ROOT}/kernel_driver"
-USER_SPACE_DIR="${PROJECT_ROOT}/user_space"
+KERNEL_MODULE_DIR="${PROJECT_ROOT}/driver"
+USER_SPACE_DIR="${PROJECT_ROOT}/app"
 DEPLOY_DIR="${PROJECT_ROOT}/deploy"
 
 # Function to show usage
 usage() {
     echo "Usage: $0 [OPTIONS]"
     echo "Options:"
-    echo "  (no argument) Build all components"
-    echo "  driver        Build kernel module"
-    echo "  user          Build user space programs"
-    echo "  clean         Clean build artifacts"
-    echo "  --no-cache    Build Docker image without cache"
-    echo "  -h, --help    Show this help message"
+    echo "  (no argument)     Build all components"
+    echo "  -m, module        Build kernel modules"
+    echo "  -u, user          Build user space programs"
+    echo "  -c, clean         Clean build artifacts"
+    echo "  -n, --no-cache    Build all without cache"
+    echo "  -h, --help        Show this help message"
     exit 1
 }
 
@@ -69,23 +69,23 @@ build_docker_image() {
 
 # Function to build kernel module
 build_kernel_module() {
-    log "${YELLOW}" "Preparing kernel module..."
+    log "${YELLOW}" "Preparing kernel modules..."
     
     # Release build by default, add DEBUG=1 for debug build
     local build_type="release"
     if [ "$DEBUG" = "1" ]; then
         build_type="debug"
-        log "${YELLOW}" "Building DEBUG version of kernel module..."
+        log "${YELLOW}" "Building DEBUG version of kernel modules..."
     else
-        log "${YELLOW}" "Building RELEASE version of kernel module..."
+        log "${YELLOW}" "Building RELEASE version of kernel modules..."
     fi
     
     docker run --rm \
-        -v "${KERNEL_DRIVER_DIR}:/build/module" \
+        -v "${KERNEL_MODULE_DIR}:/build/module" \
         -v "${DEPLOY_DIR}:/build/deploy" \
         -e BUILD_TYPE=${build_type} \
-        hexapod-builder kernel || {
-        log "${RED}" "Kernel module build failed!"
+        hexapod-builder module || {
+        log "${RED}" "Kernel modules build failed!"
         exit 1
     }
 }
@@ -93,12 +93,6 @@ build_kernel_module() {
 # Function to build user space program
 build_user_space() {
     log "${YELLOW}" "Preparing user space programs..."
-    
-    # Check if Docker image exists
-    if ! docker images | grep -q hexapod-builder; then
-        log "${YELLOW}" "Docker image not found. Building it first..."
-        build_docker_image ""
-    fi
     
     # Release build by default, add DEBUG=1 for debug build
     local env_params=""
@@ -114,11 +108,11 @@ build_user_space() {
     
     # Run Docker with proper command format
     docker run --rm \
-        -v "${USER_SPACE_DIR}:/build/user_space" \
+        -v "${USER_SPACE_DIR}:/build/user" \
         -v "${DEPLOY_DIR}:/build/deploy" \
         ${env_params} \
-        hexapod-builder user_space || {
-        log "${RED}" "User space program build failed!"
+        hexapod-builder user || {
+        log "${RED}" "User space programs build failed!"
         exit 1
     }
 }
@@ -134,7 +128,7 @@ copy_install_script() {
 
 # Parse command line arguments
 case "$1" in
-    clean)
+    -c | clean)
         log "${YELLOW}" "Cleaning build artifacts..."
 
         # Check if Docker image exists before cleaning
@@ -145,8 +139,8 @@ case "$1" in
         
         # Clean kernel driver and user space using Docker
         docker run --rm \
-            -v "${KERNEL_DRIVER_DIR}:/build/module" \
-            -v "${USER_SPACE_DIR}:/build/user_space" \
+            -v "${KERNEL_MODULE_DIR}:/build/module" \
+            -v "${USER_SPACE_DIR}:/build/user" \
             hexapod-builder clean || {
             # If Docker image doesn't exist, that's fine - continue cleaning
             if [ $? -ne 125 ]; then
@@ -182,7 +176,8 @@ case "$1" in
         log "${GREEN}" "Clean completed successfully!"
         exit 0
         ;;
-    --no-cache)
+
+    -n | --no-cache)
         build_docker_image "--no-cache"
         build_kernel_module
         build_user_space
@@ -190,9 +185,19 @@ case "$1" in
         log "${GREEN}" "Build completed successfully!"
         log "${GREEN}" "Deployment package created in: ${DEPLOY_DIR}"
         ;;
-    -h|--help)
-        usage
+
+    -m | module)
+        build_docker_image ""
+        build_kernel_module
+        log "${GREEN}" "Kernel modules build completed successfully!"
         ;;
+
+    -u | user)
+        build_docker_image ""
+        build_user_space
+        log "${GREEN}" "User space programs build completed successfully!"
+        ;;
+
     "")
         build_docker_image ""
         build_kernel_module
@@ -201,16 +206,7 @@ case "$1" in
         log "${GREEN}" "Build completed successfully!"
         log "${GREEN}" "Deployment package created in: ${DEPLOY_DIR}"
         ;;
-    driver)
-        build_docker_image ""
-        build_kernel_module
-        log "${GREEN}" "Kernel module build completed successfully!"
-        ;;
-    user)
-        build_docker_image ""
-        build_user_space
-        log "${GREEN}" "User space program build completed successfully!"
-        ;;
+        
     *)
         usage
         ;;

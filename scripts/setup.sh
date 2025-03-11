@@ -12,8 +12,8 @@ NC='\033[0m'
 
 # Project paths
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-KERNEL_DRIVER_DIR="${PROJECT_ROOT}/kernel_driver"
-USER_SPACE_DIR="${PROJECT_ROOT}/user_space"
+KERNEL_DRIVER_DIR="${PROJECT_ROOT}/driver"
+USER_SPACE_DIR="${PROJECT_ROOT}/app"
 DOCS_DIR="${PROJECT_ROOT}/docs"
 DEPLOY_DIR="${PROJECT_ROOT}/deploy"
 
@@ -80,7 +80,7 @@ print_header "Creating Directory Structure"
 mkdir -p "${DEPLOY_DIR}"
 mkdir -p "${KERNEL_DRIVER_DIR}/inc"
 mkdir -p "${KERNEL_DRIVER_DIR}/src"
-mkdir -p "${KERNEL_DRIVER_DIR}/device_tree"
+mkdir -p "${KERNEL_DRIVER_DIR}/dts"
 mkdir -p "${USER_SPACE_DIR}/src"
 mkdir -p "${USER_SPACE_DIR}/inc"
 mkdir -p "${USER_SPACE_DIR}/test"

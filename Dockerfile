@@ -40,7 +40,7 @@ RUN ln -s /usr/bin/arm-linux-gnueabihf-g++-${GCC_VERSION} /usr/bin/arm-linux-gnu
 
 # 3. Directory Structure
 WORKDIR /build
-RUN mkdir -p /build/kernel /build/module /build/deploy /build/user_space
+RUN mkdir -p /build/kernel /build/module /build/deploy /build/user
 
 # 4. Kernel Headers for BeagleBone AI
 RUN wget https://rcn-ee.com/repos/debian/pool/main/l/linux-upstream/linux-headers-${KERNEL_VERSION}_1${DEBIAN_VERSION}_armhf.deb && dpkg -x linux-headers-${KERNEL_VERSION}_1${DEBIAN_VERSION}_armhf.deb /build/kernel

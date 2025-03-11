@@ -3,7 +3,6 @@
 #include <string.h>
 #include <signal.h>
 #include <unistd.h>
-#include "hexapod.hpp"
 #include "calibration.hpp"
 
 // Global flag for program termination

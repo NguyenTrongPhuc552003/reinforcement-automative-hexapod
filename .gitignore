@@ -9,25 +9,65 @@
 Module.symvers
 modules.order
 deploy/
+obj/
+bin/
+deps/
+*.d
+*.so
+*.a
+*.la
+*.lo
+*.map
+*.lst
+
+# Calibration and runtime files
+calibration.cfg
+*.log
+*.dat
+*.bin
+*.pcap
+*.csv
+core.*
 
 # Editor and IDE files
 .vscode/
 .idea/
 *.swp
 *~
-
-# Compiled device tree blobs
-*.dtbo
+.project
+.cproject
+.settings/
+.atom/
+.cache/
+.history/
+*.sublime-*
+.vim/
+tags
+.tags*
 
 # Docker artifacts
 .docker/
+.dockerignore
+*.tar
+*.tar.gz
+*.img
+docker-compose.override.yml
 
-# Dependencies
-node_modules/
+# Cross-compilation artifacts
+*.cross
+arm-*/
+toolchain-*/
+sdk-*/
+sysroot/
+staging/
 
-# Logs and databases
-*.log
-*.sqlite
+# BeagleBone specific
+*.dtbo
+*.dtb
+*.jic
+*.rbf
+u-boot/
+bootloader/
 
 # OS generated files
 .DS_Store
@@ -41,3 +81,29 @@ Thumbs.db
 # User-specific files
 *.env
 *.config
+.ssh/
+.bash_history
+.python_history
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg

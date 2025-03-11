@@ -62,8 +62,8 @@ This guide helps you get your hexapod robot up and running quickly.
 
 ## Next Steps
 
-- Customize the gait parameters in `user_space/src/gait.cpp`
-- Create a custom control program based on `user_space/src/main.cpp`
+- Customize the gait parameters in `app/src/gait.cpp`
+- Create a custom control program based on `app/src/main.cpp`
 - Fine-tune the servo calibration with `test_calibration apply`
 ```
 
