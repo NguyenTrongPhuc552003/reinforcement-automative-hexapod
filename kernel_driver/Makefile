@@ -1,7 +1,8 @@
 # Check if we're in Docker build environment
 ifneq ($(wildcard /build/module),)
     # We're in Docker, use the kernel headers from the container
-    KERNEL_DIR ?= /build/kernel/usr/src/linux-headers-4.14.108-ti-r144
+    KERNEL_DIR ?= /build/kernel/usr/src/linux-headers-${KERNEL_VERSION}
+    INSTALL_MOD_PATH ?= $(PWD)/target
 else
     $(error Please use the Docker build environment by running ./scripts/build.sh)
 endif
@@ -23,29 +24,39 @@ obj-m += hexapod_driver.o
 PWD := $(shell pwd)
 
 # Add include directory and build options
-EXTRA_CFLAGS = -I/build/module/inc
+EXTRA_CFLAGS += -I$(PWD)/inc
 EXTRA_CFLAGS += -DDEBUG
 EXTRA_CFLAGS += -march=armv7-a -mfpu=vfp -mfloat-abi=softfp
 
 # Add ARM libgcc path
-EXTRA_LDFLAGS := -L/usr/lib/gcc-cross/arm-linux-gnueabihf/8
+EXTRA_LDFLAGS := -L/usr/lib/gcc-cross/arm-linux-gnueabihf/${GCC_VERSION}
 
-# Add dependency handling
-KBUILD_EXTRA_SYMBOLS := $(shell find /build/module -name Module.symvers)
+# Fix circular dependency issue by only including external symbol files
+# Look for Module.symvers in other paths but not the current build directory
+KBUILD_EXTRA_SYMBOLS := $(shell find /build/module -path "$(PWD)" -prune -o -name Module.symvers -print)
 
-# Build modules with verbose output
-all:
-	$(MAKE) -C $(KERNEL_DIR) M=$(PWD) KBUILD_EXTRA_SYMBOLS="$(KBUILD_EXTRA_SYMBOLS)" modules
-	$(MAKE) -C $(KERNEL_DIR) M=$(PWD) modules_install INSTALL_MOD_PATH=$(PWD)/target
+# Build modules
+all: modules
 
 modules:
-	$(MAKE) -C $(KERNEL_DIR) M=$(PWD) modules
+	$(MAKE) -C $(KERNEL_DIR) M=$(PWD) KBUILD_EXTRA_SYMBOLS="$(KBUILD_EXTRA_SYMBOLS)" modules
+
+# Install modules without using modules_install (which requires System.map)
+install: modules
+	@mkdir -p $(INSTALL_MOD_PATH)/lib/modules/$(KERNEL_VERSION)/extra
+	@cp -f hexapod_driver.ko $(INSTALL_MOD_PATH)/lib/modules/$(KERNEL_VERSION)/extra/
+	@echo "Installed module to $(INSTALL_MOD_PATH)/lib/modules/$(KERNEL_VERSION)/extra/"
+
+# Run depmod if available
+depmod: install
+	@if [ -f "$(KERNEL_DIR)/System.map" ]; then \
+		depmod -b $(INSTALL_MOD_PATH) $(KERNEL_VERSION); \
+	else \
+		echo "System.map not available - skipping depmod (this is expected in cross-compile)"; \
+	fi
 
 # Clean target
 clean:
 	$(MAKE) -C $(KERNEL_DIR) M=$(PWD) clean
 	rm -f Module.symvers modules.order
-
-# Install target (for development)
-install:
-	$(MAKE) -C $(KERNEL_DIR) M=$(PWD) modules_install
+	rm -rf $(INSTALL_MOD_PATH)

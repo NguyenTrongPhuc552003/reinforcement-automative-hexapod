@@ -132,6 +132,16 @@ bool Hexapod::setLegPosition(uint8_t leg_num, const LegPosition &position)
         return false;
     }
 
+#ifdef DEBUG_POSITIONS
+    // More efficient debug approach - only print every 100 calls and only for specific legs
+    static unsigned int calls = 0;
+    if (++calls % 100 == 0 && (leg_num == 0 || leg_num == 3))
+    {
+        printf("Leg %d at %.2fs: hip=%d, knee=%d, ankle=%d\n",
+               leg_num, getCurrentTime(), position.hip, position.knee, position.ankle);
+    }
+#endif
+
     // Prepare command using legacy struct for ioctl compatibility
     leg_command_t cmd;
     cmd.leg_num = leg_num;
@@ -145,6 +155,11 @@ bool Hexapod::setLegPosition(uint8_t leg_num, const LegPosition &position)
     {
         int err = errno;
         pImpl->setError(err, std::string("Failed to set leg position: ") + strerror(err));
+#ifdef DEBUG_ERRORS
+        // Print a more detailed error message
+        printf("ioctl SET_LEG failed with error %d (%s) for leg %d\n",
+               err, strerror(err), leg_num);
+#endif
         return false;
     }
 
@@ -274,4 +289,12 @@ void Hexapod::printImuData(const ImuData &data)
     printf("Accel: X=%.2fg Y=%.2fg Z=%.2fg, Gyro: X=%.2f° Y=%.2f° Z=%.2f°/s\n",
            data.getAccelX(), data.getAccelY(), data.getAccelZ(),
            data.getGyroX(), data.getGyroY(), data.getGyroZ());
+}
+
+// Helper function to get consistent timestamps
+double Hexapod::getCurrentTime() const
+{
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return ts.tv_sec + (ts.tv_nsec / 1.0e9);
 }

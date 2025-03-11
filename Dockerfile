@@ -1,7 +1,17 @@
-FROM ubuntu:18.04
+# Set the base image to Debian Bookworm
+FROM debian:bookworm-slim
 
 # Set noninteractive installation
 ENV DEBIAN_FRONTEND=noninteractive
+
+# Set kernel header version
+ENV KERNEL_VERSION=5.10.168-ti-r82
+
+# Set Debian version
+ENV DEBIAN_VERSION=bookworm
+
+# Set GCC version
+ENV GCC_VERSION=12
 
 # 1. Base Tools and Build Dependencies
 RUN apt-get update && apt-get install -y \
@@ -20,25 +30,25 @@ RUN apt-get update && apt-get install -y \
 
 # 2. Install ARM cross-compiler toolchain for BeagleBone (GLIBC 2.28 compatible)
 RUN apt-get update && apt-get install -y \
-    gcc-8-arm-linux-gnueabihf \
-    g++-8-arm-linux-gnueabihf \
+    gcc-${GCC_VERSION}-arm-linux-gnueabihf \
+    g++-${GCC_VERSION}-arm-linux-gnueabihf \
     && rm -rf /var/lib/apt/lists/*
 
 # Create symlink for cross-compiler
-RUN ln -s /usr/bin/arm-linux-gnueabihf-gcc-8 /usr/bin/arm-linux-gnueabihf-gcc
-RUN ln -s /usr/bin/arm-linux-gnueabihf-g++-8 /usr/bin/arm-linux-gnueabihf-g++
+RUN ln -s /usr/bin/arm-linux-gnueabihf-gcc-${GCC_VERSION} /usr/bin/arm-linux-gnueabihf-gcc
+RUN ln -s /usr/bin/arm-linux-gnueabihf-g++-${GCC_VERSION} /usr/bin/arm-linux-gnueabihf-g++
 
 # 3. Directory Structure
 WORKDIR /build
 RUN mkdir -p /build/kernel /build/module /build/deploy /build/user_space
 
-# 4. Kernel Headers
-RUN wget https://rcn-ee.com/repos/debian/pool/main/l/linux-upstream/linux-headers-4.14.108-ti-r144_1buster_armhf.deb && dpkg -x linux-headers-4.14.108-ti-r144_1buster_armhf.deb /build/kernel
+# 4. Kernel Headers for BeagleBone AI
+RUN wget https://rcn-ee.com/repos/debian/pool/main/l/linux-upstream/linux-headers-${KERNEL_VERSION}_1${DEBIAN_VERSION}_armhf.deb && dpkg -x linux-headers-${KERNEL_VERSION}_1${DEBIAN_VERSION}_armhf.deb /build/kernel
 
 # 5. Environment Setup
 ENV ARCH=arm
 ENV CROSS_COMPILE=arm-linux-gnueabihf-
-ENV KERNEL_DIR=/build/kernel/usr/src/linux-headers-4.14.108-ti-r144
+ENV KERNEL_DIR=/build/kernel/usr/src/linux-headers-${KERNEL_VERSION}
 
 # 6. Build host tools
 RUN cd ${KERNEL_DIR} && \

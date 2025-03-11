@@ -23,10 +23,22 @@ case "$1" in
     "kernel")
         cd /build/module
         log "${GREEN}" "Building kernel module..."
-        make ${MAKE_PARAMS} || {
+        
+        # Configure build based on build type
+        if [ "$BUILD_TYPE" = "debug" ]; then
+            EXTRA_CFLAGS="-DDEBUG -I/build/module/inc"
+            log "${GREEN}" "Debug build enabled"
+        else
+            EXTRA_CFLAGS="-DNDEBUG -O2 -I/build/module/inc"
+            log "${GREEN}" "Release build enabled"
+        fi
+        
+        # Build the module
+        make ${MAKE_PARAMS} EXTRA_CFLAGS="$EXTRA_CFLAGS" || {
             log "${RED}" "Build failed!"
             exit 1
         }
+        
         log "${GREEN}" "Copying built modules to deploy directory..."
         mkdir -p /build/deploy
         cp /build/module/*.ko /build/deploy/ 2>/dev/null || true
@@ -36,10 +48,20 @@ case "$1" in
     "user_space")
         cd /build/user_space
         log "${GREEN}" "Building user space programs..."
-        make || {
-            log "${RED}" "Build failed!"
-            exit 1
-        }
+        
+        # Set debug flag if specified
+        if [ "$DEBUG" = "1" ]; then
+            make DEBUG=1 || {
+                log "${RED}" "Build failed!"
+                exit 1
+            }
+        else
+            make || {
+                log "${RED}" "Build failed!"
+                exit 1
+            }
+        fi
+        
         log "${GREEN}" "Copying programs to deploy directory..."
         mkdir -p /build/deploy
         cp /build/user_space/bin/* /build/deploy/ 2>/dev/null || true

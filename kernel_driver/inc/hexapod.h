@@ -7,7 +7,7 @@
 #include <linux/ioctl.h>
 
 /* Hardware Configuration */
-#define HEXAPOD_I2C_BUS 3
+#define HEXAPOD_I2C_BUS 2
 #define MPU6050_I2C_ADDR 0x68
 #define PCA9685_I2C_ADDR 0x40
 
@@ -64,6 +64,30 @@ struct hexapod_calibration
     s16 knee_offset;
     s16 ankle_offset;
 };
+
+/* Configuration structure for centralized parameters */
+struct hexapod_config
+{
+    u8 i2c_bus;
+    u8 mpu6050_addr;
+    u8 pca9685_primary_addr;
+    u8 pca9685_secondary_addr;
+    bool use_secondary_controller;
+    u16 pwm_frequency;
+    u16 min_pulse_us;
+    u16 max_pulse_us;
+};
+
+// Default configuration
+static const struct hexapod_config default_config = {
+    .i2c_bus = 2,
+    .mpu6050_addr = 0x68,
+    .pca9685_primary_addr = 0x40,
+    .pca9685_secondary_addr = 0x70,
+    .use_secondary_controller = false,
+    .pwm_frequency = 50,
+    .min_pulse_us = 1000,
+    .max_pulse_us = 2000};
 
 /* Main driver data structure */
 struct hexapod_data

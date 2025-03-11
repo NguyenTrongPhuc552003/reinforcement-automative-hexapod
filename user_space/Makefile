@@ -5,8 +5,9 @@ CXXFLAGS += -march=armv7-a -mfpu=vfp -mfloat-abi=hard
 CXXFLAGS += -pipe -fno-rtti
 
 # Add additional optimization flags
-RELEASE_FLAGS = -DNDEBUG -flto -ffast-math
-DEBUG_FLAGS = -g -DDEBUG
+RELEASE_FLAGS = -DNDEBUG -O3 -flto -ffast-math -fomit-frame-pointer
+# Reduce debug flags - remove overly verbose options
+DEBUG_FLAGS = -g -DDEBUG -O0
 
 # Choose between release and debug
 ifdef DEBUG

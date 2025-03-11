@@ -135,9 +135,18 @@ public:
         double timeDelta = (now.tv_sec - lastUpdate.tv_sec) +
                            (now.tv_nsec - lastUpdate.tv_nsec) / 1.0e9;
 
+        // Skip update if time delta is too small (prevents excessive CPU usage)
+        if (timeDelta < 0.005)
+        { // Only update at ~200Hz max
+            return true;
+        }
+
         bool result = true;
 
-        switch (state)
+        // Cache the current state to avoid repeated comparisons
+        ControllerState currentState = state;
+
+        switch (currentState)
         {
         case ControllerState::WALKING:
         case ControllerState::ROTATING:

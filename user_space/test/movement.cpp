@@ -116,13 +116,15 @@ static bool test_gait(Hexapod &hexapod, GaitType gaitType)
     double start_time, current_time, elapsed_time;
     double direction = 0.0; // Forward
     double speed = 0.5;     // Half-speed
+    bool success = true;
 
-    // Initialize gait parameters
+    // Initialize gait parameters with LARGER values for more noticeable movement
     params.type = gaitType;
-    params.stepHeight = 30.0; // 30mm step height
-    params.stepLength = 60.0; // 60mm stride length
-    params.cycleTime = 2.0;   // 2 seconds per cycle
+    params.stepHeight = 40.0; // Increased from 30.0 to 40.0 mm
+    params.stepLength = 80.0; // Increased from 60.0 to 80.0 mm
+    params.cycleTime = 3.0;   // Increased from 2.0 to 3.0 seconds for slower, more visible movement
 
+    // Set duty factor according to gait type
     switch (gaitType)
     {
     case GaitType::TRIPOD:
@@ -132,7 +134,7 @@ static bool test_gait(Hexapod &hexapod, GaitType gaitType)
 
     case GaitType::WAVE:
         printf("Testing wave gait pattern\n");
-        params.dutyFactor = 0.75; // 75% stance phase
+        params.dutyFactor = 0.8; // 80% stance phase
         break;
 
     case GaitType::RIPPLE:
@@ -145,6 +147,12 @@ static bool test_gait(Hexapod &hexapod, GaitType gaitType)
         return false;
     }
 
+    printf("Initializing gait with parameters:\n");
+    printf("- Step Height: %.1f mm\n", params.stepHeight);
+    printf("- Step Length: %.1f mm\n", params.stepLength);
+    printf("- Cycle Time: %.1f seconds\n", params.cycleTime);
+    printf("- Duty Factor: %.2f\n", params.dutyFactor);
+
     // Initialize gait controller
     if (!gait.init(hexapod, params))
     {
@@ -153,7 +161,12 @@ static bool test_gait(Hexapod &hexapod, GaitType gaitType)
     }
 
     // Center legs before starting
-    gait.centerLegs();
+    printf("Centering legs...\n");
+    if (!gait.centerLegs())
+    {
+        fprintf(stderr, "Failed to center legs\n");
+        return false;
+    }
     sleep(1);
 
     // Run gait pattern for 15 seconds or until Ctrl+C
@@ -161,18 +174,25 @@ static bool test_gait(Hexapod &hexapod, GaitType gaitType)
     start_time = get_time();
     elapsed_time = 0.0;
 
+    printf("Starting movement loop...\n");
+
+    // Use fixed direction initially to troubleshoot
+    direction = 0.0; // straight forward
+
+    // Increase speed for more visible movement
+    speed = 0.8;
+    printf("Using fixed direction %.1f° and speed %.1f\n", direction, speed);
+
     while (elapsed_time < 15.0 && running)
     {
         current_time = get_time();
         elapsed_time = current_time - start_time;
 
-        // Update direction to create circular movement
-        direction = fmod(elapsed_time * 24.0, 360.0);
-
         // Update gait
-        if (!gait.update(current_time, direction, speed))
+        if (!gait.update(elapsed_time, direction, speed))
         {
-            fprintf(stderr, "Gait update error\n");
+            fprintf(stderr, "Gait update error at time %.2f\n", elapsed_time);
+            success = false;
             break;
         }
 
@@ -181,9 +201,17 @@ static bool test_gait(Hexapod &hexapod, GaitType gaitType)
         {
             printf("Time: %.1f s, Direction: %.1f°, Speed: %.1f\n",
                    elapsed_time, direction, speed);
+
+            // Every 5 seconds, switch direction to confirm servos respond
+            if ((int)elapsed_time % 5 == 0)
+            {
+                direction = ((int)elapsed_time % 10 == 0) ? 0.0 : 180.0; // alternate forward/backward
+                printf("Switching direction to %.1f°\n", direction);
+            }
         }
 
-        usleep(20000); // 20ms (50Hz update rate)
+        // Reduce delay for smoother motion - 10ms (100Hz update rate)
+        usleep(10000);
     }
 
     // Clean up - gait will clean itself up in destructor
@@ -192,7 +220,7 @@ static bool test_gait(Hexapod &hexapod, GaitType gaitType)
     printf("Centering legs...\n");
     gait.centerLegs();
 
-    return true;
+    return success;
 }
 
 // Main test program
@@ -215,6 +243,35 @@ int main(int argc, char *argv[])
     }
 
     printf("Connected to hexapod device\n\n");
+
+    // Test IMU to verify device communication is working
+    printf("Testing IMU communication...\n");
+    ImuData imu;
+    if (hexapod.getImuData(imu))
+    {
+        printf("IMU communication successful:\n");
+        hexapod.printImuData(imu);
+    }
+    else
+    {
+        printf("Warning: IMU communication failed. Continuing anyway...\n");
+    }
+
+    // Test a simple leg movement to verify servo communication
+    printf("Testing basic leg movement...\n");
+    LegPosition testPos(15, 15, 15); // small movement to verify servos respond
+    if (hexapod.setLegPosition(0, testPos))
+    {
+        printf("Servo test command sent successfully\n");
+    }
+    else
+    {
+        printf("Warning: Servo test command failed: %s\n",
+               hexapod.getLastErrorMessage().c_str());
+    }
+    sleep(1);
+    hexapod.centerAll();
+    sleep(1);
 
     // Run tests (or specific test if specified)
     if (argc > 1)

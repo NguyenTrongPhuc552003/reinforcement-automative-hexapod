@@ -4,6 +4,14 @@
 #include <linux/slab.h>
 #include "mpu6050.h"
 
+// Add error counters for diagnostics
+static struct
+{
+    atomic_t read_errors;
+    atomic_t write_errors;
+    atomic_t timeout_errors;
+} mpu6050_error_stats;
+
 /**
  * Write to an MPU6050 register
  */
@@ -21,11 +29,18 @@ static int mpu6050_write_reg(struct i2c_client *client, u8 reg, u8 val)
         if (ret == 0)
             return 0;
 
+#ifdef DEBUG_I2C
         dev_err(&client->dev, "Write retry %d for reg 0x%02x\n",
                 2 - retries, reg);
-        // msleep(10);
+#endif
         /* Use schedule_timeout_interruptible() instead of msleep() */
         schedule_timeout_interruptible(msecs_to_jiffies(10));
+    }
+
+    // If all retries failed, increment error counter
+    if (ret < 0)
+    {
+        atomic_inc(&mpu6050_error_stats.write_errors);
     }
 
     return ret;
@@ -48,9 +63,10 @@ static int mpu6050_read_reg(struct i2c_client *client, u8 reg)
         if (ret >= 0)
             return ret;
 
+#ifdef DEBUG_I2C
         dev_err(&client->dev, "Read retry %d for reg 0x%02x\n",
                 2 - retries, reg);
-        // msleep(10);
+#endif
         /* Use schedule_timeout_interruptible() instead of msleep() */
         schedule_timeout_interruptible(msecs_to_jiffies(10));
     }
@@ -96,6 +112,11 @@ int mpu6050_init(struct i2c_client *client)
 
     if (!client)
         return -EINVAL;
+
+    // Initialize error counters
+    atomic_set(&mpu6050_error_stats.read_errors, 0);
+    atomic_set(&mpu6050_error_stats.write_errors, 0);
+    atomic_set(&mpu6050_error_stats.timeout_errors, 0);
 
     /* Verify device ID */
     ret = mpu6050_read_reg(client, MPU6050_WHO_AM_I);
@@ -179,7 +200,8 @@ int mpu6050_init(struct i2c_client *client)
         return ret;
     }
 
-    dev_info(&client->dev, "MPU6050/MPU9250 initialized successfully\n");
+    // Simplified success message
+    dev_info(&client->dev, "MPU6050 initialized\n");
     return 0;
 }
 

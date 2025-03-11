@@ -6,8 +6,8 @@
 #include "hexapod.h"
 
 /* I2C Bus and Addresses */
-#define PCA9685_I2C_BUS 3     /* BeagleBone I2C3 */
-#define PCA9685_I2C_ADDR 0x40 /* Default address */
+#define PCA9685_I2C_BUS HEXAPOD_I2C_BUS /* BeagleBone I2C3 */
+#define PCA9685_I2C_ADDR 0x40           /* Default address */
 
 /* PCA9685 registers */
 #define PCA9685_MODE1 0x00
