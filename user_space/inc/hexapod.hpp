@@ -92,6 +92,9 @@ public:
     // IMU data access
     bool getImuData(ImuData &data) const;
 
+    // Time access
+    double getCurrentTime() const;
+
     // Calibration
     bool setCalibration(uint8_t leg_num, int16_t hip_offset, int16_t knee_offset, int16_t ankle_offset);
 

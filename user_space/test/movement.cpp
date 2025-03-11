@@ -241,21 +241,7 @@ int main(int argc, char *argv[])
                 hexapod.getLastErrorMessage().c_str());
         return 1;
     }
-
     printf("Connected to hexapod device\n\n");
-
-    // Test IMU to verify device communication is working
-    printf("Testing IMU communication...\n");
-    ImuData imu;
-    if (hexapod.getImuData(imu))
-    {
-        printf("IMU communication successful:\n");
-        hexapod.printImuData(imu);
-    }
-    else
-    {
-        printf("Warning: IMU communication failed. Continuing anyway...\n");
-    }
 
     // Test a simple leg movement to verify servo communication
     printf("Testing basic leg movement...\n");

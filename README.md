@@ -2,13 +2,26 @@
 
 A comprehensive control system for a six-legged robot (hexapod) using BeagleBone Black, featuring both kernel-space drivers and user-space applications.
 
+![Hexapod Robot](docs/images/hexapod.jpg)
+
 ## Project Overview
 
-This project implements:
-- Kernel drivers for servo control (PCA9685) and IMU sensor (MPU6050)
-- User-space libraries for kinematics and gait control
-- Test utilities and example applications
-- Comprehensive documentation and hardware guides
+This project implements a complete software stack for controlling a 6-legged robot with 18 servo motors (3 per leg), including:
+
+- Kernel drivers for hardware communication (PCA9685 PWM controllers and MPU6050 IMU)
+- User-space libraries for kinematics and gait generation
+- Calibration system for precise servo adjustment
+- Test utilities for system validation
+- Comprehensive documentation
+
+### Key Features
+
+- **Multiple Gait Patterns**: Tripod, Wave, and Ripple locomotion patterns
+- **Real-time IMU Feedback**: Motion sensing for balance and orientation
+- **Advanced Kinematics**: Precise leg positioning using forward and inverse kinematics
+- **Calibration System**: Easy adjustment for hardware variations
+- **Hardware Abstraction**: Clean separation between application and hardware layers
+- **Testing Tools**: Comprehensive validation of all components
 
 ## System Architecture
 

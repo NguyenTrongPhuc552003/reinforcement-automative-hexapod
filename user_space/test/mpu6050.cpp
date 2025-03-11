@@ -46,13 +46,7 @@ int main(void)
         }
 
         // Print formatted IMU data
-        printf("\rAccel: X=%+6.2fg Y=%+6.2fg Z=%+6.2fg | Gyro: X=%+7.2f° Y=%+7.2f° Z=%+7.2f°/s",
-               imuData.getAccelX(),
-               imuData.getAccelY(),
-               imuData.getAccelZ(),
-               imuData.getGyroX(),
-               imuData.getGyroY(),
-               imuData.getGyroZ());
+        hexapod.printImuData(imuData);
         fflush(stdout);
 
         // Short delay

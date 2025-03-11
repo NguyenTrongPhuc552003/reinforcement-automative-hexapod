@@ -12,11 +12,11 @@ The hexapod robot uses the following key hardware components:
 
 The I2C bus 3 on BeagleBone Black is used for connecting sensors and actuators:
 
-| Device          | I2C Address | Bus | Description                  |
-|-----------------|-------------|-----|------------------------------|
-| MPU6050         | 0x68        | 3   | 6-axis IMU sensor           |
-| PCA9685 Primary | 0x40        | 3   | 16-channel PWM controller   |
-| PCA9685 Secondary | 0x70      | 3   | 16-channel PWM controller (optional) |
+| Device            | I2C Address | Bus | Description                          |
+|-------------------|-------------|-----|--------------------------------------|
+| MPU6050           | 0x68        | 3   | 6-axis IMU sensor                    |
+| PCA9685 Primary   | 0x40        | 3   | 16-channel PWM controller            |
+| PCA9685 Secondary | 0x70        | 3   | 16-channel PWM controller (optional) |
 
 ## MPU6050 IMU Sensor
 
@@ -31,8 +31,8 @@ The MPU6050 is a 6-axis motion tracking device combining a 3-axis gyroscope and 
 ### Pin Connections
 - VCC: 3.3V
 - GND: Ground
-- SCL: P9_19 (I2C3_SCL)
-- SDA: P9_20 (I2C3_SDA)
+- SCL: P9_19 (I2C2_SCL)
+- SDA: P9_20 (I2C2_SDA)
 - INT: Not connected
 
 ### Data Interpretation
@@ -52,8 +52,8 @@ The PCA9685 is a 16-channel, 12-bit PWM controller.
 ### Pin Connections
 - VCC: 3.3V
 - GND: Ground
-- SCL: P9_19 (I2C3_SCL)
-- SDA: P9_20 (I2C3_SDA)
+- SCL: P9_19 (I2C2_SCL)
+- SDA: P9_20 (I2C2_SDA)
 - OE: Not connected (enabled by default)
 
 ## Servo Motors
