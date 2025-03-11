@@ -1,6 +1,6 @@
 # Cross-compiler for BeagleBone
 CXX = arm-linux-gnueabihf-g++
-CXXFLAGS = -Wall -Wextra -O2 -std=c++14 -I./inc -fPIC
+CXXFLAGS = -Wall -Wextra -O2 -std=c++17 -I./inc -fPIC
 CXXFLAGS += -march=armv7-a -mfpu=vfp -mfloat-abi=hard
 CXXFLAGS += -pipe -fno-rtti
 
