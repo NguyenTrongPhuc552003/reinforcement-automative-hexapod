@@ -1,8 +1,10 @@
-# Hexapod Robot Architecture Documentation
+# Hexapod Software Architecture
 
 ## System Overview
 
-The hexapod robot control system is implemented as a user-space application interfacing with kernel-space drivers. The system provides control over six legs, each with three degrees of freedom (hip, knee, ankle), and includes IMU sensing capabilities.
+The hexapod robot control system follows a layered architecture with clear separation between kernel-space and user-space components. This design maximizes flexibility, maintainability, and performance for real-time robot control.
+
+## Architecture Diagram
 
 ## Key Components
 

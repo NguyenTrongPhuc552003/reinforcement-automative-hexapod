@@ -47,9 +47,11 @@ public:
     // Get singleton instance
     static Kinematics &getInstance();
 
-    // Non-copyable, non-movable
+    // Constructor and assignment operators for singleton
     Kinematics(const Kinematics &) = delete;
     Kinematics &operator=(const Kinematics &) = delete;
+
+    // Move constructor and assignment operator for singleton
     Kinematics(Kinematics &&) = delete;
     Kinematics &operator=(Kinematics &&) = delete;
 

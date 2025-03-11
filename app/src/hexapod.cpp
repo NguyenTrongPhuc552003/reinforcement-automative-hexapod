@@ -286,7 +286,7 @@ void Hexapod::printLegPosition(const LegPosition &position)
 
 void Hexapod::printImuData(const ImuData &data)
 {
-    printf("Accel: X=%.2fg Y=%.2fg Z=%.2fg, Gyro: X=%.2f° Y=%.2f° Z=%.2f°/s\n",
+    printf("\rAccel: X=%+6.2fg Y=%+6.2fg Z=%+6.2fg | Gyro: X=%+7.2f° Y=%+7.2f° Z=%+7.2f°/s",
            data.getAccelX(), data.getAccelY(), data.getAccelZ(),
            data.getGyroX(), data.getGyroY(), data.getGyroZ());
 }

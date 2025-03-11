@@ -2,103 +2,163 @@
 
 ## Overview
 
-The hexapod robot uses the following key hardware components:
-- BeagleBone Black as the control board
-- MPU6050 6-axis IMU sensor
-- PCA9685 PWM controller(s) for servo control
-- MG996R servo motors (18 units, 3 per leg)
+This document describes the hardware components of the hexapod robot and provides detailed specifications, wiring diagrams, and configuration information.
+
+![Hexapod Hardware Overview](../resource/overview.jpg)
+
+## Robot Specifications
+
+| Parameter             | Value                                      |
+|-----------------------|--------------------------------------------|
+| Dimensions            | 300mm × 300mm × 150mm (L×W×H)              |
+| Weight                | ~1.5kg (without battery)                   |
+| Operating Voltage     | 6V (servos), 5V (logic)                    |
+| Power Consumption     | 2-10A depending on movement                |
+| Maximum Speed         | ~0.3m/s                                    |
+| Control Board         | BeagleBone AI/Black                        |
+| Servo Motors          | 18× MG996R (or compatible)                 |
+| Degrees of Freedom    | 18 (3 per leg)                             |
+| Operating Time        | ~1 hour (with 5000mAh battery)             |
+| Sensing               | 6-axis IMU (accelerometer + gyroscope)     |
+
+## Component List
+
+| Component                 | Quantity | Description                            |
+|---------------------------|----------|----------------------------------------|
+| BeagleBone Black/Green    | 1        | Main control board                     |
+| MG996R Servo Motors       | 18       | 3 per leg (hip, knee, ankle)           |
+| PCA9685 PWM Controller    | 2        | 16-channel PWM controller              |
+| MPU6050 IMU Sensor        | 1        | 6-axis accelerometer + gyroscope       |
+| 6V 10A Power Supply       | 1        | For powering servos                    |
+| Voltage Regulator 5V      | 1        | For logic power                        |
+| Aluminum/Plastic Brackets | 18       | For leg joints                         |
+| Body Frame                | 1        | Central chassis                        |
+| Leg Segments              | 18       | Connecting rods for legs               |
+| Foot Pads                 | 6        | Non-slip contact points                |
+| Wires and Connectors      | Assorted | For electrical connections             |
+| Mounting Hardware         | Assorted | Screws, nuts, standoffs                |
+
+## Mechanical Architecture
+
+The hexapod follows a standard hexapod design with 6 legs arranged radially around a central body:
+
+- **Body**: Hexagonal or circular platform housing the control electronics
+- **Legs**: 6 legs with 3 joints each (hip, knee, ankle)
+- **Joint Arrangement**:
+  - Hip: Rotates horizontally (parallel to body)
+  - Knee: Rotates vertically (perpendicular to hip)
+  - Ankle: Rotates vertically (perpendicular to knee)
+
+### Dimensions
+
+- **Body Diameter**: 150mm
+- **Leg Segments**:
+  - Hip to Knee (COXA): 30mm
+  - Knee to Ankle (FEMUR): 85mm
+  - Ankle to Foot (TIBIA): 130mm
+- **Total Leg Extension**: ~245mm fully extended
+
+## Electrical Architecture
+
+### Power System
+
+- **Main Power**: 6V, 10A power supply or battery
+- **Power Distribution**:
+  - Separate power rails for servos and logic
+  - Common ground between all components
+- **Protection**:
+  - Fuse on main power line (10A)
+  - Reverse polarity protection
+  - Logic level isolation between BeagleBone and servo power
+
+### Control System
+
+- **Main Controller**: BeagleBone Black/Green
+  - AM335x 1GHz ARM Cortex-A8 processor
+  - 512MB DDR3 RAM
+  - Linux operating system
+
+- **Servo Control**: Via PCA9685 PWM controllers
+  - 2× PCA9685 boards (primary and secondary)
+  - I2C communication from BeagleBone
+  - 50Hz PWM signal generation
+
+- **Sensing**:
+  - MPU6050 IMU for orientation detection
+  - Additional sensor connections available for expansion
 
 ## I2C Bus Configuration
 
-The I2C bus 3 on BeagleBone Black is used for connecting sensors and actuators:
+The I2C bus 2 on BeagleBone is used for connecting sensors and actuators:
 
-| Device          | I2C Address | Bus | Description                  |
-|-----------------|-------------|-----|------------------------------|
-| MPU6050         | 0x68        | 3   | 6-axis IMU sensor           |
-| PCA9685 Primary | 0x40        | 3   | 16-channel PWM controller   |
-| PCA9685 Secondary | 0x70      | 3   | 16-channel PWM controller (optional) |
+| Device            | I2C Address | Bus | Description                          |
+|-------------------|-------------|-----|--------------------------------------|
+| MPU6050           | 0x68        | 2   | 6-axis IMU sensor                    |
+| PCA9685 Primary   | 0x40        | 2   | 16-channel PWM controller            |
+| PCA9685 Secondary | 0x70        | 2   | 16-channel PWM controller (optional) |
 
-## MPU6050 IMU Sensor
+### BeagleBone Pin Configuration
 
-The MPU6050 is a 6-axis motion tracking device combining a 3-axis gyroscope and 3-axis accelerometer.
+| BeagleBone Pin | Function   | Connected To               |
+|----------------|------------|----------------------------|
+| P9_19          | I2C2_SCL   | SCL of all I2C devices     |
+| P9_20          | I2C2_SDA   | SDA of all I2C devices     |
+| P9_1, P9_2     | GND        | Ground for all devices     |
+| P9_7, P9_8     | SYS_5V     | Logic power for shields    |
+| P9_3, P9_4     | DC_3.3V    | 3.3V sensors (e.g. MPU6050)|
 
-### Configuration
-- Accelerometer Range: ±2g
-- Gyroscope Range: ±500 degrees/second
-- Sample Rate: 100Hz
-- Digital Low-Pass Filter: 10Hz
+## Servo Motor Specifications
 
-### Pin Connections
-- VCC: 3.3V
-- GND: Ground
-- SCL: P9_19 (I2C3_SCL)
-- SDA: P9_20 (I2C3_SDA)
-- INT: Not connected
+Type: MG996R (or compatible) high-torque metal gear servo
 
-### Data Interpretation
-- Accelerometer data is in raw 16-bit format (divide by 16384 to get values in g's)
-- Gyroscope data is in raw 16-bit format (divide by 65.5 to get values in degrees/second)
-
-## PCA9685 PWM Controller
-
-The PCA9685 is a 16-channel, 12-bit PWM controller.
-
-### Configuration
-- PWM Frequency: 50Hz (standard for servos)
-- I2C Address: 0x40 (Primary), 0x70 (Secondary, optional)
-- Output Mode: Push-pull
-- Internal oscillator: 25MHz
-
-### Pin Connections
-- VCC: 3.3V
-- GND: Ground
-- SCL: P9_19 (I2C3_SCL)
-- SDA: P9_20 (I2C3_SDA)
-- OE: Not connected (enabled by default)
-
-## Servo Motors
-
-MG996R metal gear servos are used for all joints.
-
-### Specifications
-- Operating Voltage: 4.8-6.6V
-- Torque: 9.4 kg-cm (4.8V) to 11 kg-cm (6.6V)
-- Speed: 0.17 sec/60° (4.8V) to 0.14 sec/60° (6.6V)
-- Range: 180° (controlled as ±90°)
-- PWM Signal: 1-2ms pulse width (50Hz frequency)
-
-### Joint Assignment
-- Hip Joints: Controls horizontal movement (±90°)
-- Knee Joints: Controls vertical movement (±90°)
-- Ankle Joints: Controls final foot position (±90°)
+| Parameter          | Specification                             |
+|--------------------|-------------------------------------------|
+| Operating Voltage  | 4.8V to 6.6V                              |
+| Stall Torque       | 9.4 kg·cm (4.8V) / 11 kg·cm (6.0V)        |
+| Speed              | 0.17 sec/60° (4.8V) / 0.14 sec/60° (6.0V) |
+| Weight             | 55g                                        |
+| Dimensions         | 40.7 × 19.7 × 42.9 mm                      |
+| Control Signal     | PWM, 1-2ms pulse, 50Hz                     |
+| Rotation Range     | 180° (controlled as ±90°)                  |
+| Working Temperature| -30°C to +60°C                             |
 
 ## Servo Mapping
 
-Below is the mapping of leg numbers, joints, and PWM channels:
+Each servo is connected to a specific channel on the PCA9685 controllers.
 
-| Leg | Joint   | PWM Channel | Controller |
-|-----|---------|-------------|------------|
-| 0   | Hip     | 0           | Primary    |
-| 0   | Knee    | 1           | Primary    |
-| 0   | Ankle   | 2           | Primary    |
-| 1   | Hip     | 3           | Primary    |
-| 1   | Knee    | 4           | Primary    |
-| 1   | Ankle   | 5           | Primary    |
-| 2   | Hip     | 6           | Primary    |
-| 2   | Knee    | 7           | Primary    |
-| 2   | Ankle   | 8           | Primary    |
-| 3   | Hip     | 9           | Primary    |
-| 3   | Knee    | 10          | Primary    |
-| 3   | Ankle   | 11          | Primary    |
-| 4   | Hip     | 12          | Primary    |
-| 4   | Knee    | 13          | Primary    |
-| 4   | Ankle   | 14          | Primary    |
-| 5   | Hip     | 15          | Primary    |
-| 5   | Knee    | 0           | Secondary  |
-| 5   | Ankle   | 1           | Secondary  |
+| Leg | Joint | PWM Channel | Controller |
+|-----|-------|-------------|------------|
+| 0   | Hip   | 0           | Primary    |
+|     | Knee  | 1           | Primary    |
+|_____| Ankle | 2           | Primary    |
+| 1   | Hip   | 3           | Primary    |
+|     | Knee  | 4           | Primary    |
+|_____| Ankle | 5           | Primary    |
+| 2   | Hip   | 6           | Primary    |
+|     | Knee  | 7           | Primary    |
+|_____| Ankle | 8           | Primary    |
+| 3   | Hip   | 0           | Secondary  |
+|     | Knee  | 1           | Secondary  |
+|_____| Ankle | 2           | Secondary  |
+| 4   | Hip   | 3           | Secondary  |
+|     | Knee  | 4           | Secondary  |
+|_____| Ankle | 5           | Secondary  |
+| 5   | Hip   | 6           | Secondary  |
+|     | Knee  | 7           | Secondary  |
+|_____| Ankle | 8           | Secondary  |
 
-## Power Requirements
+Note: The secondary controller is optional. If using only one controller, leg 5's knee and ankle joints must be remapped to unused channels or a different solution implemented.
 
-- Logic Power: 5V from BeagleBone or USB
-- Servo Power: 6V, 10A power supply recommended
-- Separate power rails for logic and servos with common ground
+## MPU6050 IMU Configuration
+
+The MPU6050 provides orientation data for the hexapod:
+
+| Parameter           | Configuration                 |
+|---------------------|-------------------------------|
+| I2C Address         | 0x68                          |
+| Accelerometer Range | ±2g                           |
+| Gyroscope Range     | ±500 degrees/second           |
+| Sample Rate         | 100Hz                         |
+| Low-Pass Filter     | 10Hz                          |
+| Orientation         | X forward, Y right, Z up      |
+

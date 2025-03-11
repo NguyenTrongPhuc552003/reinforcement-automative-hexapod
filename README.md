@@ -2,20 +2,29 @@
 
 A comprehensive control system for a six-legged robot (hexapod) using BeagleBone Black, featuring both kernel-space drivers and user-space applications.
 
+![Hexapod Robot](docs/images/hexapod_diagram.png)
+
 ## Project Overview
 
-This project implements:
-- Kernel drivers for servo control (PCA9685) and IMU sensor (MPU6050)
-- User-space libraries for kinematics and gait control
-- Test utilities and example applications
-- Comprehensive documentation and hardware guides
+This project implements a complete software stack for controlling a 6-legged robot with 18 servo motors (3 per leg), including:
+
+- **Kernel-Space Components**:
+  - Linux kernel driver for servo control (PCA9685 PWM controllers)
+  - IMU sensor driver (MPU6050) for orientation sensing
+  - Hardware abstraction layer for unified device access
+  
+- **User-Space Components**: 
+  - Kinematics library for precise leg positioning
+  - Gait generation for various walking patterns
+  - Calibration system for mechanical offset compensation
+  - Interactive control interface
 
 ## System Architecture
 
 ```
 .
-├── kernel_driver/    # Linux kernel device drivers
-├── user_space/      # User applications and libraries
+├── driver/          # Linux kernel device drivers
+├── app/             # User applications and libraries
 ├── docs/            # Documentation
 └── scripts/         # Build and utility scripts
 ```
@@ -41,7 +50,7 @@ This project implements:
 
 1. Build the kernel module:
    ```bash
-   cd kernel_driver
+   cd driver
    make
    ```
 
@@ -52,7 +61,7 @@ This project implements:
 
 3. Build user-space applications:
    ```bash
-   cd user_space
+   cd app
    make
    ```
 
@@ -64,15 +73,15 @@ This project implements:
 ## Development
 
 See individual README files in subdirectories for detailed development guides:
-- [Kernel Driver README](kernel_driver/README.md)
-- [User Space README](user_space/README.md)
+- [Kernel Driver README](driver/README.md)
+- [User Space README](app/README.md)
 - [Documentation](docs/README.md)
 
 ## Testing
 
 Run the test suite:
 ```bash
-cd user_space/test
+cd app/test
 make test
 ```
 
