@@ -1,17 +1,17 @@
 # Set the base image to Debian Bookworm
-FROM debian:bookworm-slim
+FROM debian:buster
 
 # Set noninteractive installation
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Set kernel header version
-ENV KERNEL_VERSION=5.10.168-ti-r82
+ENV KERNEL_VERSION=4.14.108-ti-r144
 
 # Set Debian version
-ENV DEBIAN_VERSION=bookworm
+ENV DEBIAN_VERSION=buster
 
 # Set GCC version
-ENV GCC_VERSION=12
+ENV GCC_VERSION=8
 
 # 1. Base Tools and Build Dependencies
 RUN apt-get update && apt-get install -y \

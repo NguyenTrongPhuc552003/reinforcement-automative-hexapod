@@ -1,6 +1,6 @@
 # Hexapod Robot Control System
 
-A comprehensive control system for a six-legged robot (hexapod) using BeagleBone Black, featuring both kernel-space drivers and user-space applications.
+A comprehensive control system for a six-legged robot (hexapod) using BeagleBone AI (or Black), featuring both kernel-space drivers and user-space applications.
 
 ![Hexapod Robot](resource/overview.jpg)
 
