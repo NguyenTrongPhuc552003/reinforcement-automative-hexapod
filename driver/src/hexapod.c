@@ -4,7 +4,6 @@
 #include <linux/fs.h>
 #include <linux/cdev.h>
 #include <linux/device.h>
-#include <linux/i2c.h>
 #include <linux/uaccess.h>
 #include <linux/miscdevice.h>
 #include <linux/delay.h>
@@ -24,9 +23,9 @@ int hexapod_set_leg_position(struct hexapod_data *dev, u8 leg, struct hexapod_le
         return -EINVAL;
 
     /* Check angle limits */
-    if (pos->hip < MIN_ANGLE || pos->hip > MAX_ANGLE ||
-        pos->knee < MIN_ANGLE || pos->knee > MAX_ANGLE ||
-        pos->ankle < MIN_ANGLE || pos->ankle > MAX_ANGLE)
+    if (pos->hip < SERVO_MIN_ANGLE || pos->hip > SERVO_MAX_ANGLE ||
+        pos->knee < SERVO_MIN_ANGLE || pos->knee > SERVO_MAX_ANGLE ||
+        pos->ankle < SERVO_MIN_ANGLE || pos->ankle > SERVO_MAX_ANGLE)
         return -EINVAL;
 
     /* Lock the device */
@@ -53,7 +52,7 @@ int hexapod_get_imu_data(struct hexapod_data *dev, struct hexapod_imu_data *data
         return -EINVAL;
 
     mutex_lock(&dev->lock);
-    ret = mpu6050_read_sensors(dev->mpu6050, data);
+    ret = mpu6050_read_sensors(data);
     mutex_unlock(&dev->lock);
 
     return ret;
@@ -177,7 +176,6 @@ static const struct file_operations hexapod_fops = {
 static int __init hexapod_init(void)
 {
     int ret;
-    struct i2c_adapter *adapter;
 
     // Simplified message - less verbose
     pr_info("Hexapod: initializing driver\n");
@@ -198,29 +196,12 @@ static int __init hexapod_init(void)
         return ret;
     }
 
-    /* Get I2C adapter */
-    adapter = i2c_get_adapter(HEXAPOD_I2C_BUS);
-    if (!adapter)
-    {
-        pr_err("Hexapod: failed to get I2C adapter\n");
-        ret = -ENODEV;
-        goto fail_i2c;
-    }
-
-    /* Initialize MPU6050 - use i2c_new_dummy_device instead of deprecated i2c_new_dummy */
-    hexapod_dev.mpu6050 = i2c_new_dummy_device(adapter, MPU6050_I2C_ADDR);
-    if (!hexapod_dev.mpu6050)
-    {
-        pr_err("Hexapod: failed to create MPU6050 I2C client\n");
-        ret = -ENOMEM;
-        goto fail_mpu;
-    }
-
-    ret = mpu6050_init(hexapod_dev.mpu6050);
+    /* Initialize MPU6050 */
+    ret = mpu6050_init();
     if (ret)
     {
         pr_err("Hexapod: failed to initialize MPU6050: %d\n", ret);
-        goto fail_mpu_init;
+        goto fail_mpu;
     }
 
     /* Initialize PCA9685 */
@@ -239,7 +220,6 @@ static int __init hexapod_init(void)
         goto fail_servo;
     }
 
-    i2c_put_adapter(adapter);
     hexapod_dev.initialized = true;
     // Simplified success message
     pr_info("Hexapod: driver initialized\n");
@@ -248,12 +228,8 @@ static int __init hexapod_init(void)
 fail_servo:
     pca9685_cleanup();
 fail_pca:
-    mpu6050_remove(hexapod_dev.mpu6050);
-fail_mpu_init:
-    i2c_unregister_device(hexapod_dev.mpu6050);
+    mpu6050_cleanup();
 fail_mpu:
-    i2c_put_adapter(adapter);
-fail_i2c:
     misc_deregister(&hexapod_miscdev);
     return ret;
 }
@@ -270,12 +246,7 @@ static void __exit hexapod_cleanup(void)
         /* Clean up subsystems */
         servo_cleanup();
         pca9685_cleanup();
-
-        if (hexapod_dev.mpu6050)
-        {
-            mpu6050_remove(hexapod_dev.mpu6050);
-            i2c_unregister_device(hexapod_dev.mpu6050);
-        }
+        mpu6050_cleanup();
 
         /* Unregister the device */
         misc_deregister(&hexapod_miscdev);

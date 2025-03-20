@@ -7,12 +7,18 @@
 
 /* Servo mapping - which channel for each servo */
 static const u8 servo_map[NUM_LEGS][NUM_JOINTS_PER_LEG] = {
-    {0, 1, 2},    /* Leg 0 */
-    {3, 4, 5},    /* Leg 1 */
-    {6, 7, 8},    /* Leg 2 */
-    {9, 10, 11},  /* Leg 3 */
-    {12, 13, 14}, /* Leg 4 */
-    {15, 0, 1}    /* Leg 5 - Note: may involve secondary controller */
+    {0, 1, 2}, /* Leg 0 - First PCA9685 */
+    {3, 4, 5}, /* Leg 1 - First PCA9685 */
+    {6, 7, 8}, /* Leg 2 - First PCA9685 */
+    {0, 1, 2}, /* Leg 3 - Second PCA9685 */
+    {3, 4, 5}, /* Leg 4 - Second PCA9685 */
+    {6, 7, 8}  /* Leg 5 - Second PCA9685 */
+};
+
+/* Which PCA9685 controller to use for each leg (0 = first, 1 = second) */
+static const u8 leg_controller[NUM_LEGS] = {
+    0, 0, 0, /* First 3 legs use first controller */
+    1, 1, 1  /* Last 3 legs use second controller */
 };
 
 /* Calibration offsets */
@@ -71,6 +77,7 @@ int servo_set_angle(u8 leg, u8 joint, s16 angle)
 {
     u8 channel;
     u16 pulse_width;
+    u8 controller_offset = 0;
 
     /* Validate parameters */
     if (leg >= NUM_LEGS || joint >= NUM_JOINTS_PER_LEG)
@@ -78,6 +85,20 @@ int servo_set_angle(u8 leg, u8 joint, s16 angle)
 
     /* Get the appropriate channel */
     channel = servo_map[leg][joint];
+
+    /* If using two controllers and this is a leg that should use second controller */
+    if (default_config.use_secondary_controller && leg_controller[leg] == 1)
+    {
+        controller_offset = 16;
+        channel += controller_offset;
+    }
+    else if (!default_config.use_secondary_controller && leg_controller[leg] == 1)
+    {
+        /* In test mode with only one controller, remap legs that would normally use
+         * the second controller to the first controller
+         */
+        channel = servo_map[leg][joint]; // Use the channel as is with first controller
+    }
 
     /* Apply calibration offset */
     angle += servo_offsets[leg][joint];
