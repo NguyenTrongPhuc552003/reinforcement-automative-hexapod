@@ -1,9 +1,12 @@
 #ifndef _MPU6050_H_
 #define _MPU6050_H_
 
-#include <linux/i2c.h>
 #include <linux/types.h>
 #include "hexapod.h"
+
+/* I2C configuration */
+#define MPU6050_I2C_BUS HEXAPOD_I2C_BUS
+#define MPU6050_I2C_ADDR 0x68
 
 /* Register addresses */
 #define MPU6050_PWR_MGMT_1 0x6B
@@ -27,9 +30,16 @@
 /* Device identification */
 #define MPU6050_DEVICE_ID 0x98
 
+/* MPU6050 device structure */
+struct mpu6050_dev
+{
+    struct i2c_client *client;
+    int initialized;
+};
+
 /* Function declarations */
-int mpu6050_init(struct i2c_client *client);
-void mpu6050_remove(struct i2c_client *client);
-int mpu6050_read_sensors(struct i2c_client *client, struct hexapod_imu_data *data);
+int mpu6050_init(void);
+void mpu6050_cleanup(void);
+int mpu6050_read_sensors(struct hexapod_imu_data *data);
 
 #endif /* _MPU6050_H_ */

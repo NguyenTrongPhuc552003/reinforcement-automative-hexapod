@@ -1,23 +1,43 @@
 #include <linux/module.h>
 #include <linux/i2c.h>
-#include <linux/delay.h>
-#include <linux/err.h>
+#include <linux/types.h>
+#include <linux/errno.h>
 #include "pca9685.h"
 
 /* Global variables */
 static struct i2c_client *pca9685_client;
-// Add support for secondary controller
 static struct i2c_client *pca9685_secondary_client;
+static int secondary_controller_active = 0;
 
-// Add a function to select the appropriate client based on channel number
+/* Function prototypes */
+static struct i2c_client *pca9685_get_client(u8 channel);
+static int pca9685_write_reg(u8 reg, u8 val);
+static int pca9685_read_reg(u8 reg);
+static int pca9685_init_controller(struct i2c_client *client);
+
+/* Select the appropriate client based on channel number */
 static struct i2c_client *pca9685_get_client(u8 channel)
 {
-    // Use primary controller for channels 0-15
-    // Use secondary controller for channels 16-31 (mapped to 0-15 internally)
+    /*
+     * First PCA9685 handles channels 0-15
+     * Second PCA9685 handles channels 16-31 (mapped to 0-15 internally)
+     * We only use channels 0-8 on each controller
+     */
     if (channel < 16)
+    {
         return pca9685_client;
-    else
+    }
+    else if (secondary_controller_active)
+    {
         return pca9685_secondary_client;
+    }
+    else
+    {
+        /* When secondary controller isn't active but channel > 15,
+         * silently remap to primary controller. This avoids warning spam.
+         */
+        return pca9685_client;
+    }
 }
 
 /**
@@ -39,7 +59,6 @@ static int pca9685_write_reg(u8 reg, u8 val)
             return 0;
 
         /* Delay before retry */
-        // msleep(5);
         /* Use schedule_timeout_interruptible() instead of msleep() */
         schedule_timeout_interruptible(msecs_to_jiffies(5));
     }
@@ -67,7 +86,6 @@ static int pca9685_read_reg(u8 reg)
             return ret;
 
         /* Delay before retry */
-        // msleep(5);
         /* Use schedule_timeout_interruptible() instead of msleep() */
         schedule_timeout_interruptible(msecs_to_jiffies(5));
     }
@@ -93,69 +111,137 @@ int pca9685_init(void)
         return -ENODEV;
     }
 
-    /* Create I2C client - use i2c_new_dummy_device instead of i2c_new_dummy */
-    pca9685_client = i2c_new_dummy_device(adapter, PCA9685_I2C_ADDR);
-    i2c_put_adapter(adapter);
-
+    /* Create I2C client for primary controller */
+    pca9685_client = i2c_new_dummy(adapter, PCA9685_I2C_ADDR);
     if (!pca9685_client)
     {
-        pr_err("PCA9685: Failed to create I2C client\n");
+        pr_err("PCA9685: Failed to create primary I2C client\n");
+        i2c_put_adapter(adapter);
         return -ENOMEM;
     }
 
-    /* Software reset */
-    ret = pca9685_write_reg(PCA9685_MODE1, 0x80); /* Set reset bit */
+    /* Create I2C client for secondary controller if configured */
+    if (default_config.use_secondary_controller)
+    {
+        pca9685_secondary_client = i2c_new_dummy(adapter, default_config.pca9685_secondary_addr);
+        if (!pca9685_secondary_client)
+        {
+            pr_err("PCA9685: Failed to create secondary I2C client\n");
+            i2c_unregister_device(pca9685_client);
+            i2c_put_adapter(adapter);
+            return -ENOMEM;
+        }
+        secondary_controller_active = 1;
+    }
+
+    i2c_put_adapter(adapter);
+
+    /* Initialize primary controller */
+    ret = pca9685_init_controller(pca9685_client);
     if (ret < 0)
+    {
+        pr_err("PCA9685: Failed to initialize primary controller\n");
         goto error;
-    // msleep(10); /* Wait for reset to complete */
-    /* Use schedule_timeout_interruptible() instead of msleep() */
+    }
+
+    /* Initialize secondary controller if active */
+    if (secondary_controller_active)
+    {
+        ret = pca9685_init_controller(pca9685_secondary_client);
+        if (ret < 0)
+        {
+            pr_err("PCA9685: Failed to initialize secondary controller\n");
+            goto error;
+        }
+    }
+
+    /* Calculate prescale for default frequency */
+    prescale = (u8)((PCA9685_CLOCK_FREQ / (PCA9685_PWM_RES * PCA9685_PWM_FREQ)) - 1);
+
+    pr_info("PCA9685: Initialized %s at address 0x%02x, prescale %d, freq %d Hz\n",
+            secondary_controller_active ? "controllers" : "controller",
+            PCA9685_I2C_ADDR, prescale, PCA9685_PWM_FREQ);
+    return 0;
+
+error:
+    pca9685_cleanup();
+    return ret;
+}
+
+/**
+ * Initialize a specific PCA9685 controller
+ */
+static int pca9685_init_controller(struct i2c_client *client)
+{
+    int ret;
+    u8 prescale;
+
+    if (!client)
+        return -EINVAL;
+
+    /* Software reset */
+    ret = i2c_smbus_write_byte_data(client, PCA9685_MODE1, 0x80); /* Set reset bit */
+    if (ret < 0)
+    {
+        dev_err(&client->dev, "Failed to reset device: %d\n", ret);
+        return ret;
+    }
+
     schedule_timeout_interruptible(msecs_to_jiffies(10));
 
     /* Set to sleep mode (required to change prescale) */
-    ret = pca9685_write_reg(PCA9685_MODE1, MODE1_SLEEP);
+    ret = i2c_smbus_write_byte_data(client, PCA9685_MODE1, MODE1_SLEEP);
     if (ret < 0)
-        goto error;
+    {
+        dev_err(&client->dev, "Failed to set sleep mode: %d\n", ret);
+        return ret;
+    }
 
     /* Calculate prescale for default frequency */
     prescale = (u8)((PCA9685_CLOCK_FREQ / (PCA9685_PWM_RES * PCA9685_PWM_FREQ)) - 1);
 
     /* Set prescale value */
-    ret = pca9685_write_reg(PCA9685_PRESCALE, prescale);
+    ret = i2c_smbus_write_byte_data(client, PCA9685_PRESCALE, prescale);
     if (ret < 0)
-        goto error;
+    {
+        dev_err(&client->dev, "Failed to set prescale: %d\n", ret);
+        return ret;
+    }
 
     /* Set to normal operation with auto-increment */
-    ret = pca9685_write_reg(PCA9685_MODE1, MODE1_AI);
+    ret = i2c_smbus_write_byte_data(client, PCA9685_MODE1, MODE1_AI);
     if (ret < 0)
-        goto error;
-    // msleep(10); /* Wait for oscillator */
-    /* Use schedule_timeout_interruptible() instead of msleep() */
+    {
+        dev_err(&client->dev, "Failed to set operating mode: %d\n", ret);
+        return ret;
+    }
+
     schedule_timeout_interruptible(msecs_to_jiffies(10));
 
     /* Set output mode to totem pole (default) */
-    ret = pca9685_write_reg(PCA9685_MODE2, MODE2_OUTDRV);
+    ret = i2c_smbus_write_byte_data(client, PCA9685_MODE2, MODE2_OUTDRV);
     if (ret < 0)
-        goto error;
+    {
+        dev_err(&client->dev, "Failed to set output mode: %d\n", ret);
+        return ret;
+    }
 
     /* Turn off all outputs */
-    ret = pca9685_write_reg(PCA9685_ALL_LED_OFF_L, 0);
+    ret = i2c_smbus_write_byte_data(client, PCA9685_ALL_LED_OFF_L, 0);
     if (ret < 0)
-        goto error;
-    ret = pca9685_write_reg(PCA9685_ALL_LED_OFF_H, 0x10); /* Full off */
-    if (ret < 0)
-        goto error;
-
-    pr_info("PCA9685: Initialized at address 0x%02x, prescale %d, freq %d Hz\n",
-            PCA9685_I2C_ADDR, prescale, PCA9685_PWM_FREQ);
-    return 0;
-
-error:
-    if (pca9685_client)
     {
-        i2c_unregister_device(pca9685_client);
-        pca9685_client = NULL;
+        dev_err(&client->dev, "Failed to turn off outputs (low): %d\n", ret);
+        return ret;
     }
-    return ret;
+
+    ret = i2c_smbus_write_byte_data(client, PCA9685_ALL_LED_OFF_H, 0x10); /* Full off */
+    if (ret < 0)
+    {
+        dev_err(&client->dev, "Failed to turn off outputs (high): %d\n", ret);
+        return ret;
+    }
+
+    return 0;
 }
 
 /**
@@ -213,11 +299,18 @@ int pca9685_set_pwm(u8 channel, u16 on, u16 off)
 {
     int ret;
     u8 reg;
+    struct i2c_client *client;
     u8 data[4];
 
     if (channel > 31 || on > 4095 || off > 4095)
         return -EINVAL;
 
+    /* Get the appropriate client */
+    client = pca9685_get_client(channel);
+    if (!client)
+        return -ENODEV;
+
+    /* Calculate register address (channel % 16 to handle second controller) */
     reg = PCA9685_LED0_ON_L + ((channel % 16) * 4);
 
     /* Prepare data for all 4 registers at once */
@@ -227,27 +320,27 @@ int pca9685_set_pwm(u8 channel, u16 on, u16 off)
     data[3] = (off >> 8) & 0x0F;
 
     /* Write all 4 registers in a single block write if possible */
-    if (i2c_check_functionality(pca9685_get_client(channel)->adapter, I2C_FUNC_SMBUS_WRITE_I2C_BLOCK))
+    if (i2c_check_functionality(client->adapter, I2C_FUNC_SMBUS_WRITE_I2C_BLOCK))
     {
-        ret = i2c_smbus_write_i2c_block_data(pca9685_get_client(channel), reg, 4, data);
+        ret = i2c_smbus_write_i2c_block_data(client, reg, 4, data);
         if (ret == 0)
             return 0;
     }
 
     /* Fall back to individual writes if block write fails */
-    ret = pca9685_write_reg(reg, data[0]);
+    ret = i2c_smbus_write_byte_data(client, reg, data[0]);
     if (ret < 0)
         return ret;
 
-    ret = pca9685_write_reg(reg + 1, data[1]);
+    ret = i2c_smbus_write_byte_data(client, reg + 1, data[1]);
     if (ret < 0)
         return ret;
 
-    ret = pca9685_write_reg(reg + 2, data[2]);
+    ret = i2c_smbus_write_byte_data(client, reg + 2, data[2]);
     if (ret < 0)
         return ret;
 
-    ret = pca9685_write_reg(reg + 3, data[3]);
+    ret = i2c_smbus_write_byte_data(client, reg + 3, data[3]);
     if (ret < 0)
         return ret;
 

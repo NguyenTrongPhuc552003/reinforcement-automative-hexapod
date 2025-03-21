@@ -2,14 +2,12 @@
 #define _HEXAPOD_H_
 
 #include <linux/types.h>
-#include <linux/mutex.h>
 #include <linux/i2c.h>
 #include <linux/ioctl.h>
+#include <linux/mutex.h>
 
-/* Hardware Configuration */
-#define HEXAPOD_I2C_BUS 2
-#define MPU6050_I2C_ADDR 0x68
-#define PCA9685_I2C_ADDR 0x40
+/* Common Configuration */
+#define HEXAPOD_I2C_BUS 3
 
 /* Robot dimensions (mm) */
 #define COXA_LENGTH 30
@@ -20,10 +18,6 @@
 #define NUM_LEGS 6
 #define NUM_JOINTS_PER_LEG 3
 #define TOTAL_SERVOS (NUM_LEGS * NUM_JOINTS_PER_LEG)
-
-/* Servo angle limits (degrees) */
-#define MIN_ANGLE -90
-#define MAX_ANGLE 90
 
 /* IOCTL commands */
 #define HEXAPOD_IOC_MAGIC 'H'
@@ -72,7 +66,7 @@ struct hexapod_config
     u8 mpu6050_addr;
     u8 pca9685_primary_addr;
     u8 pca9685_secondary_addr;
-    bool use_secondary_controller;
+    int use_secondary_controller;
     u16 pwm_frequency;
     u16 min_pulse_us;
     u16 max_pulse_us;
@@ -80,11 +74,11 @@ struct hexapod_config
 
 // Default configuration
 static const struct hexapod_config default_config = {
-    .i2c_bus = 2,
-    .mpu6050_addr = 0x68,
-    .pca9685_primary_addr = 0x40,
-    .pca9685_secondary_addr = 0x70,
-    .use_secondary_controller = false,
+    .i2c_bus = HEXAPOD_I2C_BUS,     /* Match I2C bus from README */
+    .mpu6050_addr = 0x68,           /* Match MPU6050 address from README */
+    .pca9685_primary_addr = 0x40,   /* Match primary address from README */
+    .pca9685_secondary_addr = 0x41, /* Using only one controller for testing */
+    .use_secondary_controller = 0,
     .pwm_frequency = 50,
     .min_pulse_us = 1000,
     .max_pulse_us = 2000};
@@ -96,7 +90,7 @@ struct hexapod_data
     struct mutex lock;
     struct hexapod_leg_position positions[NUM_LEGS];
     struct hexapod_calibration calibration[NUM_LEGS];
-    bool initialized;
+    int initialized;
 };
 
 /* Function declarations */

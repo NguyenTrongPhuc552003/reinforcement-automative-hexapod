@@ -1,149 +1,70 @@
 #include <linux/module.h>
-#include <linux/i2c.h>
-#include <linux/delay.h>
-#include <linux/slab.h>
+#include <linux/types.h>
+#include <linux/errno.h>
 #include "mpu6050.h"
 
-// Add error counters for diagnostics
-static struct
-{
-    atomic_t read_errors;
-    atomic_t write_errors;
-    atomic_t timeout_errors;
-} mpu6050_error_stats;
+/* Global MPU6050 device structure */
+static struct mpu6050_dev mpu6050_device;
 
 /**
- * Write to an MPU6050 register
+ * Write a register to the MPU6050
  */
-static int mpu6050_write_reg(struct i2c_client *client, u8 reg, u8 val)
+static int mpu6050_write_reg(struct i2c_client *client, u8 reg, u8 value)
 {
-    int ret, retries = 3;
+    int ret;
 
-    if (!client)
-        return -EINVAL;
-
-    /* Try up to 3 times */
-    while (retries--)
-    {
-        ret = i2c_smbus_write_byte_data(client, reg, val);
-        if (ret == 0)
-            return 0;
-
-#ifdef DEBUG_I2C
-        dev_err(&client->dev, "Write retry %d for reg 0x%02x\n",
-                2 - retries, reg);
-#endif
-        /* Use schedule_timeout_interruptible() instead of msleep() */
-        schedule_timeout_interruptible(msecs_to_jiffies(10));
-    }
-
-    // If all retries failed, increment error counter
+    ret = i2c_smbus_write_byte_data(client, reg, value);
     if (ret < 0)
-    {
-        atomic_inc(&mpu6050_error_stats.write_errors);
-    }
+        dev_err(&client->dev, "Failed to write to reg 0x%02x: %d\n", reg, ret);
 
     return ret;
 }
 
 /**
- * Read from an MPU6050 register
+ * Read a register from the MPU6050
  */
 static int mpu6050_read_reg(struct i2c_client *client, u8 reg)
 {
-    int ret, retries = 3;
+    int ret;
 
-    if (!client)
-        return -EINVAL;
-
-    /* Try up to 3 times */
-    while (retries--)
-    {
-        ret = i2c_smbus_read_byte_data(client, reg);
-        if (ret >= 0)
-            return ret;
-
-#ifdef DEBUG_I2C
-        dev_err(&client->dev, "Read retry %d for reg 0x%02x\n",
-                2 - retries, reg);
-#endif
-        /* Use schedule_timeout_interruptible() instead of msleep() */
-        schedule_timeout_interruptible(msecs_to_jiffies(10));
-    }
+    ret = i2c_smbus_read_byte_data(client, reg);
+    if (ret < 0)
+        dev_err(&client->dev, "Failed to read reg 0x%02x: %d\n", reg, ret);
 
     return ret;
 }
 
 /**
- * Read multiple registers from MPU6050
+ * Read a block of data from MPU6050
  */
-static int mpu6050_read_block(struct i2c_client *client, u8 reg,
-                              u8 length, u8 *values)
+static int mpu6050_read_block(struct i2c_client *client, u8 reg, u8 len, u8 *buf)
 {
     int ret;
 
-    if (!client || !values)
-        return -EINVAL;
-
-    ret = i2c_smbus_read_i2c_block_data(client, reg, length, values);
+    ret = i2c_smbus_read_i2c_block_data(client, reg, len, buf);
     if (ret < 0)
-    {
-        dev_err(&client->dev, "Block read failed: %d\n", ret);
-        return ret;
-    }
-
-    if (ret != length)
-    {
-        dev_err(&client->dev, "Block read: expected %d bytes, got %d\n",
-                length, ret);
+        dev_err(&client->dev, "Failed to read block from reg 0x%02x: %d\n", reg, ret);
+    else if (ret != len)
         return -EIO;
-    }
 
-    return 0;
+    return ret;
 }
 
 /**
- * Initialize the MPU6050
+ * Initialize the MPU6050 hardware
  */
-int mpu6050_init(struct i2c_client *client)
+static int mpu6050_hw_init(struct i2c_client *client)
 {
-    u8 id;
     int ret;
 
-    if (!client)
-        return -EINVAL;
-
-    // Initialize error counters
-    atomic_set(&mpu6050_error_stats.read_errors, 0);
-    atomic_set(&mpu6050_error_stats.write_errors, 0);
-    atomic_set(&mpu6050_error_stats.timeout_errors, 0);
-
-    /* Verify device ID */
-    ret = mpu6050_read_reg(client, MPU6050_WHO_AM_I);
-    if (ret < 0)
-    {
-        dev_err(&client->dev, "Failed to read device ID: %d\n", ret);
-        return ret;
-    }
-
-    id = ret & 0xFF;
-    dev_info(&client->dev, "Device ID: 0x%02x\n", id);
-
-    /* Accept various device IDs - MPU6050, MPU9250, and variants */
-    if (id != MPU6050_DEVICE_ID)
-    {
-        dev_err(&client->dev, "Unsupported device ID: 0x%02x\n", id);
-        return -ENODEV;
-    }
-
-    /* Reset device */
+    /* Reset the device */
     ret = mpu6050_write_reg(client, MPU6050_PWR_MGMT_1, MPU6050_RESET);
     if (ret < 0)
     {
         dev_err(&client->dev, "Failed to reset device: %d\n", ret);
         return ret;
     }
-    // msleep(100); /* Wait for reset to complete */
+
     /* Use schedule_timeout_interruptible() instead of msleep() */
     schedule_timeout_interruptible(msecs_to_jiffies(100));
 
@@ -154,8 +75,7 @@ int mpu6050_init(struct i2c_client *client)
         dev_err(&client->dev, "Failed to wake up device: %d\n", ret);
         return ret;
     }
-    // msleep(10);
-    /* Use schedule_timeout_interruptible() instead of msleep() */
+
     schedule_timeout_interruptible(msecs_to_jiffies(10));
 
     /* Configure gyroscope range */
@@ -200,36 +120,107 @@ int mpu6050_init(struct i2c_client *client)
         return ret;
     }
 
-    // Simplified success message
+    /* Verify device ID */
+    ret = mpu6050_read_reg(client, MPU6050_WHO_AM_I);
+    if (ret < 0)
+    {
+        dev_err(&client->dev, "Failed to read device ID: %d\n", ret);
+        return ret;
+    }
+
+    if (ret != MPU6050_DEVICE_ID)
+    {
+        dev_err(&client->dev, "Unexpected device ID: got 0x%02x, expected 0x%02x\n",
+                ret, MPU6050_DEVICE_ID);
+        return -ENODEV;
+    }
+
     dev_info(&client->dev, "MPU6050 initialized\n");
     return 0;
 }
 
 /**
- * Remove the MPU6050
+ * Initialize the MPU6050 module
  */
-void mpu6050_remove(struct i2c_client *client)
+int mpu6050_init(void)
 {
-    if (!client)
-        return;
+    struct i2c_adapter *adapter;
+    struct i2c_client *client;
+    int ret;
 
-    /* Put device in sleep mode to save power */
-    mpu6050_write_reg(client, MPU6050_PWR_MGMT_1, MPU6050_SLEEP_MODE);
+    pr_info("MPU6050: initializing\n");
+
+    /* Clear device structure */
+    memset(&mpu6050_device, 0, sizeof(mpu6050_device));
+
+    /* Get I2C adapter */
+    adapter = i2c_get_adapter(MPU6050_I2C_BUS);
+    if (!adapter)
+    {
+        pr_err("MPU6050: failed to get I2C adapter\n");
+        return -ENODEV;
+    }
+
+    /* Create I2C client */
+    client = i2c_new_dummy(adapter, MPU6050_I2C_ADDR);
+    if (!client)
+    {
+        pr_err("MPU6050: failed to create I2C client\n");
+        i2c_put_adapter(adapter);
+        return -ENOMEM;
+    }
+
+    /* Initialize hardware */
+    ret = mpu6050_hw_init(client);
+    if (ret)
+    {
+        pr_err("MPU6050: hardware initialization failed: %d\n", ret);
+        i2c_unregister_device(client);
+        i2c_put_adapter(adapter);
+        return ret;
+    }
+
+    /* Store client in device structure */
+    mpu6050_device.client = client;
+    mpu6050_device.initialized = 1;
+
+    i2c_put_adapter(adapter);
+    pr_info("MPU6050: initialization complete\n");
+    return 0;
+}
+
+/**
+ * Cleanup the MPU6050 module
+ */
+void mpu6050_cleanup(void)
+{
+    pr_info("MPU6050: cleaning up\n");
+
+    if (mpu6050_device.initialized && mpu6050_device.client)
+    {
+        /* Put device in sleep mode to save power */
+        mpu6050_write_reg(mpu6050_device.client, MPU6050_PWR_MGMT_1, MPU6050_SLEEP_MODE);
+
+        /* Unregister I2C client */
+        i2c_unregister_device(mpu6050_device.client);
+        mpu6050_device.client = NULL;
+        mpu6050_device.initialized = 0;
+    }
 }
 
 /**
  * Read sensor data from MPU6050
  */
-int mpu6050_read_sensors(struct i2c_client *client, struct hexapod_imu_data *data)
+int mpu6050_read_sensors(struct hexapod_imu_data *data)
 {
     u8 buffer[14];
     int ret;
 
-    if (!client || !data)
+    if (!mpu6050_device.initialized || !mpu6050_device.client || !data)
         return -EINVAL;
 
     /* Read all sensors in a single transaction (registers 0x3B to 0x48) */
-    ret = mpu6050_read_block(client, MPU6050_ACCEL_XOUT_H, 14, buffer);
+    ret = mpu6050_read_block(mpu6050_device.client, MPU6050_ACCEL_XOUT_H, 14, buffer);
     if (ret < 0)
         return ret;
 
@@ -249,7 +240,7 @@ int mpu6050_read_sensors(struct i2c_client *client, struct hexapod_imu_data *dat
 }
 
 EXPORT_SYMBOL_GPL(mpu6050_init);
-EXPORT_SYMBOL_GPL(mpu6050_remove);
+EXPORT_SYMBOL_GPL(mpu6050_cleanup);
 EXPORT_SYMBOL_GPL(mpu6050_read_sensors);
 
 MODULE_LICENSE("GPL");
