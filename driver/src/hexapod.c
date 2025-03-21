@@ -1,12 +1,8 @@
 #include <linux/module.h>
 #include <linux/kernel.h>
-#include <linux/init.h>
-#include <linux/fs.h>
 #include <linux/cdev.h>
-#include <linux/device.h>
 #include <linux/uaccess.h>
 #include <linux/miscdevice.h>
-#include <linux/delay.h>
 #include "hexapod.h"
 #include "servo.h"
 #include "mpu6050.h"
@@ -220,7 +216,7 @@ static int __init hexapod_init(void)
         goto fail_servo;
     }
 
-    hexapod_dev.initialized = true;
+    hexapod_dev.initialized = 1;
     // Simplified success message
     pr_info("Hexapod: driver initialized\n");
     return 0;

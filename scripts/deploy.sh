@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Configuration
-BEAGLEBONE_IP="192.168.1.8"  # Your BeagleBone IP
+BEAGLEBONE_IP="beaglebone.local"  # Your BeagleBone IP or hostname
 BEAGLEBONE_USER="debian"
 DEPLOY_DIR="../deploy"
 

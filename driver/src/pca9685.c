@@ -1,13 +1,13 @@
 #include <linux/module.h>
 #include <linux/i2c.h>
-#include <linux/delay.h>
-#include <linux/err.h>
+#include <linux/types.h>
+#include <linux/errno.h>
 #include "pca9685.h"
 
 /* Global variables */
 static struct i2c_client *pca9685_client;
 static struct i2c_client *pca9685_secondary_client;
-static bool secondary_controller_active = false;
+static int secondary_controller_active = 0;
 
 /* Function prototypes */
 static struct i2c_client *pca9685_get_client(u8 channel);
@@ -59,7 +59,6 @@ static int pca9685_write_reg(u8 reg, u8 val)
             return 0;
 
         /* Delay before retry */
-        // msleep(5);
         /* Use schedule_timeout_interruptible() instead of msleep() */
         schedule_timeout_interruptible(msecs_to_jiffies(5));
     }
@@ -87,7 +86,6 @@ static int pca9685_read_reg(u8 reg)
             return ret;
 
         /* Delay before retry */
-        // msleep(5);
         /* Use schedule_timeout_interruptible() instead of msleep() */
         schedule_timeout_interruptible(msecs_to_jiffies(5));
     }
@@ -133,7 +131,7 @@ int pca9685_init(void)
             i2c_put_adapter(adapter);
             return -ENOMEM;
         }
-        secondary_controller_active = true;
+        secondary_controller_active = 1;
     }
 
     i2c_put_adapter(adapter);
