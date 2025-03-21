@@ -1,7 +1,6 @@
 #include <linux/module.h>
-#include <linux/kernel.h>
-#include <linux/delay.h>
-#include <linux/sched.h>
+#include <linux/types.h>
+#include <linux/errno.h>
 #include "mpu6050.h"
 
 /* Global MPU6050 device structure */
@@ -183,7 +182,7 @@ int mpu6050_init(void)
 
     /* Store client in device structure */
     mpu6050_device.client = client;
-    mpu6050_device.initialized = true;
+    mpu6050_device.initialized = 1;
 
     i2c_put_adapter(adapter);
     pr_info("MPU6050: initialization complete\n");
@@ -205,7 +204,7 @@ void mpu6050_cleanup(void)
         /* Unregister I2C client */
         i2c_unregister_device(mpu6050_device.client);
         mpu6050_device.client = NULL;
-        mpu6050_device.initialized = false;
+        mpu6050_device.initialized = 0;
     }
 }
 

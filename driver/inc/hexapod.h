@@ -2,9 +2,9 @@
 #define _HEXAPOD_H_
 
 #include <linux/types.h>
-#include <linux/mutex.h>
 #include <linux/i2c.h>
 #include <linux/ioctl.h>
+#include <linux/mutex.h>
 
 /* Common Configuration */
 #define HEXAPOD_I2C_BUS 3
@@ -66,7 +66,7 @@ struct hexapod_config
     u8 mpu6050_addr;
     u8 pca9685_primary_addr;
     u8 pca9685_secondary_addr;
-    bool use_secondary_controller;
+    int use_secondary_controller;
     u16 pwm_frequency;
     u16 min_pulse_us;
     u16 max_pulse_us;
@@ -74,11 +74,11 @@ struct hexapod_config
 
 // Default configuration
 static const struct hexapod_config default_config = {
-    .i2c_bus = HEXAPOD_I2C_BUS,        /* Match I2C bus from README */
-    .mpu6050_addr = 0x68,              /* Match MPU6050 address from README */
-    .pca9685_primary_addr = 0x40,      /* Match primary address from README */
-    .pca9685_secondary_addr = 0x41,    /* Using only one controller for testing */
-    .use_secondary_controller = false, /* Using only one controller for testing */
+    .i2c_bus = HEXAPOD_I2C_BUS,     /* Match I2C bus from README */
+    .mpu6050_addr = 0x68,           /* Match MPU6050 address from README */
+    .pca9685_primary_addr = 0x40,   /* Match primary address from README */
+    .pca9685_secondary_addr = 0x41, /* Using only one controller for testing */
+    .use_secondary_controller = 0,
     .pwm_frequency = 50,
     .min_pulse_us = 1000,
     .max_pulse_us = 2000};
@@ -90,7 +90,7 @@ struct hexapod_data
     struct mutex lock;
     struct hexapod_leg_position positions[NUM_LEGS];
     struct hexapod_calibration calibration[NUM_LEGS];
-    bool initialized;
+    int initialized;
 };
 
 /* Function declarations */

@@ -1,7 +1,6 @@
 #ifndef _MPU6050_H_
 #define _MPU6050_H_
 
-#include <linux/i2c.h>
 #include <linux/types.h>
 #include "hexapod.h"
 
@@ -35,7 +34,7 @@
 struct mpu6050_dev
 {
     struct i2c_client *client;
-    bool initialized;
+    int initialized;
 };
 
 /* Function declarations */
