@@ -32,6 +32,9 @@ usage() {
     echo "  -i, install       Create installation script"
     echo "  -n, --no-cache    Build all without cache"
     echo "  -h, --help        Show this help message"
+    echo ""
+    echo "Options can be combined, e.g., -im to build installation script & modules"
+    echo ""
     exit 1
 }
 
@@ -127,96 +130,139 @@ build_install_script() {
     local script_dir="$(dirname "${BASH_SOURCE[0]}")"
     cp "${script_dir}/install.sh" "${DEPLOY_DIR}/"
     chmod +x "${DEPLOY_DIR}/install.sh"
-    log "${GREEN}" "Installation script copied successfully"
 }
 
-# Parse command line arguments
-case "$1" in
-    -c | clean)
-        log "${YELLOW}" "Cleaning build artifacts..."
+# Initialize option flags
+DO_CLEAN=0
+DO_MODULE=0
+DO_USER=0
+DO_INSTALL=0
+DO_NO_CACHE=0
 
-        # Check if Docker image exists before cleaning
-        if ! docker images | grep -q hexapod-builder; then
-            log "${YELLOW}" "Docker image doesn't exist, build first!"
-            exit 0
+# Parse command-line arguments
+if [ $# -eq 0 ]; then
+    # Default: build everything
+    DO_MODULE=1
+    DO_USER=1
+    DO_INSTALL=1
+else
+    for arg in "$@"; do
+        if [[ "$arg" == "--no-cache" ]]; then
+            DO_NO_CACHE=1
+        elif [[ "$arg" == "--help" || "$arg" == "-h" ]]; then
+            usage
+        elif [[ "$arg" == "clean" || "$arg" == "-c" ]]; then
+            DO_CLEAN=1
+        elif [[ "$arg" == "module" ]]; then
+            DO_MODULE=1
+        elif [[ "$arg" == "user" ]]; then
+            DO_USER=1
+        elif [[ "$arg" == "install" ]]; then
+            DO_INSTALL=1
+        elif [[ "$arg" == -* && "$arg" != "--"* ]]; then
+            # Process combined short options like -imu
+            flags=${arg#-}
+            for (( i=0; i<${#flags}; i++ )); do
+                flag=${flags:$i:1}
+                case "$flag" in
+                    c) DO_CLEAN=1 ;;
+                    m) DO_MODULE=1 ;;
+                    u) DO_USER=1 ;;
+                    i) DO_INSTALL=1 ;;
+                    n) DO_NO_CACHE=1 ;;
+                    h) usage ;;
+                    *) 
+                        log "${RED}" "Unknown option: -$flag"
+                        usage
+                        ;;
+                esac
+            done
+        else
+            log "${RED}" "Unknown argument: $arg"
+            usage
         fi
-        
-        # Clean kernel driver and user space using Docker
-        docker run --rm \
-            -v "${KERNEL_MODULE_DIR}:/build/module" \
-            -v "${USER_SPACE_DIR}:/build/user" \
-            hexapod-builder clean || {
-            # If Docker image doesn't exist, that's fine - continue cleaning
-            if [ $? -ne 125 ]; then
-                log "${RED}" "Docker clean failed!"
-                exit 1
-            fi
-        }
-        
-        # Clean deploy directory with sudo if needed
-        if [ -d "${DEPLOY_DIR}" ]; then
-            log "${YELLOW}" "Cleaning deploy directory..."
-            if ! rm -rf "${DEPLOY_DIR}"/* 2>/dev/null; then
-                log "${YELLOW}" "Using sudo to clean deploy directory..."
-                sudo rm -rf "${DEPLOY_DIR}"/*
-            fi
-        fi
-        
-        # Clean user space binaries with sudo if needed
-        if [ -d "${USER_SPACE_DIR}/bin" ]; then
-            log "${GREEN}" "Cleaning user space binaries..."
-            if ! rm -rf "${USER_SPACE_DIR}/bin" 2>/dev/null; then
-                log "${YELLOW}" "Using sudo to clean user space binaries..."
-                sudo rm -rf "${USER_SPACE_DIR}/bin"
-            fi
-        fi
-        
-        log "${GREEN}" "Clean completed successfully!"
+    done
+fi
+
+# Handle clean first (as it exits)
+if [ $DO_CLEAN -eq 1 ]; then
+    log "${YELLOW}" "Cleaning build artifacts..."
+    
+    # Check if Docker image exists before cleaning
+    if ! docker images | grep -q hexapod-builder; then
+        log "${YELLOW}" "Docker image doesn't exist, build first!"
         exit 0
-        ;;
-
-    -n | --no-cache)
-        # Remove Docker image if it exists
-        if docker images | grep -q hexapod-builder; then
-            log "${GREEN}" "Removing Docker image..."
-            docker rmi hexapod-builder || true
+    fi
+    
+    # Clean kernel driver and user space using Docker
+    docker run --rm \
+        -v "${KERNEL_MODULE_DIR}:/build/module" \
+        -v "${USER_SPACE_DIR}:/build/user" \
+        hexapod-builder clean || {
+        # If Docker image doesn't exist, that's fine - continue cleaning
+        if [ $? -ne 125 ]; then
+            log "${RED}" "Docker clean failed!"
+            exit 1
         fi
+    }
+    
+    # Clean deploy directory with sudo if needed
+    if [ -d "${DEPLOY_DIR}" ]; then
+        log "${YELLOW}" "Cleaning deploy directory..."
+        if ! rm -rf "${DEPLOY_DIR}"/* 2>/dev/null; then
+            log "${YELLOW}" "Using sudo to clean deploy directory..."
+            sudo rm -rf "${DEPLOY_DIR}"/*
+        fi
+    fi
+    
+    # Clean user space binaries with sudo if needed
+    if [ -d "${USER_SPACE_DIR}/bin" ]; then
+        log "${GREEN}" "Cleaning user space binaries..."
+        if ! rm -rf "${USER_SPACE_DIR}/bin" 2>/dev/null; then
+            log "${YELLOW}" "Using sudo to clean user space binaries..."
+            sudo rm -rf "${USER_SPACE_DIR}/bin"
+        fi
+    fi
+    
+    log "${GREEN}" "Clean completed successfully!"
+    exit 0
+fi
 
-        build_docker_image "--no-cache"
-        build_kernel_module
-        build_user_space
-        build_install_script
-        log "${GREEN}" "Build completed successfully!"
-        log "${GREEN}" "Deployment package created in: ${DEPLOY_DIR}"
-        ;;
+# Handle Docker image building with or without cache
+if [ $DO_NO_CACHE -eq 1 ]; then
+    # Remove Docker image if it exists
+    if docker images | grep -q hexapod-builder; then
+        log "${GREEN}" "Removing Docker image..."
+        docker rmi hexapod-builder || true
+    fi
+    build_docker_image "--no-cache"
+else
+    build_docker_image ""
+fi
 
-    -m | module)
-        build_docker_image ""
-        build_kernel_module
-        log "${GREEN}" "Kernel modules build completed successfully!"
-        ;;
+# Build requested components
+COMPONENTS_BUILT=0
 
-    -u | user)
-        build_docker_image ""
-        build_user_space
-        log "${GREEN}" "User space programs build completed successfully!"
-        ;;
+if [ $DO_MODULE -eq 1 ]; then
+    build_kernel_module
+    log "${GREEN}" "Kernel modules build completed successfully!"
+    COMPONENTS_BUILT=1
+fi
 
-    -i | install)
-        build_install_script
-        log "${GREEN}" "Installation script created successfully!"
-        ;;
+if [ $DO_USER -eq 1 ]; then
+    build_user_space
+    log "${GREEN}" "User space programs build completed successfully!"
+    COMPONENTS_BUILT=1
+fi
 
-    "")
-        build_docker_image ""
-        build_kernel_module
-        build_user_space
-        build_install_script
-        log "${GREEN}" "Build completed successfully!"
-        log "${GREEN}" "Deployment package created in: ${DEPLOY_DIR}"
-        ;;
-        
-    *)
-        usage
-        ;;
-esac
+if [ $DO_INSTALL -eq 1 ]; then
+    build_install_script
+    log "${GREEN}" "Installation script created successfully!"
+    COMPONENTS_BUILT=1
+fi
+
+# Print overall success message if anything was built
+if [ $COMPONENTS_BUILT -eq 1 ]; then
+    log "${GREEN}" "Build completed successfully!"
+    log "${GREEN}" "Deployment package created in: ${DEPLOY_DIR}"
+fi
