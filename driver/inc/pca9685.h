@@ -6,7 +6,8 @@
 
 /* I2C Bus and Addresses */
 #define PCA9685_I2C_BUS HEXAPOD_I2C_BUS /* BeagleBone I2C3 */
-#define PCA9685_I2C_ADDR 0x40           /* Default address */
+#define PCA9685_I2C_ADDR_1 0x40         /* Primary address */
+#define PCA9685_I2C_ADDR_2 0x41         /* Secondary address */
 
 /* PCA9685 registers */
 #define PCA9685_MODE1 0x00
@@ -47,5 +48,6 @@ void pca9685_cleanup(void);
 int pca9685_set_pwm_freq(u16 freq_hz);
 int pca9685_set_pwm(u8 channel, u16 on, u16 off);
 int pca9685_set_pwm_us(u8 channel, u16 us);
+int pca9685_enable_outputs(void);
 
 #endif /* _PCA9685_H_ */

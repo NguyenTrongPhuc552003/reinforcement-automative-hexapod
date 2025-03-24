@@ -56,9 +56,9 @@ build_docker_image() {
         exit 1
     fi
     
-    # Verify docker-entrypoint.sh exists
-    if [ ! -f "${PROJECT_ROOT}/docker-entrypoint.sh" ]; then
-        log "${RED}" "docker-entrypoint.sh not found in project root!"
+    # Verify entrypoint.sh exists
+    if [ ! -f "${PROJECT_ROOT}/entrypoint.sh" ]; then
+        log "${RED}" "entrypoint.sh not found in project root!"
         exit 1
     fi
     

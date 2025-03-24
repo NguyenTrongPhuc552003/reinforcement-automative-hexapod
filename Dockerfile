@@ -57,21 +57,21 @@ RUN cd ${KERNEL_DIR} && \
     gcc -o scripts/recordmcount scripts/recordmcount.c && \
     echo '#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <sys/types.h>\n#include <sys/stat.h>\n#include <unistd.h>\n#include <fcntl.h>\n' > scripts/mod/modpost_local.h && \
     gcc -o scripts/mod/modpost \
-        scripts/mod/modpost.c \
-        scripts/mod/file2alias.c \
-        scripts/mod/sumversion.c \
-        -DCONFIG_MODVERSIONS -DCONFIG_MODULE_SRCVERSION_ALL \
-        -I scripts/mod \
-        -include scripts/mod/modpost_local.h && \
+    scripts/mod/modpost.c \
+    scripts/mod/file2alias.c \
+    scripts/mod/sumversion.c \
+    -DCONFIG_MODVERSIONS -DCONFIG_MODULE_SRCVERSION_ALL \
+    -I scripts/mod \
+    -include scripts/mod/modpost_local.h && \
     gcc -o scripts/genksyms/genksyms \
-        scripts/genksyms/genksyms.c \
-        scripts/genksyms/parse.tab.c \
-        scripts/genksyms/lex.lex.c \
-        -I scripts/genksyms
+    scripts/genksyms/genksyms.c \
+    scripts/genksyms/parse.tab.c \
+    scripts/genksyms/lex.lex.c \
+    -I scripts/genksyms
 
 # 7. Build Script
-COPY docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+COPY entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # 8. Copy source files
 COPY . /build/module/
@@ -79,4 +79,4 @@ COPY . /build/module/
 # Default command for kernel module build
 CMD cd /build/module && make
 
-ENTRYPOINT ["docker-entrypoint.sh"]
+ENTRYPOINT ["entrypoint.sh"]
