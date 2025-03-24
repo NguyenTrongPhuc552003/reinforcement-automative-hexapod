@@ -76,27 +76,32 @@ int servo_set_angle(u8 leg, u8 joint, s16 angle)
 {
     u8 channel;
     u16 pulse_width;
-    u8 controller_offset = 0;
+    int ret;
+    static int first_command = 1;
 
     /* Validate parameters */
     if (leg >= NUM_LEGS || joint >= NUM_JOINTS_PER_LEG)
         return -EINVAL;
 
+    /* On first servo command, ensure PWM outputs are enabled */
+    if (first_command)
+    {
+        ret = pca9685_enable_outputs();
+        if (ret < 0)
+        {
+            pr_err("Servo: Failed to enable PWM outputs: %d\n", ret);
+            return ret;
+        }
+        first_command = 0;
+    }
+
     /* Get the appropriate channel */
     channel = servo_map[leg][joint];
 
-    /* If using two controllers and this is a leg that should use second controller */
-    if (default_config.use_secondary_controller && leg_controller[leg] == 1)
+    /* If this leg uses the second controller, add offset to channel */
+    if (leg_controller[leg] == 1)
     {
-        controller_offset = 16;
-        channel += controller_offset;
-    }
-    else if (!default_config.use_secondary_controller && leg_controller[leg] == 1)
-    {
-        /* In test mode with only one controller, remap legs that would normally use
-         * the second controller to the first controller
-         */
-        channel = servo_map[leg][joint]; // Use the channel as is with first controller
+        channel += 16; /* Offset for second PCA9685 controller */
     }
 
     /* Apply calibration offset */
@@ -106,7 +111,13 @@ int servo_set_angle(u8 leg, u8 joint, s16 angle)
     pulse_width = angle_to_pulse(angle);
 
     /* Set the pulse width */
-    return pca9685_set_pwm_us(channel, pulse_width);
+    ret = pca9685_set_pwm_us(channel, pulse_width);
+    if (ret)
+    {
+        pr_err("Servo: Failed to set PWM for leg %d, joint %d (channel %d): %d\n",
+               leg, joint, channel, ret);
+    }
+    return ret;
 }
 
 /* Set calibration for a leg */
@@ -127,6 +138,14 @@ int servo_set_calibration(u8 leg, s16 hip_offset, s16 knee_offset, s16 ankle_off
 int servo_center_all(void)
 {
     int leg, joint, ret;
+
+    /* Ensure PWM outputs are enabled before centering */
+    ret = pca9685_enable_outputs();
+    if (ret < 0)
+    {
+        pr_err("Servo: Failed to enable PWM outputs: %d\n", ret);
+        return ret;
+    }
 
     for (leg = 0; leg < NUM_LEGS; leg++)
     {

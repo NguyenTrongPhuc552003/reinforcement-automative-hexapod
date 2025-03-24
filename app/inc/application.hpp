@@ -6,6 +6,7 @@
 #include <functional>
 #include <string>
 #include <chrono>
+#include <atomic>
 #include "hexapod.hpp"
 #include "controller.hpp"
 
@@ -66,6 +67,13 @@ private:
     bool setupInputHandling();
     bool processInput();
     bool update();
+    void setupKeyCommands();
+    void printHelp() const;
+    void displayTelemetry();
+    void updatePerformanceMetrics(const std::chrono::microseconds &frameTime);
+    void reportPerformance();
+    bool loadConfiguration();
+    bool saveConfiguration();
 
     // Command pattern for key handling
     using KeyCommand = std::function<bool()>;
@@ -73,7 +81,8 @@ private:
     bool executeKeyCommand(char key);
 
     // Member variables
-    static volatile bool m_running;
+    static std::atomic<bool> m_running;
+    static std::atomic<bool> m_telemetryActive;
     std::string m_lastError;
     ControlMode m_currentMode;
 
@@ -87,6 +96,10 @@ private:
     // Performance monitoring
     std::chrono::high_resolution_clock::time_point m_lastUpdateTime;
     float m_updateInterval; // seconds between updates
+    unsigned long m_frameCount;
+    unsigned long m_totalFrameTime; // microseconds
+    unsigned long m_maxFrameTime;   // microseconds
+    bool m_performanceMonitoringEnabled;
 };
 
 #endif // APPLICATION_HPP

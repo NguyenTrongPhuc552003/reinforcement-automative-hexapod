@@ -5,9 +5,8 @@
 #include "pca9685.h"
 
 /* Global variables */
-static struct i2c_client *pca9685_client;
+static struct i2c_client *pca9685_primary_client;
 static struct i2c_client *pca9685_secondary_client;
-static int secondary_controller_active = 0;
 
 /* Function prototypes */
 static struct i2c_client *pca9685_get_client(u8 channel);
@@ -25,18 +24,11 @@ static struct i2c_client *pca9685_get_client(u8 channel)
      */
     if (channel < 16)
     {
-        return pca9685_client;
-    }
-    else if (secondary_controller_active)
-    {
-        return pca9685_secondary_client;
+        return pca9685_primary_client;
     }
     else
     {
-        /* When secondary controller isn't active but channel > 15,
-         * silently remap to primary controller. This avoids warning spam.
-         */
-        return pca9685_client;
+        return pca9685_secondary_client;
     }
 }
 
@@ -112,55 +104,48 @@ int pca9685_init(void)
     }
 
     /* Create I2C client for primary controller */
-    pca9685_client = i2c_new_dummy(adapter, PCA9685_I2C_ADDR);
-    if (!pca9685_client)
+    pca9685_primary_client = i2c_new_dummy(adapter, PCA9685_I2C_ADDR_1);
+    if (!pca9685_primary_client)
     {
         pr_err("PCA9685: Failed to create primary I2C client\n");
         i2c_put_adapter(adapter);
         return -ENOMEM;
     }
 
-    /* Create I2C client for secondary controller if configured */
-    if (default_config.use_secondary_controller)
+    /* Create I2C client for secondary controller */
+    pca9685_secondary_client = i2c_new_dummy(adapter, PCA9685_I2C_ADDR_2);
+    if (!pca9685_secondary_client)
     {
-        pca9685_secondary_client = i2c_new_dummy(adapter, default_config.pca9685_secondary_addr);
-        if (!pca9685_secondary_client)
-        {
-            pr_err("PCA9685: Failed to create secondary I2C client\n");
-            i2c_unregister_device(pca9685_client);
-            i2c_put_adapter(adapter);
-            return -ENOMEM;
-        }
-        secondary_controller_active = 1;
+        pr_err("PCA9685: Failed to create secondary I2C client\n");
+        i2c_unregister_device(pca9685_primary_client);
+        i2c_put_adapter(adapter);
+        return -ENOMEM;
     }
 
+    /* Safe to release adapter now that both clients are created */
     i2c_put_adapter(adapter);
 
     /* Initialize primary controller */
-    ret = pca9685_init_controller(pca9685_client);
+    ret = pca9685_init_controller(pca9685_primary_client);
     if (ret < 0)
     {
         pr_err("PCA9685: Failed to initialize primary controller\n");
         goto error;
     }
 
-    /* Initialize secondary controller if active */
-    if (secondary_controller_active)
+    /* Initialize secondary controller */
+    ret = pca9685_init_controller(pca9685_secondary_client);
+    if (ret < 0)
     {
-        ret = pca9685_init_controller(pca9685_secondary_client);
-        if (ret < 0)
-        {
-            pr_err("PCA9685: Failed to initialize secondary controller\n");
-            goto error;
-        }
+        pr_err("PCA9685: Failed to initialize secondary controller\n");
+        goto error;
     }
 
     /* Calculate prescale for default frequency */
     prescale = (u8)((PCA9685_CLOCK_FREQ / (PCA9685_PWM_RES * PCA9685_PWM_FREQ)) - 1);
 
-    pr_info("PCA9685: Initialized %s at address 0x%02x, prescale %d, freq %d Hz\n",
-            secondary_controller_active ? "controllers" : "controller",
-            PCA9685_I2C_ADDR, prescale, PCA9685_PWM_FREQ);
+    pr_info("PCA9685: Initialized dual controllers (0x%02x, 0x%02x) at %d Hz\n",
+            PCA9685_I2C_ADDR_1, PCA9685_I2C_ADDR_2, PCA9685_PWM_FREQ);
     return 0;
 
 error:
@@ -374,19 +359,45 @@ int pca9685_set_pwm_us(u8 channel, u16 us)
 }
 
 /**
+ * Enable all PWM outputs
+ */
+int pca9685_enable_outputs(void)
+{
+    int ret;
+
+    /* Enable outputs on both controllers if available */
+    ret = pca9685_write_reg(PCA9685_MODE1, MODE1_AI); /* Normal operation with auto-increment */
+    if (ret < 0)
+        return ret;
+
+    /* Set output mode to totem pole (provides stronger drive) */
+    ret = pca9685_write_reg(PCA9685_MODE2, MODE2_OUTDRV);
+    if (ret < 0)
+        return ret;
+
+    /* Clear the "full off" state for all channels */
+    ret = pca9685_write_reg(PCA9685_ALL_LED_OFF_H, 0x00);
+    if (ret < 0)
+        return ret;
+
+    pr_debug("PCA9685: All outputs enabled\n");
+    return 0;
+}
+
+/**
  * Clean up PCA9685 resources
  */
 void pca9685_cleanup(void)
 {
-    if (pca9685_client)
+    if (pca9685_primary_client)
     {
         /* Turn off all outputs */
         pca9685_write_reg(PCA9685_ALL_LED_OFF_L, 0);
         pca9685_write_reg(PCA9685_ALL_LED_OFF_H, 0x10); /* Full off */
 
         /* Unregister client */
-        i2c_unregister_device(pca9685_client);
-        pca9685_client = NULL;
+        i2c_unregister_device(pca9685_primary_client);
+        pca9685_primary_client = NULL;
     }
 
     if (pca9685_secondary_client)
@@ -407,6 +418,7 @@ EXPORT_SYMBOL_GPL(pca9685_cleanup);
 EXPORT_SYMBOL_GPL(pca9685_set_pwm);
 EXPORT_SYMBOL_GPL(pca9685_set_pwm_freq);
 EXPORT_SYMBOL_GPL(pca9685_set_pwm_us);
+EXPORT_SYMBOL_GPL(pca9685_enable_outputs);
 
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("PCA9685 PWM Controller Driver");

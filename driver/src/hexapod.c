@@ -173,7 +173,6 @@ static int __init hexapod_init(void)
 {
     int ret;
 
-    // Simplified message - less verbose
     pr_info("Hexapod: initializing driver\n");
 
     /* Initialize the data structure */
@@ -192,7 +191,7 @@ static int __init hexapod_init(void)
         return ret;
     }
 
-    /* Initialize MPU6050 */
+    /* Initialize MPU6050 - uses constants from mpu6050.h */
     ret = mpu6050_init();
     if (ret)
     {
@@ -200,7 +199,7 @@ static int __init hexapod_init(void)
         goto fail_mpu;
     }
 
-    /* Initialize PCA9685 */
+    /* Initialize PCA9685 - uses constants from pca9685.h */
     ret = pca9685_init();
     if (ret)
     {
@@ -217,7 +216,6 @@ static int __init hexapod_init(void)
     }
 
     hexapod_dev.initialized = 1;
-    // Simplified success message
     pr_info("Hexapod: driver initialized\n");
     return 0;
 
