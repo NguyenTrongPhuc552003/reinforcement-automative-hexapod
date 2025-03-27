@@ -60,3 +60,7 @@ clean:
 	$(MAKE) -C $(KERNEL_DIR) M=$(PWD) clean
 	rm -f Module.symvers modules.order
 	rm -rf $(INSTALL_MOD_PATH)
+	# Clean organized build artifacts (matching entrypoint.sh)
+	rm -rf $(PWD)/obj
+	rm -rf $(PWD)/cmd
+	rm -rf $(PWD)/deps

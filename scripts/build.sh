@@ -29,11 +29,11 @@ usage() {
     echo "  -m, module        Build kernel modules"
     echo "  -u, user          Build user space programs"
     echo "  -c, clean         Clean build artifacts"
-    echo "  -i, install       Create installation script"
+    echo "  -t, utility       Create utility scripts (install.sh, monitor.sh)"
     echo "  -n, --no-cache    Build all without cache"
     echo "  -h, --help        Show this help message"
     echo ""
-    echo "Options can be combined, e.g., -im to build installation script & modules"
+    echo "Options can be combined, e.g., -mt to build modules & utility scripts"
     echo ""
     exit 1
 }
@@ -124,19 +124,27 @@ build_user_space() {
     }
 }
 
-# Function to create install script
-build_install_script() {
-    log "${YELLOW}" "Copying installation script..."
+# Function to create utility scripts
+build_utility_scripts() {
+    log "${YELLOW}" "Copying utility scripts..."
     local script_dir="$(dirname "${BASH_SOURCE[0]}")"
+    
+    # Copy installation script
     cp "${script_dir}/install.sh" "${DEPLOY_DIR}/"
     chmod +x "${DEPLOY_DIR}/install.sh"
+    
+    # Copy monitoring script
+    cp "${script_dir}/monitor.sh" "${DEPLOY_DIR}/"
+    chmod +x "${DEPLOY_DIR}/monitor.sh"
+    
+    log "${GREEN}" "Utility scripts prepared successfully"
 }
 
 # Initialize option flags
 DO_CLEAN=0
 DO_MODULE=0
 DO_USER=0
-DO_INSTALL=0
+DO_UTILITY=0
 DO_NO_CACHE=0
 
 # Parse command-line arguments
@@ -144,7 +152,7 @@ if [ $# -eq 0 ]; then
     # Default: build everything
     DO_MODULE=1
     DO_USER=1
-    DO_INSTALL=1
+    DO_UTILITY=1
 else
     for arg in "$@"; do
         if [[ "$arg" == "--no-cache" ]]; then
@@ -157,8 +165,8 @@ else
             DO_MODULE=1
         elif [[ "$arg" == "user" ]]; then
             DO_USER=1
-        elif [[ "$arg" == "install" ]]; then
-            DO_INSTALL=1
+        elif [[ "$arg" == "utility" ]]; then
+            DO_UTILITY=1
         elif [[ "$arg" == -* && "$arg" != "--"* ]]; then
             # Process combined short options like -imu
             flags=${arg#-}
@@ -168,7 +176,7 @@ else
                     c) DO_CLEAN=1 ;;
                     m) DO_MODULE=1 ;;
                     u) DO_USER=1 ;;
-                    i) DO_INSTALL=1 ;;
+                    t) DO_UTILITY=1 ;;
                     n) DO_NO_CACHE=1 ;;
                     h) usage ;;
                     *) 
@@ -255,9 +263,9 @@ if [ $DO_USER -eq 1 ]; then
     COMPONENTS_BUILT=1
 fi
 
-if [ $DO_INSTALL -eq 1 ]; then
-    build_install_script
-    log "${GREEN}" "Installation script created successfully!"
+if [ $DO_UTILITY -eq 1 ]; then
+    build_utility_scripts
+    log "${GREEN}" "Utility scripts created successfully!"
     COMPONENTS_BUILT=1
 fi
 

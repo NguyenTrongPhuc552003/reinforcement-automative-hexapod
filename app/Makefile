@@ -17,7 +17,7 @@ else
 endif
 
 # Add library linking with rpath
-LDFLAGS = -lm -L/build/deploy
+LDFLAGS = -lm -L/build/deploy -lstdc++fs
 LDFLAGS += -Wl,-O1 -Wl,--as-needed
 
 # Directories

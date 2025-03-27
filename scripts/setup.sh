@@ -166,6 +166,12 @@ else
     print_warning "Test utilities not found in deploy directory"
 fi
 
+# Add a kernel monitoring section
+print_step "Creating kernel monitoring tools"
+cp "${PROJECT_ROOT}/scripts/monitor.sh" "${DEPLOY_DIR}/"
+chmod +x "${DEPLOY_DIR}/monitor.sh"
+print_step "Kernel object flow monitor installed to deploy directory"
+
 # Final instructions
 print_header "Setup Complete!"
 
@@ -186,6 +192,11 @@ Here's how to use it:
    sudo ./test_servo              # Test servo movements
    sudo ./test_mpu6050            # Test IMU sensor readings
    sudo ./test_movement           # Test different gaits
+
+4. To monitor kernel object flow:
+   sudo ./monitor.sh              # Monitor all kernel interactions
+   sudo ./monitor.sh --mode ioctl # Focus on IOCTL commands
+   sudo ./monitor.sh --mode kernel # Show kernel driver details
 
 For more information, see the documentation in ./docs/
 
