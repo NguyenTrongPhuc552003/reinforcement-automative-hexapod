@@ -1,300 +1,535 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <errno.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <cerrno>
 #include <fcntl.h>
+#include <unistd.h>
 #include <sys/ioctl.h>
-#include <string>
+#include <time.h>
+#include <stdexcept>
+#include <system_error>
 #include "hexapod.hpp"
+
+//==============================================================================
+// Kernel Driver Interface Definitions
+//==============================================================================
 
 // Device file path
 #define HEXAPOD_DEVICE "/dev/hexapod"
 
 // IOCTL commands - must match kernel definitions
 #define HEXAPOD_IOC_MAGIC 'H'
-#define HEXAPOD_IOCTL_SET_LEG _IOW(HEXAPOD_IOC_MAGIC, 1, leg_command_t)
-#define HEXAPOD_IOCTL_GET_IMU _IOR(HEXAPOD_IOC_MAGIC, 2, ImuData)
-#define HEXAPOD_IOCTL_CALIBRATE _IOW(HEXAPOD_IOC_MAGIC, 3, Calibration)
+#define HEXAPOD_IOCTL_SET_LEG _IOW(HEXAPOD_IOC_MAGIC, 1, struct hexapod_leg_cmd)
+#define HEXAPOD_IOCTL_GET_IMU _IOR(HEXAPOD_IOC_MAGIC, 2, struct hexapod_imu_data)
+#define HEXAPOD_IOCTL_CALIBRATE _IOW(HEXAPOD_IOC_MAGIC, 3, struct hexapod_calibration)
 #define HEXAPOD_IOCTL_CENTER_ALL _IO(HEXAPOD_IOC_MAGIC, 4)
 
-// Legacy C structures for compatibility with kernel
-typedef struct
+namespace hexapod
 {
-    int16_t hip;
-    int16_t knee;
-    int16_t ankle;
-} leg_position_t;
 
-typedef struct
-{
-    uint8_t leg_num;
-    leg_position_t position;
-} leg_command_t;
+    //==============================================================================
+    // Kernel-compatible Structure Definitions
+    //==============================================================================
 
-// Implementation class using PIMPL idiom
-class HexapodImpl
-{
-public:
-    int fd;
-    bool initialized;
-    LegPosition leg_positions[NUM_LEGS];
-    ImuData imu_data;
-    int last_error_code;
-    std::string last_error_message;
-
-    HexapodImpl() : fd(-1), initialized(false), last_error_code(0)
+    // These structures maintain binary compatibility with kernel driver
+    struct hexapod_leg_joint
     {
-        for (int i = 0; i < NUM_LEGS; i++)
+        int16_t hip;
+        int16_t knee;
+        int16_t ankle;
+    };
+
+    struct hexapod_leg_cmd
+    {
+        uint8_t leg_num;
+        struct hexapod_leg_joint joint;
+    };
+
+    struct hexapod_imu_data
+    {
+        int16_t accel_x;
+        int16_t accel_y;
+        int16_t accel_z;
+        int16_t gyro_x;
+        int16_t gyro_y;
+        int16_t gyro_z;
+    };
+
+    struct hexapod_calibration
+    {
+        uint8_t leg_num;
+        struct hexapod_leg_joint offsets;
+    };
+
+    //==============================================================================
+    // Utility Functions
+    //==============================================================================
+
+    /**
+     * @brief Get the name of an error category for logging
+     *
+     * @param category Error category
+     * @return const char* Category name as string
+     */
+    const char *getCategoryName(ErrorCategory category)
+    {
+        switch (category)
         {
-            leg_positions[i] = LegPosition();
+        case ErrorCategory::NONE:
+            return "NONE";
+        case ErrorCategory::DEVICE:
+            return "DEVICE";
+        case ErrorCategory::COMMUNICATION:
+            return "COMM";
+        case ErrorCategory::PARAMETER:
+            return "PARAM";
+        case ErrorCategory::SYSTEM:
+            return "SYSTEM";
+        case ErrorCategory::HARDWARE:
+            return "HARDWARE";
+        default:
+            return "UNKNOWN";
         }
     }
 
-    void setError(int code, const std::string &message)
+    //==============================================================================
+    // Implementation Class (PIMPL idiom)
+    //==============================================================================
+
+    class HexapodImpl
     {
-        last_error_code = code;
-        last_error_message = message;
-        if (code != 0)
+    public:
+        int fd;                                      ///< File descriptor for device
+        bool initialized;                            ///< Initialization flag
+        LegPosition leg_positions[Config::NUM_LEGS]; ///< Current leg positions
+        ImuData imu_data;                            ///< Current IMU data
+        ErrorInfo lastError;                         ///< Last error information
+
+        /**
+         * @brief Construct a new Hexapod Impl object
+         */
+        HexapodImpl() : fd(-1), initialized(false)
         {
-            fprintf(stderr, "Hexapod error: %s\n", message.c_str());
+            // Initialize leg positions
+            for (int i = 0; i < Config::NUM_LEGS; i++)
+            {
+                leg_positions[i] = LegPosition();
+                leg_positions[i].leg_num = i;
+            }
         }
-    }
-};
 
-// LegPosition implementation
-LegPosition::LegPosition(int16_t hip, int16_t knee, int16_t ankle)
-    : hip(hip), knee(knee), ankle(ankle) {}
+        /**
+         * @brief Set error information with logging
+         *
+         * @param code Error code
+         * @param category Error category
+         * @param message Error message
+         */
+        void setError(int code, ErrorCategory category, const std::string &message)
+        {
+            lastError = ErrorInfo(code, category, message);
+            if (code != 0)
+            {
+                fprintf(stderr, "Hexapod error [%s-%d]: %s\n",
+                        getCategoryName(category), code, message.c_str());
+            }
+        }
 
-// Hexapod implementation
-Hexapod::Hexapod() : pImpl(new HexapodImpl()) {}
+        /**
+         * @brief Clear error information
+         */
+        void clearError()
+        {
+            lastError = ErrorInfo();
+        }
 
-Hexapod::~Hexapod()
-{
-    cleanup();
-}
+        /**
+         * @brief Execute IOCTL with error handling
+         *
+         * @param request IOCTL request code
+         * @param arg IOCTL argument
+         * @param errorMessage Error message prefix
+         * @return true if IOCTL successful
+         * @return false if IOCTL failed
+         */
+        bool executeIoctl(unsigned long request, void *arg, const char *errorMessage)
+        {
+            if (!initialized || fd < 0)
+            {
+                setError(ErrorInfo::ErrorCode::NOT_INITIALIZED, ErrorCategory::PARAMETER,
+                         "Hexapod not initialized or invalid file descriptor");
+                return false;
+            }
 
-Hexapod::Hexapod(Hexapod &&other) noexcept : pImpl(std::move(other.pImpl)) {}
+            int ret = ioctl(fd, request, arg);
+            if (ret < 0)
+            {
+                setError(ErrorInfo::ErrorCode::COMM_ERROR, ErrorCategory::COMMUNICATION,
+                         std::string(errorMessage) + ": " + strerror(errno));
+                return false;
+            }
 
-Hexapod &Hexapod::operator=(Hexapod &&other) noexcept
-{
-    if (this != &other)
+            return true;
+        }
+    };
+
+    //==============================================================================
+    // LegPosition Implementation
+    //==============================================================================
+
+    LegPosition::LegPosition(int16_t hip, int16_t knee, int16_t ankle) : leg_num(0)
     {
-        pImpl = std::move(other.pImpl);
+        joints.hip = hip;
+        joints.knee = knee;
+        joints.ankle = ankle;
     }
-    return *this;
-}
 
-bool Hexapod::init()
-{
-    if (pImpl->initialized)
+    LegPosition::LegPosition(const LegPosition &other) : leg_num(other.leg_num)
     {
+        joints.hip = other.joints.hip;
+        joints.knee = other.joints.knee;
+        joints.ankle = other.joints.ankle;
+    }
+
+    LegPosition &LegPosition::operator=(const LegPosition &other)
+    {
+        if (this != &other)
+        {
+            leg_num = other.leg_num;
+            joints.hip = other.joints.hip;
+            joints.knee = other.joints.knee;
+            joints.ankle = other.joints.ankle;
+        }
+        return *this;
+    }
+
+    //==============================================================================
+    // Hexapod Class Implementation
+    //==============================================================================
+
+    // Constructor and Destructor
+    Hexapod::Hexapod() : pImpl(std::make_unique<HexapodImpl>()) {}
+
+    Hexapod::~Hexapod()
+    {
+        cleanup();
+    }
+
+    // Move operations
+    Hexapod::Hexapod(Hexapod &&other) noexcept : pImpl(std::move(other.pImpl)) {}
+
+    Hexapod &Hexapod::operator=(Hexapod &&other) noexcept
+    {
+        if (this != &other)
+        {
+            pImpl = std::move(other.pImpl);
+        }
+        return *this;
+    }
+
+    // Initialization
+    bool Hexapod::init()
+    {
+        // If already initialized, just return success
+        if (pImpl->initialized)
+        {
+            return true;
+        }
+
+        // Clear any previous errors
+        pImpl->clearError();
+
+        // Try to open the device
+        pImpl->fd = open(HEXAPOD_DEVICE, O_RDWR);
+        if (pImpl->fd < 0)
+        {
+            // Handle different error cases with specific messages
+            if (access(HEXAPOD_DEVICE, F_OK) != 0)
+            {
+                pImpl->setError(ErrorInfo::ErrorCode::DEVICE_NOT_FOUND, ErrorCategory::DEVICE,
+                                "Device node not found. Is the driver loaded? Try 'sudo modprobe hexapod_driver'");
+            }
+            else if (access(HEXAPOD_DEVICE, R_OK | W_OK) != 0)
+            {
+                pImpl->setError(ErrorInfo::ErrorCode::PERMISSION_DENIED, ErrorCategory::SYSTEM,
+                                "Permission denied. Try running with sudo or add your user to the correct group.");
+            }
+            else
+            {
+                pImpl->setError(ErrorInfo::ErrorCode::IO_ERROR, ErrorCategory::COMMUNICATION,
+                                std::string("Failed to open hexapod device: ") + strerror(errno));
+            }
+            return false;
+        }
+
+        // Set initialized flag
+        pImpl->initialized = true;
+        printf("Hexapod interface initialized successfully\n");
         return true;
     }
 
-    pImpl->fd = open(HEXAPOD_DEVICE, O_RDWR);
-    if (pImpl->fd < 0)
+    // Cleanup resources
+    void Hexapod::cleanup()
     {
-        int err = errno;
-        pImpl->setError(err, std::string("Failed to open hexapod device: ") + strerror(err));
-        return false;
-    }
-
-    pImpl->initialized = true;
-    printf("Hexapod initialized successfully\n");
-    return true;
-}
-
-void Hexapod::cleanup()
-{
-    if (pImpl && pImpl->initialized)
-    {
-        if (pImpl->fd >= 0)
+        if (pImpl && pImpl->initialized)
         {
-            close(pImpl->fd);
-            pImpl->fd = -1;
+            // Center legs for safety if we still have a valid fd
+            if (pImpl->fd >= 0)
+            {
+                // Try to center, but don't fail if we can't
+                centerAll();
+
+                // Close device file with proper error checking
+                if (close(pImpl->fd) < 0)
+                {
+                    fprintf(stderr, "Warning: Error closing hexapod device: %s\n", strerror(errno));
+                }
+                pImpl->fd = -1;
+            }
+            pImpl->initialized = false;
         }
-        pImpl->initialized = false;
     }
-}
 
-bool Hexapod::setLegPosition(uint8_t leg_num, const LegPosition &position)
-{
-    if (!pImpl->initialized || leg_num >= NUM_LEGS)
+    // Leg Position Control
+    bool Hexapod::setLegPosition(uint8_t leg_num, const LegPosition &position)
     {
-        pImpl->setError(EINVAL, "Invalid leg number or not initialized");
-        return false;
+        // Parameter validation
+        if (!pImpl->initialized)
+        {
+            pImpl->setError(ErrorInfo::ErrorCode::NOT_INITIALIZED, ErrorCategory::PARAMETER,
+                            "Hexapod not initialized");
+            return false;
+        }
+
+        if (leg_num >= Config::NUM_LEGS)
+        {
+            pImpl->setError(ErrorInfo::ErrorCode::INVALID_PARAM, ErrorCategory::PARAMETER,
+                            "Invalid leg number: " + std::to_string(leg_num));
+            return false;
+        }
+
+        if (pImpl->fd < 0)
+        {
+            pImpl->setError(ErrorInfo::ErrorCode::BAD_FILE, ErrorCategory::SYSTEM,
+                            "Invalid file descriptor");
+            return false;
+        }
+
+        // Check angle limits
+        if (position.getHip() < AngleLimits::HIP_MIN || position.getHip() > AngleLimits::HIP_MAX ||
+            position.getKnee() < AngleLimits::KNEE_MIN || position.getKnee() > AngleLimits::KNEE_MAX ||
+            position.getAnkle() < AngleLimits::ANKLE_MIN || position.getAnkle() > AngleLimits::ANKLE_MAX)
+        {
+
+            pImpl->setError(ErrorInfo::ErrorCode::INVALID_PARAM, ErrorCategory::PARAMETER,
+                            "Joint angle out of range");
+            return false;
+        }
+
+        // Create the command structure for the kernel
+        struct hexapod_leg_cmd cmd;
+        cmd.leg_num = leg_num;
+        cmd.joint.hip = position.getHip();
+        cmd.joint.knee = position.getKnee();
+        cmd.joint.ankle = position.getAnkle();
+
+        // Send command through IOCTL
+        int ret = ioctl(pImpl->fd, HEXAPOD_IOCTL_SET_LEG, &cmd);
+        if (ret < 0)
+        {
+            pImpl->setError(ErrorInfo::ErrorCode::COMM_ERROR, ErrorCategory::COMMUNICATION,
+                            std::string("Failed to set leg position: ") + strerror(errno));
+            return false;
+        }
+
+        // Store position in local state
+        pImpl->leg_positions[leg_num] = position;
+        pImpl->leg_positions[leg_num].leg_num = leg_num;
+        return true;
     }
 
-    if (pImpl->fd < 0)
+    bool Hexapod::getLegPosition(uint8_t leg_num, LegPosition &position) const
     {
-        pImpl->setError(EBADF, "Invalid file descriptor");
-        return false;
+        // Parameter validation
+        if (!pImpl->initialized)
+        {
+            const_cast<HexapodImpl *>(pImpl.get())->setError(ErrorInfo::ErrorCode::NOT_INITIALIZED, ErrorCategory::PARAMETER, "Hexapod not initialized");
+            return false;
+        }
+
+        if (leg_num >= Config::NUM_LEGS)
+        {
+            const_cast<HexapodImpl *>(pImpl.get())->setError(ErrorInfo::ErrorCode::INVALID_PARAM, ErrorCategory::PARAMETER, "Invalid leg number: " + std::to_string(leg_num));
+            return false;
+        }
+
+        // Return cached position
+        position = pImpl->leg_positions[leg_num];
+        return true;
     }
 
-#ifdef DEBUG_POSITIONS
-    // More efficient debug approach - only print every 100 calls and only for specific legs
-    static unsigned int calls = 0;
-    if (++calls % 100 == 0 && (leg_num == 0 || leg_num == 3))
+    // IMU Data Access
+    bool Hexapod::getImuData(ImuData &data) const
     {
-        printf("Leg %d at %.2fs: hip=%d, knee=%d, ankle=%d\n",
-               leg_num, getCurrentTime(), position.hip, position.knee, position.ankle);
+        // Parameter validation
+        if (!pImpl->initialized)
+        {
+            const_cast<HexapodImpl *>(pImpl.get())->setError(ErrorInfo::ErrorCode::NOT_INITIALIZED, ErrorCategory::PARAMETER, "Hexapod not initialized");
+            return false;
+        }
+
+        if (pImpl->fd < 0)
+        {
+            const_cast<HexapodImpl *>(pImpl.get())->setError(ErrorInfo::ErrorCode::BAD_FILE, ErrorCategory::SYSTEM, "Invalid file descriptor");
+            return false;
+        }
+
+        // Create kernel-compatible structure
+        struct hexapod_imu_data kernel_data;
+
+        // Request data via IOCTL
+        int ret = ioctl(pImpl->fd, HEXAPOD_IOCTL_GET_IMU, &kernel_data);
+        if (ret < 0)
+        {
+            const_cast<HexapodImpl *>(pImpl.get())->setError(ErrorInfo::ErrorCode::COMM_ERROR, ErrorCategory::COMMUNICATION, std::string("Failed to get IMU data: ") + strerror(errno));
+            return false;
+        }
+
+        // Copy data to output parameter
+        data.accel_x = kernel_data.accel_x;
+        data.accel_y = kernel_data.accel_y;
+        data.accel_z = kernel_data.accel_z;
+        data.gyro_x = kernel_data.gyro_x;
+        data.gyro_y = kernel_data.gyro_y;
+        data.gyro_z = kernel_data.gyro_z;
+
+        // Cache data
+        pImpl->imu_data = data;
+        return true;
     }
-#endif
 
-    // Prepare command using legacy struct for ioctl compatibility
-    leg_command_t cmd;
-    cmd.leg_num = leg_num;
-    cmd.position.hip = position.hip;
-    cmd.position.knee = position.knee;
-    cmd.position.ankle = position.ankle;
-
-    // Send command to kernel
-    int ret = ioctl(pImpl->fd, HEXAPOD_IOCTL_SET_LEG, &cmd);
-    if (ret < 0)
+    // Calibration
+    bool Hexapod::setCalibration(uint8_t leg_num, int16_t hip_offset, int16_t knee_offset, int16_t ankle_offset)
     {
-        int err = errno;
-        pImpl->setError(err, std::string("Failed to set leg position: ") + strerror(err));
-#ifdef DEBUG_ERRORS
-        // Print a more detailed error message
-        printf("ioctl SET_LEG failed with error %d (%s) for leg %d\n",
-               err, strerror(err), leg_num);
-#endif
-        return false;
+        // Parameter validation
+        if (!pImpl->initialized)
+        {
+            pImpl->setError(ErrorInfo::ErrorCode::NOT_INITIALIZED, ErrorCategory::PARAMETER,
+                            "Hexapod not initialized");
+            return false;
+        }
+
+        if (leg_num >= Config::NUM_LEGS)
+        {
+            pImpl->setError(ErrorInfo::ErrorCode::INVALID_PARAM, ErrorCategory::PARAMETER,
+                            "Invalid leg number: " + std::to_string(leg_num));
+            return false;
+        }
+
+        if (pImpl->fd < 0)
+        {
+            pImpl->setError(ErrorInfo::ErrorCode::BAD_FILE, ErrorCategory::SYSTEM,
+                            "Invalid file descriptor");
+            return false;
+        }
+
+        // Create kernel-compatible calibration structure
+        struct hexapod_calibration cal;
+        cal.leg_num = leg_num;
+        cal.offsets.hip = hip_offset;
+        cal.offsets.knee = knee_offset;
+        cal.offsets.ankle = ankle_offset;
+
+        // Send calibration through IOCTL
+        int ret = ioctl(pImpl->fd, HEXAPOD_IOCTL_CALIBRATE, &cal);
+        if (ret < 0)
+        {
+            pImpl->setError(ErrorInfo::ErrorCode::COMM_ERROR, ErrorCategory::COMMUNICATION,
+                            std::string("Failed to set calibration: ") + strerror(errno));
+            return false;
+        }
+
+        return true;
     }
 
-    // Store position in local state
-    pImpl->leg_positions[leg_num] = position;
-    return true;
-}
-
-bool Hexapod::getLegPosition(uint8_t leg_num, LegPosition &position) const
-{
-    if (!pImpl->initialized || leg_num >= NUM_LEGS)
+    // Center all legs
+    bool Hexapod::centerAll()
     {
-        const_cast<HexapodImpl *>(pImpl.get())->setError(EINVAL, "Invalid leg number or not initialized");
-        return false;
+        // Validation
+        if (!pImpl->initialized)
+        {
+            pImpl->setError(ErrorInfo::ErrorCode::NOT_INITIALIZED, ErrorCategory::PARAMETER,
+                            "Hexapod not initialized");
+            return false;
+        }
+
+        if (pImpl->fd < 0)
+        {
+            pImpl->setError(ErrorInfo::ErrorCode::BAD_FILE, ErrorCategory::SYSTEM,
+                            "Invalid file descriptor");
+            return false;
+        }
+
+        // Send center command through IOCTL
+        int ret = ioctl(pImpl->fd, HEXAPOD_IOCTL_CENTER_ALL);
+        if (ret < 0)
+        {
+            pImpl->setError(ErrorInfo::ErrorCode::COMM_ERROR, ErrorCategory::COMMUNICATION,
+                            std::string("Failed to center all legs: ") + strerror(errno));
+            return false;
+        }
+
+        // Update local state to reflect centered position
+        for (int i = 0; i < Config::NUM_LEGS; i++)
+        {
+            pImpl->leg_positions[i] = LegPosition(0, 0, 0);
+            pImpl->leg_positions[i].leg_num = i;
+        }
+
+        return true;
     }
 
-    position = pImpl->leg_positions[leg_num];
-    return true;
-}
-
-bool Hexapod::getImuData(ImuData &data) const
-{
-    if (!pImpl->initialized)
+    // Error handling
+    ErrorInfo Hexapod::getLastError() const
     {
-        const_cast<HexapodImpl *>(pImpl.get())->setError(EINVAL, "Hexapod not initialized");
-        return false;
+        return pImpl->lastError;
     }
 
-    if (pImpl->fd < 0)
+    std::string Hexapod::getLastErrorMessage() const
     {
-        const_cast<HexapodImpl *>(pImpl.get())->setError(EBADF, "Invalid file descriptor");
-        return false;
+        return pImpl->lastError.getMessage();
     }
 
-    int ret = ioctl(pImpl->fd, HEXAPOD_IOCTL_GET_IMU, &data);
-    if (ret < 0)
+    int Hexapod::getLastErrorCode() const
     {
-        int err = errno;
-        const_cast<HexapodImpl *>(pImpl.get())->setError(err, std::string("Failed to get IMU data: ") + strerror(err));
-        return false;
+        return pImpl->lastError.getCode();
     }
 
-    pImpl->imu_data = data;
-    return true;
-}
-
-bool Hexapod::setCalibration(uint8_t leg_num, int16_t hip_offset, int16_t knee_offset, int16_t ankle_offset)
-{
-    if (!pImpl->initialized || leg_num >= NUM_LEGS)
+    ErrorCategory Hexapod::getLastErrorCategory() const
     {
-        pImpl->setError(EINVAL, "Invalid leg number or not initialized");
-        return false;
+        return pImpl->lastError.getCategory();
     }
 
-    if (pImpl->fd < 0)
+    // Debug utilities
+    void Hexapod::printLegPosition(const LegPosition &position)
     {
-        pImpl->setError(EBADF, "Invalid file descriptor");
-        return false;
+        printf("Hip: %d, Knee: %d, Ankle: %d\n",
+               position.getHip(), position.getKnee(), position.getAnkle());
     }
 
-    Calibration cal;
-    cal.leg_num = leg_num;
-    cal.hip_offset = hip_offset;
-    cal.knee_offset = knee_offset;
-    cal.ankle_offset = ankle_offset;
-
-    int ret = ioctl(pImpl->fd, HEXAPOD_IOCTL_CALIBRATE, &cal);
-    if (ret < 0)
+    void Hexapod::printImuData(const ImuData &data)
     {
-        int err = errno;
-        pImpl->setError(err, std::string("Failed to set calibration: ") + strerror(err));
-        return false;
+        printf("\rAccel: X=%+6.2fg Y=%+6.2fg Z=%+6.2fg | Gyro: X=%+7.2f° Y=%+7.2f° Z=%+7.2f°/s",
+               data.getAccelX(), data.getAccelY(), data.getAccelZ(),
+               data.getGyroX(), data.getGyroY(), data.getGyroZ());
     }
 
-    return true;
-}
-
-bool Hexapod::centerAll()
-{
-    if (!pImpl->initialized)
+    // Time utility
+    double Hexapod::getCurrentTime() const
     {
-        pImpl->setError(EINVAL, "Hexapod not initialized");
-        return false;
+        struct timespec ts;
+        clock_gettime(CLOCK_MONOTONIC, &ts);
+        return ts.tv_sec + (ts.tv_nsec / 1.0e9);
     }
 
-    if (pImpl->fd < 0)
-    {
-        pImpl->setError(EBADF, "Invalid file descriptor");
-        return false;
-    }
-
-    int ret = ioctl(pImpl->fd, HEXAPOD_IOCTL_CENTER_ALL);
-    if (ret < 0)
-    {
-        int err = errno;
-        pImpl->setError(err, std::string("Failed to center all legs: ") + strerror(err));
-        return false;
-    }
-
-    // Clear local state
-    for (int i = 0; i < NUM_LEGS; i++)
-    {
-        pImpl->leg_positions[i] = LegPosition(0, 0, 0);
-    }
-
-    return true;
-}
-
-std::string Hexapod::getLastErrorMessage() const
-{
-    return pImpl->last_error_message;
-}
-
-int Hexapod::getLastErrorCode() const
-{
-    return pImpl->last_error_code;
-}
-
-void Hexapod::printLegPosition(const LegPosition &position)
-{
-    printf("Hip: %d, Knee: %d, Ankle: %d\n",
-           position.hip, position.knee, position.ankle);
-}
-
-void Hexapod::printImuData(const ImuData &data)
-{
-    printf("\rAccel: X=%+6.2fg Y=%+6.2fg Z=%+6.2fg | Gyro: X=%+7.2f° Y=%+7.2f° Z=%+7.2f°/s",
-           data.getAccelX(), data.getAccelY(), data.getAccelZ(),
-           data.getGyroX(), data.getGyroY(), data.getGyroZ());
-}
-
-// Helper function to get consistent timestamps
-double Hexapod::getCurrentTime() const
-{
-    struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    return ts.tv_sec + (ts.tv_nsec / 1.0e9);
-}
+} // namespace hexapod

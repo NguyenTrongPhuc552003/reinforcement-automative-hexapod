@@ -4,326 +4,496 @@
 #include <algorithm>
 #include <stdexcept>
 #include <unistd.h>
+#include <cstdio>
 #include "gait.hpp"
 
-// Implementation class (PIMPL idiom)
-class GaitImpl
+namespace gait
 {
-public:
-    GaitImpl(Hexapod &hexapod, const GaitParameters &params) : hexapod(hexapod), params(params), initialized(false), lastTime(0.0)
+
+    //==============================================================================
+    // Implementation Class (PIMPL idiom)
+    //==============================================================================
+
+    class GaitImpl
     {
-        // Set default leg positions (standing stance)
-        defaultPositions = {
-            {100.0, 100.0, -100.0},  // Front-right
-            {0.0, 120.0, -100.0},    // Middle-right
-            {-100.0, 100.0, -100.0}, // Back-right
-            {100.0, -100.0, -100.0}, // Front-left
-            {0.0, -120.0, -100.0},   // Middle-left
-            {-100.0, -100.0, -100.0} // Back-left
-        };
-
-        // Initialize phase offsets based on gait type
-        configureGaitPattern(params.type);
-    }
-
-    ~GaitImpl() = default;
-
-    // Configure phases for different gait patterns
-    void configureGaitPattern(GaitType type)
-    {
-        phaseOffsets.resize(NUM_LEGS);
-
-        switch (type)
+    public:
+        /**
+         * @brief Construct a new Gait Implementation object
+         *
+         * @param hexapod Reference to hexapod controller
+         * @param params Initial gait parameters
+         */
+        GaitImpl(hexapod::Hexapod &hexapod, const GaitParameters &params)
+            : hexapod(hexapod),
+              params(params),
+              initialized(false),
+              lastTime(0.0)
         {
-        case GaitType::TRIPOD:
-            // Legs 0, 2, 4 move together, and 1, 3, 5 move together
-            phaseOffsets = {0.0, 0.5, 0.0, 0.5, 0.0, 0.5};
-            params.dutyFactor = 0.5; // 50% stance phase
-            break;
+            if (!params.validate())
+            {
+                throw std::invalid_argument("Invalid gait parameters");
+            }
 
-        case GaitType::WAVE:
-            // Each leg is 1/6 cycle out of phase with the next
-            phaseOffsets = {0.0, 0.5, 0.2, 0.7, 0.4, 0.9};
-            params.dutyFactor = 0.85; // 85% stance phase
-            params.stepHeight = 40.0; // Higher steps
-            break;
+            // Initialize leg positions, phase offsets, and states vectors
+            initDefaultPositions();
+            configureGaitPattern(params.type);
 
-        case GaitType::RIPPLE:
-            // More complex overlapping sequence
-            phaseOffsets = {0.0, 0.5, 0.33, 0.83, 0.67, 0.17};
-            params.dutyFactor = 0.65; // 65% stance phase
-            break;
-
-        default:
-            throw std::invalid_argument("Invalid gait type");
+            initialized = true;
         }
 
-        // Create storage for leg states
-        legStates.resize(NUM_LEGS, 0); // 0 = stance, 1 = swing
+        ~GaitImpl() = default;
 
-        initialized = true;
-    }
-
-    // Update all leg positions for the current time
-    bool update(double time, double direction, double speed)
-    {
-        if (!initialized)
+        /**
+         * @brief Initialize default standing positions for each leg
+         */
+        void initDefaultPositions()
         {
-            fprintf(stderr, "Gait not initialized\n");
-            return false;
+            // Use struct to avoid confusion with Point3D which has different member order
+            struct Position
+            {
+                double x, y, z;
+            };
+
+            // Clear and preallocate vectors
+            defaultPositions.clear();
+            defaultPositions.reserve(hexapod::Config::NUM_LEGS);
+
+            // Assign default positions for standing stance
+            defaultPositions = {
+                {100.0, 100.0, -100.0},  // Front-right (0)
+                {0.0, 120.0, -100.0},    // Middle-right (1)
+                {-100.0, 100.0, -100.0}, // Back-right (2)
+                {100.0, -100.0, -100.0}, // Front-left (3)
+                {0.0, -120.0, -100.0},   // Middle-left (4)
+                {-100.0, -100.0, -100.0} // Back-left (5)
+            };
         }
 
-        // Calculate global phase (0.0 - 1.0)
-        double phase = std::fmod(time / params.cycleTime, 1.0);
+        /**
+         * @brief Configure phases for different gait patterns
+         *
+         * @param type The gait type to configure
+         */
+        void configureGaitPattern(GaitType type)
+        {
+            // Resize and initialize phase offsets array
+            phaseOffsets.resize(hexapod::Config::NUM_LEGS);
 
+            // Configure based on gait type
+            switch (type)
+            {
+            case GaitType::TRIPOD:
+                // Legs 0, 2, 4 move together, and 1, 3, 5 move together
+                phaseOffsets = {0.0, 0.5, 0.0, 0.5, 0.0, 0.5};
+                params.dutyFactor = 0.5; // 50% stance phase
+                break;
+
+            case GaitType::WAVE:
+                // Each leg has a specific phase offset for wave-like motion
+                phaseOffsets = {0.0, 0.5, 0.2, 0.7, 0.4, 0.9};
+                params.dutyFactor = 0.85; // 85% stance phase
+                break;
+
+            case GaitType::RIPPLE:
+                // More complex overlapping sequence
+                phaseOffsets = {0.0, 0.5, 0.33, 0.83, 0.67, 0.17};
+                params.dutyFactor = 0.65; // 65% stance phase
+                break;
+
+            default:
+                throw std::invalid_argument("Unsupported gait type");
+            }
+
+            // Initialize leg states vector (0 = stance, 1 = swing)
+            legStates.resize(hexapod::Config::NUM_LEGS, 0);
+        }
+
+        /**
+         * @brief Update all leg positions for the current time
+         *
+         * @param time Current time in seconds
+         * @param direction Direction of travel in degrees
+         * @param speed Movement speed factor (0.0-1.0)
+         * @return bool True if update successful
+         */
+        bool update(double time, double direction, double speed)
+        {
+            if (!initialized)
+            {
+                fprintf(stderr, "Gait not initialized\n");
+                return false;
+            }
+
+            // Clamp speed to valid range
+            speed = std::max(0.0, std::min(1.0, speed));
+
+            // Calculate global phase (0.0 - 1.0) based on time and cycle time
+            double phase = std::fmod(time / params.cycleTime, 1.0);
+
+// Debug logging (reduced frequency)
 #ifdef DEBUG_GAIT
-        // Print debug info less frequently (changed from 50 to 200 calls)
-        static int debugCounter = 0;
-        if (++debugCounter % 200 == 0)
-        { // Print every ~200 calls instead of 50
-            fprintf(stderr, "Gait update: time=%.2f, phase=%.2f, dir=%.1f, speed=%.2f\n",
-                    time, phase, direction, speed);
-        }
+            static int debugCounter = 0;
+            if (++debugCounter % 200 == 0)
+            {
+                fprintf(stderr, "Gait update: time=%.2f, phase=%.2f, dir=%.1f, speed=%.2f\n",
+                        time, phase, direction, speed);
+            }
 #endif
 
-        // Store current time
-        lastTime = time;
+            // Store current time for future calculations
+            lastTime = time;
 
-        // Update each leg
-        for (int i = 0; i < NUM_LEGS; ++i)
+            // Update each leg position
+            bool success = true;
+            for (int i = 0; i < hexapod::Config::NUM_LEGS; ++i)
+            {
+                // Skip update if unsuccessful - prevents partial updates
+                if (!updateLegPosition(i, phase, direction, speed))
+                {
+                    success = false;
+                    break;
+                }
+            }
+
+            return success;
+        }
+
+        /**
+         * @brief Update position for a specific leg
+         *
+         * @param legIndex Leg index (0-5)
+         * @param globalPhase Global phase of the gait cycle
+         * @param direction Direction of travel in degrees
+         * @param speed Movement speed factor
+         * @return bool True if update successful
+         */
+        bool updateLegPosition(int legIndex, double globalPhase, double direction, double speed)
         {
-            // Calculate leg phase (with offset)
-            double legPhase = std::fmod(phase + phaseOffsets[i], 1.0);
+            // Calculate leg-specific phase with offset
+            double legPhase = std::fmod(globalPhase + phaseOffsets[legIndex], 1.0);
 
             // Get default position for this leg
-            Point3D footPos(
-                defaultPositions[i].x,
-                defaultPositions[i].y,
-                defaultPositions[i].z);
+            kinematics::Point3D footPos(
+                defaultPositions[legIndex].x,
+                defaultPositions[legIndex].y,
+                defaultPositions[legIndex].z);
 
-#ifdef DEBUG_GAIT
-            // Debug: print original position occasionally
-            if (debugCounter % 50 == 0 && i == 0)
-            {
-                fprintf(stderr, "Leg %d initial pos: (%.1f, %.1f, %.1f), phase: %.2f\n",
-                        i, footPos.x, footPos.y, footPos.z, legPhase);
-            }
-#endif
-
-            // Apply stride pattern
+            // Apply gait trajectory to modify the position
             computeLegTrajectory(footPos, legPhase, direction, speed);
 
-#ifdef DEBUG_GAIT
-            // Debug: print modified position occasionally
-            if (debugCounter % 50 == 0 && i == 0)
-            {
-                fprintf(stderr, "Leg %d computed pos: (%.1f, %.1f, %.1f)\n",
-                        i, footPos.x, footPos.y, footPos.z);
-            }
-#endif
+            // Convert position to joint angles using inverse kinematics
+            hexapod::LegPosition angles;
+            angles.leg_num = legIndex; // Set leg number for IK to use correct parameters
 
-            // Convert position to joint angles
-            LegPosition angles;
-            if (!Kinematics::getInstance().inverseKinematics(footPos, angles))
+            if (!kinematics::Kinematics::getInstance().inverseKinematics(footPos, angles))
             {
-                fprintf(stderr, "Inverse kinematics failed for leg %d\n", i);
-                continue;
+                fprintf(stderr, "Inverse kinematics failed for leg %d\n", legIndex);
+                return false;
             }
 
             // Send command to hexapod
-            if (!hexapod.setLegPosition(i, angles))
+            if (!hexapod.setLegPosition(legIndex, angles))
             {
                 fprintf(stderr, "Failed to set position for leg %d: %s\n",
-                        i, hexapod.getLastErrorMessage().c_str());
-                return false;
-            }
-        }
-        return true;
-    }
-
-    // Center all legs in default position
-    bool centerLegs()
-    {
-        for (int i = 0; i < NUM_LEGS; ++i)
-        {
-            Point3D pos(
-                defaultPositions[i].x,
-                defaultPositions[i].y,
-                defaultPositions[i].z);
-
-            LegPosition angles;
-            if (!Kinematics::getInstance().inverseKinematics(pos, angles))
-            {
-                fprintf(stderr, "Inverse kinematics failed during centering for leg %d\n", i);
-                continue;
-            }
-
-            if (!hexapod.setLegPosition(i, angles))
-            {
-                fprintf(stderr, "Failed to center leg %d: %s\n",
-                        i, hexapod.getLastErrorMessage().c_str());
+                        legIndex, hexapod.getLastErrorMessage().c_str());
                 return false;
             }
 
-            // Small delay between legs for smoother movement
-            usleep(50000);
+            return true;
         }
-        return true;
-    }
 
-    // Get current parameters
-    GaitParameters getParameters() const
-    {
-        return params;
-    }
-
-    // Update parameters
-    bool setParameters(const GaitParameters &newParams)
-    {
-        if (newParams.type != params.type)
+        /**
+         * @brief Compute trajectory for a leg at a given phase
+         *
+         * @param position Position to be modified
+         * @param phase Phase within gait cycle (0.0-1.0)
+         * @param direction Direction of travel in degrees
+         * @param speed Movement speed factor
+         */
+        void computeLegTrajectory(kinematics::Point3D &position, double phase, double direction, double speed)
         {
-            // Need to reconfigure gait pattern for new type
-            configureGaitPattern(newParams.type);
-        }
-        params = newParams;
-        return true;
-    }
+            // Cache direction calculations for efficiency
+            static double lastDirection = -999.0;
+            static double sinAngle = 0.0, cosAngle = 1.0;
 
-private:
-    // Compute leg trajectory for a given phase
-    void computeLegTrajectory(Point3D &position, double phase, double direction, double speed)
-    {
-        // Convert direction from degrees to radians - precalculate when direction changes
-        static double lastDirection = -999.0;
-        static double sinAngle = 0.0, cosAngle = 1.0;
+            // Recalculate only when direction changes
+            if (direction != lastDirection)
+            {
+                double angleRad = direction * M_PI / 180.0;
+                sinAngle = sin(angleRad);
+                cosAngle = cos(angleRad);
+                lastDirection = direction;
+            }
 
-        if (direction != lastDirection)
-        {
-            double angleRad = direction * M_PI / 180.0;
-            sinAngle = sin(angleRad);
-            cosAngle = cos(angleRad);
-            lastDirection = direction;
-        }
+            // Calculate stride length based on speed
+            double strideLength = params.stepLength * speed;
 
-        double strideLength = params.stepLength * speed;
+            // Calculate stride vector components
+            double strideX = strideLength * cosAngle;
+            double strideY = strideLength * sinAngle;
 
-        // Calculate stride vector components using precalculated sin/cos
-        double strideX = strideLength * cosAngle;
-        double strideY = strideLength * sinAngle;
-
-        // Remove unused variables that were causing warnings
-        // double origX = position.x;
-        // double origY = position.y;
-        // double origZ = position.z;
-
-        // Use a constant precomputed duty factor to avoid division
-        const double dutyFactor = params.dutyFactor;
-        const double invDutyFactor = 1.0 / dutyFactor;
-        const double invSwingFactor = 1.0 / (1.0 - dutyFactor);
-
-        // Store initial position for trajectory verification (in debug mode only)
+// Store original position for debug
 #ifdef DEBUG_TRAJECTORY
-        double origX = position.x;
-        double origY = position.y;
-        double origZ = position.z;
+            double origX = position.x;
+            double origY = position.y;
+            double origZ = position.z;
 #endif
 
-        // Determine if stance or swing phase
-        if (phase < dutyFactor)
-        {
-            // Stance phase - foot is on ground, moving backward
-            double stancePhase = phase * invDutyFactor;
-            position.x += strideX * (0.5 - stancePhase);
-            position.y += strideY * (0.5 - stancePhase);
-            // Height is constant during stance phase
-        }
-        else
-        {
-            // Swing phase - foot is in air, moving forward
-            double swingPhase = (phase - dutyFactor) * invSwingFactor;
-            position.x += strideX * (swingPhase - 0.5);
-            position.y += strideY * (swingPhase - 0.5);
+            // Precompute constants for efficiency
+            const double dutyFactor = params.dutyFactor;
+            const double invDutyFactor = 1.0 / dutyFactor;
+            const double invSwingFactor = 1.0 / (1.0 - dutyFactor);
 
-            // Add vertical component - optimize parabolic trajectory calculation
-            // Original: position.z += params.stepHeight * (1.0 - 4.0 * pow(swingPhase - 0.5, 2.0));
-            double swingOffset = swingPhase - 0.5;
-            position.z += params.stepHeight * (1.0 - 4.0 * (swingOffset * swingOffset));
-        }
+            // Determine if stance or swing phase
+            if (phase < dutyFactor)
+            {
+                // Stance phase - foot is on ground, moving backward
+                double stancePhase = phase * invDutyFactor;
+                position.x += strideX * (0.5 - stancePhase);
+                position.y += strideY * (0.5 - stancePhase);
+                // Height remains constant during stance
+            }
+            else
+            {
+                // Swing phase - foot is in air, moving forward
+                double swingPhase = (phase - dutyFactor) * invSwingFactor;
 
+                // Move foot horizontally
+                position.x += strideX * (swingPhase - 0.5);
+                position.y += strideY * (swingPhase - 0.5);
+
+                // Add vertical component (parabolic trajectory)
+                double swingOffset = swingPhase - 0.5;
+                position.z += params.stepHeight * (1.0 - 4.0 * (swingOffset * swingOffset));
+            }
+
+// Debug trajectory calculation
 #ifdef DEBUG_TRAJECTORY
-        // Less frequent but more informative debug output
-        static int debugCount = 0;
-        if (++debugCount % 500 == 0)
-        {
-            fprintf(stderr, "Trajectory for phase=%.2f: delta=(%.2f,%.2f,%.2f)\n",
-                    phase, position.x - origX, position.y - origY, position.z - origZ);
-        }
+            static int debugCount = 0;
+            if (++debugCount % 500 == 0)
+            {
+                fprintf(stderr, "Trajectory for phase=%.2f: delta=(%.2f,%.2f,%.2f)\n",
+                        phase, position.x - origX, position.y - origY, position.z - origZ);
+            }
 #endif
-    }
+        }
 
-    // Member variables
-    Hexapod &hexapod;
-    GaitParameters params;
-    bool initialized;
-    double lastTime;
+        /**
+         * @brief Center all legs to their default positions
+         *
+         * @return bool True if all legs were successfully centered
+         */
+        bool centerLegs()
+        {
+            if (!initialized)
+            {
+                fprintf(stderr, "Gait not initialized\n");
+                return false;
+            }
 
-    struct Point3DSimple
-    {
-        double x, y, z;
+            for (int i = 0; i < hexapod::Config::NUM_LEGS; ++i)
+            {
+                // Create Point3D from default position
+                kinematics::Point3D pos(
+                    defaultPositions[i].x,
+                    defaultPositions[i].y,
+                    defaultPositions[i].z);
+
+                // Calculate joint angles using inverse kinematics
+                hexapod::LegPosition angles;
+                angles.leg_num = i;
+
+                if (!kinematics::Kinematics::getInstance().inverseKinematics(pos, angles))
+                {
+                    fprintf(stderr, "Inverse kinematics failed during centering for leg %d\n", i);
+                    continue; // Continue with other legs even if one fails
+                }
+
+                // Send command to hexapod
+                if (!hexapod.setLegPosition(i, angles))
+                {
+                    fprintf(stderr, "Failed to center leg %d: %s\n",
+                            i, hexapod.getLastErrorMessage().c_str());
+                    return false;
+                }
+
+                // Small delay between leg movements for smoother centering
+                usleep(50000); // 50ms delay
+            }
+
+            return true;
+        }
+
+        /**
+         * @brief Get current parameters
+         *
+         * @return GaitParameters Current parameters
+         */
+        GaitParameters getParameters() const
+        {
+            return params;
+        }
+
+        /**
+         * @brief Update parameters
+         *
+         * @param newParams New parameters to use
+         * @return bool True if parameters were updated successfully
+         */
+        bool setParameters(const GaitParameters &newParams)
+        {
+            if (!newParams.validate())
+            {
+                return false;
+            }
+
+            // Reconfigure gait pattern if type changed
+            if (newParams.type != params.type)
+            {
+                try
+                {
+                    configureGaitPattern(newParams.type);
+                }
+                catch (const std::exception &e)
+                {
+                    fprintf(stderr, "Failed to configure gait pattern: %s\n", e.what());
+                    return false;
+                }
+            }
+
+            // Update parameters
+            params = newParams;
+            return true;
+        }
+
+        /**
+         * @brief Calculate the phase for a specific leg
+         *
+         * @param legIndex The leg index (0-5)
+         * @param time Current time in seconds
+         * @return double Phase value (0.0 to 1.0)
+         */
+        double calculateLegPhase(int legIndex, double time) const
+        {
+            if (legIndex < 0 || legIndex >= hexapod::Config::NUM_LEGS)
+            {
+                return 0.0;
+            }
+
+            // Calculate global phase
+            double globalPhase = std::fmod(time / params.cycleTime, 1.0);
+
+            // Apply leg-specific offset
+            return std::fmod(globalPhase + phaseOffsets[legIndex], 1.0);
+        }
+
+        /**
+         * @brief Check if initialized
+         *
+         * @return bool True if initialized
+         */
+        bool isInitialized() const
+        {
+            return initialized;
+        }
+
+        // Member variables
+        hexapod::Hexapod &hexapod;
+        GaitParameters params;
+        bool initialized;
+        double lastTime;
+
+        // Simple 3D position structure for leg positions
+        struct Position
+        {
+            double x, y, z;
+        };
+
+        std::vector<Position> defaultPositions;
+        std::vector<double> phaseOffsets;
+        std::vector<int> legStates;
     };
 
-    std::vector<Point3DSimple> defaultPositions;
-    std::vector<double> phaseOffsets;
-    std::vector<int> legStates;
-};
+    //==============================================================================
+    // Gait Class Implementation
+    //==============================================================================
 
-// Gait class implementation
-Gait::Gait() : pImpl(nullptr) {}
+    // Constructor and destructor
+    Gait::Gait() : pImpl(nullptr) {}
 
-Gait::~Gait() = default;
+    Gait::~Gait() = default;
 
-Gait::Gait(Gait &&other) noexcept = default;
+    // Move semantics
+    Gait::Gait(Gait &&other) noexcept = default;
 
-Gait &Gait::operator=(Gait &&other) noexcept = default;
+    Gait &Gait::operator=(Gait &&other) noexcept = default;
 
-bool Gait::init(Hexapod &hexapod, const GaitParameters &params)
-{
-    try
+    // Initialization
+    bool Gait::init(hexapod::Hexapod &hexapod, const GaitParameters &params)
     {
-        pImpl = std::make_unique<GaitImpl>(hexapod, params);
-        return true;
+        try
+        {
+            pImpl = std::make_unique<GaitImpl>(hexapod, params);
+            return true;
+        }
+        catch (const std::exception &e)
+        {
+            fprintf(stderr, "Gait initialization failed: %s\n", e.what());
+            return false;
+        }
     }
-    catch (const std::exception &e)
+
+    // Parameter access
+    GaitParameters Gait::getParameters() const
     {
-        fprintf(stderr, "Gait initialization failed: %s\n", e.what());
-        return false;
+        if (!pImpl)
+        {
+            return GaitParameters();
+        }
+        return pImpl->getParameters();
     }
-}
 
-bool Gait::update(double time, double direction, double speed)
-{
-    if (!pImpl)
-        return false;
-    return pImpl->update(time, direction, speed);
-}
+    bool Gait::setParameters(const GaitParameters &params)
+    {
+        if (!pImpl)
+        {
+            return false;
+        }
+        return pImpl->setParameters(params);
+    }
 
-bool Gait::centerLegs()
-{
-    if (!pImpl)
-        return false;
-    return pImpl->centerLegs();
-}
+    // Movement control
+    bool Gait::update(double time, double direction, double speed)
+    {
+        if (!pImpl)
+        {
+            return false;
+        }
+        return pImpl->update(time, direction, speed);
+    }
 
-GaitParameters Gait::getParameters() const
-{
-    if (!pImpl)
-        return GaitParameters();
-    return pImpl->getParameters();
-}
+    bool Gait::centerLegs()
+    {
+        if (!pImpl)
+        {
+            return false;
+        }
+        return pImpl->centerLegs();
+    }
 
-bool Gait::setParameters(const GaitParameters &params)
-{
-    if (!pImpl)
-        return false;
-    return pImpl->setParameters(params);
-}
+    // Utility methods
+    double Gait::calculateLegPhase(int legIndex, double time) const
+    {
+        if (!pImpl)
+        {
+            return 0.0;
+        }
+        return pImpl->calculateLegPhase(legIndex, time);
+    }
+
+    bool Gait::isInitialized() const
+    {
+        return (pImpl && pImpl->isInitialized());
+    }
+
+} // namespace gait

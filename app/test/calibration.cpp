@@ -3,16 +3,76 @@
 #include <string.h>
 #include <signal.h>
 #include <unistd.h>
-#include "calibration.hpp"
+#include <termios.h>
+#include <fcntl.h>
+#include "calibration.hpp" // This now has the authoritative Calibration definition
+#include "controller.hpp"  // Include controller for non-blocking input handling
 
 // Global flag for program termination
 static volatile int running = 1;
+static struct termios orig_termios;
+static bool terminal_modified = false;
 
 // Signal handler for graceful termination
 static void handle_signal(int sig)
 {
     printf("\nReceived signal %d, shutting down...\n", sig);
     running = 0;
+}
+
+// Setup terminal for non-blocking input
+static void setup_terminal()
+{
+    struct termios new_termios;
+
+    // Get current terminal settings
+    if (tcgetattr(STDIN_FILENO, &orig_termios) < 0)
+    {
+        fprintf(stderr, "Warning: Failed to get terminal attributes\n");
+        return;
+    }
+
+    terminal_modified = true;
+
+    // Save a copy for modifications
+    new_termios = orig_termios;
+
+    // Disable canonical mode and echo
+    new_termios.c_lflag &= ~(ICANON | ECHO | ECHOE | ECHOK | ECHONL | IEXTEN);
+
+    // Disable implementation-defined input processing
+    new_termios.c_iflag &= ~(ISTRIP | INLCR | ICRNL | IGNCR | IXON | IXOFF);
+
+    // Set input character size
+    new_termios.c_cflag &= ~CSIZE;
+    new_termios.c_cflag |= CS8;
+
+    // One input byte is enough to return from read()
+    new_termios.c_cc[VMIN] = 0;
+
+    // Inter-character timer unused (timeout immediately)
+    new_termios.c_cc[VTIME] = 0;
+
+    // Apply the new settings
+    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &new_termios) < 0)
+    {
+        fprintf(stderr, "Warning: Failed to set terminal attributes\n");
+        terminal_modified = false;
+    }
+}
+
+// Restore terminal to original state
+static void restore_terminal()
+{
+    if (terminal_modified)
+    {
+        // Restore original terminal settings
+        if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios) < 0)
+        {
+            fprintf(stderr, "Warning: Failed to restore terminal attributes\n");
+        }
+        terminal_modified = false;
+    }
 }
 
 // Test loading and saving calibration
@@ -87,25 +147,42 @@ static bool test_apply_calibration(Hexapod &hexapod)
         return false;
     }
 
-    // Apply calibration to each leg
+    // Apply calibration to each leg with better error handling
+    size_t success_count = 0;
     for (const auto &cal : calibrations)
     {
         printf("Applying calibration to leg %d: hip=%d, knee=%d, ankle=%d\n",
                cal.leg_num, cal.hip_offset, cal.knee_offset, cal.ankle_offset);
 
-        if (!hexapod.setCalibration(cal.leg_num, cal.hip_offset, cal.knee_offset, cal.ankle_offset))
+        // Added retry logic for calibration application
+        bool success = false;
+        for (int retry = 0; retry < 3 && !success; retry++)
+        {
+            if (hexapod.setCalibration(cal.leg_num, cal.hip_offset, cal.knee_offset, cal.ankle_offset))
+            {
+                success = true;
+                success_count++;
+            }
+            else if (retry < 2)
+            {
+                fprintf(stderr, "Retrying calibration for leg %d (attempt %d)...\n",
+                        cal.leg_num, retry + 2);
+                usleep(100000); // 100ms delay between retries
+            }
+        }
+
+        if (!success)
         {
             fprintf(stderr, "Failed to apply calibration to leg %d: %s\n",
                     cal.leg_num, hexapod.getLastErrorMessage().c_str());
-            return false;
         }
 
         // Short delay between legs
         usleep(100000);
     }
 
-    printf("All calibrations applied successfully\n");
-    return true;
+    printf("%d of %zu legs calibrated successfully\n", success_count, calibrations.size());
+    return (success_count == calibrations.size());
 }
 
 // Test with visual verification
@@ -188,15 +265,39 @@ int main(int argc, char *argv[])
     signal(SIGINT, handle_signal);
     signal(SIGTERM, handle_signal);
 
+    // Setup terminal
+    setup_terminal();
+
     printf("Hexapod Calibration Test\n");
     printf("------------------------\n");
 
-    // Initialize hexapod
+    // Initialize hexapod with retry logic
     Hexapod hexapod;
-    if (!hexapod.init())
+    bool initialized = false;
+    int retries = 3;
+
+    while (!initialized && retries-- > 0)
     {
-        fprintf(stderr, "Failed to initialize hexapod: %s\n",
-                hexapod.getLastErrorMessage().c_str());
+        printf("Initializing hexapod hardware (attempt %d)...\n", 3 - retries);
+        if (hexapod.init())
+        {
+            initialized = true;
+        }
+        else
+        {
+            fprintf(stderr, "Failed to initialize: %s\n", hexapod.getLastErrorMessage().c_str());
+            if (retries > 0)
+            {
+                printf("Retrying in 1 second...\n");
+                sleep(1);
+            }
+        }
+    }
+
+    if (!initialized)
+    {
+        fprintf(stderr, "Maximum retries reached, giving up.\n");
+        restore_terminal();
         return 1;
     }
 
@@ -253,6 +354,13 @@ cleanup:
     // Center all legs before exit
     printf("\nCentering all legs...\n");
     hexapod.centerAll();
+
+    // Explicitly cleanup hexapod resources
+    printf("Cleaning up hexapod resources...\n");
+    hexapod.cleanup();
+
+    // Restore terminal settings
+    restore_terminal();
 
     printf("Test program completed.\n");
     return 0;

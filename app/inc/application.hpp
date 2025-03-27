@@ -11,95 +11,179 @@
 #include "controller.hpp"
 
 /**
- * Main application class that encapsulates the hexapod control logic
+ * @brief Hexapod application system
+ *
+ * This namespace contains classes and functions for the main hexapod
+ * application, providing a high-level interface to the robot control system.
  */
-class Application
+namespace application
 {
-public:
-    // Singleton pattern
-    static Application &getInstance();
 
-    // Delete copy/move constructors and assignment operators
-    Application(const Application &) = delete;
-    Application &operator=(const Application &) = delete;
-    Application(Application &&) = delete;
-    Application &operator=(Application &&) = delete;
+    //==============================================================================
+    // Application Modes
+    //==============================================================================
 
-    // Application control modes
+    /**
+     * @brief Application control modes
+     */
     enum class ControlMode
     {
-        MANUAL,     // Direct keyboard control
-        AUTONOMOUS, // Self-navigating mode
-        SEQUENCE,   // Run pre-programmed sequence
-        CALIBRATION // Calibration mode
+        MANUAL,     ///< Direct keyboard control
+        AUTONOMOUS, ///< Self-navigating mode
+        SEQUENCE,   ///< Run pre-programmed sequence
+        CALIBRATION ///< Calibration mode
     };
 
-    // Result of operations
-    enum class Result
+    /**
+     * @brief Application execution results
+     */
+    enum class ExecutionResult
     {
-        SUCCESS,
-        ERROR_INITIALIZATION,
-        ERROR_RUNTIME,
-        ERROR_SHUTDOWN,
-        TERMINATED_BY_USER
+        SUCCESS,              ///< Normal successful completion
+        ERROR_INITIALIZATION, ///< Error during initialization
+        ERROR_RUNTIME,        ///< Error during execution
+        ERROR_SHUTDOWN,       ///< Error during shutdown
+        TERMINATED_BY_USER    ///< User requested termination
     };
 
-    // Lifecycle methods
-    bool init();
-    Result run();
-    void shutdown();
+    //==============================================================================
+    // Forward declarations
+    //==============================================================================
 
-    // Control methods
-    bool switchMode(ControlMode mode);
-    ControlMode getCurrentMode() const;
-    std::string getLastErrorMessage() const;
+    // Implementation class (PIMPL idiom)
+    class ApplicationImpl;
 
-    // Signal handling
-    static void signalHandler(int signal);
+    //==============================================================================
+    // Main Application Class
+    //==============================================================================
 
-private:
-    Application();
-    ~Application();
+    /**
+     * @brief Main hexapod application class
+     *
+     * Orchestrates the hexapod robot control system, providing a high-level
+     * interface for user interaction and system management.
+     */
+    class Application
+    {
+    public:
+        /**
+         * @brief Running state flag (shared between signal handler and main loop)
+         */
+        static std::atomic<bool> m_running;
 
-    // Private implementation methods
-    bool initializeHexapod();
-    bool initializeController();
-    bool setupInputHandling();
-    bool processInput();
-    bool update();
-    void setupKeyCommands();
-    void printHelp() const;
-    void displayTelemetry();
-    void updatePerformanceMetrics(const std::chrono::microseconds &frameTime);
-    void reportPerformance();
-    bool loadConfiguration();
-    bool saveConfiguration();
+        /**
+         * @brief Telemetry display flag
+         */
+        static std::atomic<bool> m_telemetryActive;
 
-    // Command pattern for key handling
-    using KeyCommand = std::function<bool()>;
-    void registerKeyCommand(char key, KeyCommand command);
-    bool executeKeyCommand(char key);
+        /**
+         * @brief Get the singleton instance
+         *
+         * @return Application& Reference to the singleton instance
+         */
+        static Application &getInstance();
 
-    // Member variables
-    static std::atomic<bool> m_running;
-    static std::atomic<bool> m_telemetryActive;
-    std::string m_lastError;
-    ControlMode m_currentMode;
+        // Delete copy and move operations for singleton
+        Application(const Application &) = delete;
+        Application &operator=(const Application &) = delete;
+        Application(Application &&) = delete;
+        Application &operator=(Application &&) = delete;
 
-    // Smart pointers for resource management
-    std::unique_ptr<Hexapod> m_hexapod;
-    std::unique_ptr<Controller> m_controller;
+        //--------------------------------------------------------------------------
+        // Lifecycle Methods
+        //--------------------------------------------------------------------------
 
-    // Key command map
-    std::unordered_map<char, KeyCommand> m_keyCommands;
+        /**
+         * @brief Initialize the application
+         *
+         * Sets up all subsystems including hexapod hardware, controller,
+         * terminal input handling, and key command registration.
+         *
+         * @return true if initialization successful
+         * @return false if initialization failed (check getLastError())
+         */
+        bool init();
 
-    // Performance monitoring
-    std::chrono::high_resolution_clock::time_point m_lastUpdateTime;
-    float m_updateInterval; // seconds between updates
-    unsigned long m_frameCount;
-    unsigned long m_totalFrameTime; // microseconds
-    unsigned long m_maxFrameTime;   // microseconds
-    bool m_performanceMonitoringEnabled;
-};
+        /**
+         * @brief Run the main application loop
+         *
+         * Processes input, updates the controller state, and handles system monitoring
+         * until termination is requested.
+         *
+         * @return ExecutionResult Result of the execution
+         */
+        ExecutionResult run();
 
-#endif // APPLICATION_HPP
+        /**
+         * @brief Shutdown the application
+         *
+         * Performs a clean shutdown of all subsystems, ensuring the robot
+         * is left in a safe state.
+         */
+        void shutdown();
+
+        //--------------------------------------------------------------------------
+        // Control Methods
+        //--------------------------------------------------------------------------
+
+        /**
+         * @brief Switch to a different control mode
+         *
+         * @param mode New control mode to switch to
+         * @return true if mode switch was successful
+         * @return false if mode switch failed
+         */
+        bool switchMode(ControlMode mode);
+
+        /**
+         * @brief Get the current control mode
+         *
+         * @return ControlMode Current control mode
+         */
+        ControlMode getCurrentMode() const;
+
+        /**
+         * @brief Get the last error message
+         *
+         * @return std::string Error message
+         */
+        std::string getLastErrorMessage() const;
+
+        //--------------------------------------------------------------------------
+        // Signal Handling
+        //--------------------------------------------------------------------------
+
+        /**
+         * @brief Signal handler for system signals
+         *
+         * @param signal Signal number
+         */
+        static void signalHandler(int signal);
+
+    private:
+        /**
+         * @brief Private constructor for singleton pattern
+         */
+        Application();
+
+        /**
+         * @brief Destructor
+         *
+         * Ensures clean shutdown
+         */
+        ~Application();
+
+        /**
+         * @brief Implementation pointer (PIMPL idiom)
+         */
+        std::unique_ptr<ApplicationImpl> pImpl;
+    };
+
+} // namespace application
+
+// For backward compatibility, import into global namespace
+using application::Application;
+using application::ControlMode;
+using application::ExecutionResult;
+
+#endif /* APPLICATION_HPP */

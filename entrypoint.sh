@@ -16,6 +16,30 @@ log() {
     echo -e "${color}$@${NC}"
 }
 
+# Function to organize build artifacts
+organize_build_artifacts() {
+    log "${YELLOW}" "Organizing build artifacts..."
+    
+    # Create directories for organized artifacts
+    mkdir -p /build/module/obj
+    mkdir -p /build/module/cmd
+    mkdir -p /build/module/deps
+    
+    # Move .o files
+    find /build/module -maxdepth 1 -name "*.o" -exec mv {} /build/module/obj/ \;
+    find /build/module/src -name "*.o" -exec mv {} /build/module/obj/ \;
+    
+    # Move .cmd files
+    find /build/module -maxdepth 1 -name "*.cmd" -exec mv {} /build/module/cmd/ \;
+    find /build/module/src -name "*.cmd" -exec mv {} /build/module/cmd/ \;
+    
+    # Move .d files (dependency files)
+    find /build/module -maxdepth 1 -name "*.d" -exec mv {} /build/module/deps/ \;
+    find /build/module/src -name "*.d" -exec mv {} /build/module/deps/ \;
+    
+    log "${GREEN}" "Build artifacts organized successfully!"
+}
+
 # Common make parameters for kernel module
 MAKE_PARAMS="ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} KERNEL_DIR=${KERNEL_DIR}"
 
@@ -38,6 +62,9 @@ case "$1" in
             log "${RED}" "Build failed!"
             exit 1
         }
+        
+        # Organize artifacts after successful build
+        organize_build_artifacts
         
         log "${GREEN}" "Copying built modules to deploy directory..."
         mkdir -p /build/deploy
@@ -72,6 +99,14 @@ case "$1" in
         # Clean kernel modules
         cd /build/module
         log "${GREEN}" "Cleaning kernel modules..."
+        
+        # Remove organized build artifacts directories first
+        log "${YELLOW}" "Removing organized build artifacts..."
+        rm -rf /build/module/obj/
+        rm -rf /build/module/cmd/
+        rm -rf /build/module/deps/
+        
+        # Run the normal make clean
         make ${MAKE_PARAMS} clean || true
         
         # Clean user space programs

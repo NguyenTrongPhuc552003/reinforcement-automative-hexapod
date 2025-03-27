@@ -35,8 +35,11 @@ static bool test_leg_movement(Hexapod &hexapod)
     hexapod.centerAll();
     sleep(2);
 
+    // Reuse a single LegPosition object
+    LegPosition pos(0, 0, 0);
+
     // Test each leg
-    for (int leg = 0; leg < NUM_LEGS; leg++)
+    for (int leg = 0; leg < NUM_LEGS && running; leg++)
     {
         printf("Testing leg %d\n", leg);
 
@@ -44,7 +47,9 @@ static bool test_leg_movement(Hexapod &hexapod)
         printf("  Moving hip joint\n");
         for (int angle = -30; angle <= 30 && running; angle += 10)
         {
-            LegPosition pos(angle, 0, 0);
+            pos.setHip(angle);
+            pos.setKnee(0);
+            pos.setAnkle(0);
 
             if (!hexapod.setLegPosition(leg, pos))
             {
@@ -55,16 +60,26 @@ static bool test_leg_movement(Hexapod &hexapod)
             usleep(200000); // 200ms delay
         }
 
-        // Reset hip
-        LegPosition centerHip(0, 0, 0);
-        hexapod.setLegPosition(leg, centerHip);
+        // Reset hip and test knee
+        pos.setHip(0);
+        pos.setKnee(0);
+        pos.setAnkle(0);
+
+        if (!hexapod.setLegPosition(leg, pos))
+        {
+            fprintf(stderr, "Failed to reset hip: %s\n",
+                    hexapod.getLastErrorMessage().c_str());
+            return false;
+        }
         usleep(500000); // 500ms delay
 
         // Move knee joint
         printf("  Moving knee joint\n");
         for (int angle = 0; angle <= 45 && running; angle += 10)
         {
-            LegPosition pos(0, angle, 0);
+            pos.setHip(0);
+            pos.setKnee(angle);
+            pos.setAnkle(0);
 
             if (!hexapod.setLegPosition(leg, pos))
             {
@@ -75,16 +90,26 @@ static bool test_leg_movement(Hexapod &hexapod)
             usleep(200000); // 200ms delay
         }
 
-        // Reset knee
-        LegPosition centerKnee(0, 0, 0);
-        hexapod.setLegPosition(leg, centerKnee);
+        // Reset knee and test ankle
+        pos.setHip(0);
+        pos.setKnee(0);
+        pos.setAnkle(0);
+
+        if (!hexapod.setLegPosition(leg, pos))
+        {
+            fprintf(stderr, "Failed to reset knee: %s\n",
+                    hexapod.getLastErrorMessage().c_str());
+            return false;
+        }
         usleep(500000); // 500ms delay
 
         // Move ankle joint
         printf("  Moving ankle joint\n");
         for (int angle = -30; angle <= 30 && running; angle += 10)
         {
-            LegPosition pos(0, 0, angle);
+            pos.setHip(0);
+            pos.setKnee(0);
+            pos.setAnkle(angle);
 
             if (!hexapod.setLegPosition(leg, pos))
             {
@@ -96,8 +121,16 @@ static bool test_leg_movement(Hexapod &hexapod)
         }
 
         // Reset ankle
-        LegPosition centerAnkle(0, 0, 0);
-        hexapod.setLegPosition(leg, centerAnkle);
+        pos.setHip(0);
+        pos.setKnee(0);
+        pos.setAnkle(0);
+
+        if (!hexapod.setLegPosition(leg, pos))
+        {
+            fprintf(stderr, "Failed to reset ankle: %s\n",
+                    hexapod.getLastErrorMessage().c_str());
+            return false;
+        }
         usleep(500000); // 500ms delay
     }
 
@@ -237,8 +270,25 @@ int main(int argc, char *argv[])
     Hexapod hexapod;
     if (!hexapod.init())
     {
-        fprintf(stderr, "Failed to initialize hexapod: %s\n",
-                hexapod.getLastErrorMessage().c_str());
+        ErrorInfo err = hexapod.getLastError();
+        fprintf(stderr, "Failed to initialize hexapod: [%d] %s\n",
+                err.getCode(), err.getMessage().c_str());
+
+        // Provide specific recommendations based on error category
+        switch (err.getCategory())
+        {
+        case ErrorCategory::DEVICE:
+            fprintf(stderr, "Device issue: Check if the device exists and the driver is loaded\n");
+            break;
+        case ErrorCategory::SYSTEM:
+            fprintf(stderr, "System issue: Check permissions and system resources\n");
+            break;
+        case ErrorCategory::HARDWARE:
+            fprintf(stderr, "Hardware issue: Check physical connections\n");
+            break;
+        default:
+            fprintf(stderr, "Try running with sudo privileges\n");
+        }
         return 1;
     }
     printf("Connected to hexapod device\n\n");

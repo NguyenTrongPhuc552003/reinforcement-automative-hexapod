@@ -5,6 +5,7 @@
 #include <signal.h>
 #include <string.h>
 #include <time.h>
+#include <termios.h>
 #include "hexapod.hpp"
 
 // Global flags for program control
@@ -40,6 +41,14 @@ void handle_signal(int sig)
         printf("\nReceived termination signal, shutting down immediately...\n");
         emergency_stop = 1;
         running = 0;
+    }
+
+    // Force cleanup to happen faster on second signal
+    static int signal_count = 0;
+    if (++signal_count >= 2)
+    {
+        fprintf(stderr, "\nForced exit - multiple signals received\n");
+        exit(1); // Force immediate exit if user is impatient
     }
 }
 
@@ -80,21 +89,27 @@ bool test_joint(Hexapod &hexapod, uint8_t leg_num, int joint_index, const char *
     double start_time = get_current_time();
     int success_count = 0;
     int error_count = 0;
+    int consecutive_errors = 0; // Track consecutive errors for early bailout
+
+    // Create a single LegPosition object and reuse it
+    LegPosition pos(0, 0, 0);
 
     // Perform the sweep motion
     for (int i = 0; i < config.sweep_steps && running && !emergency_stop; i++)
     {
         // Calculate angle using sine wave: smooth transition from -range to +range
         double progress = (double)i / config.sweep_steps;
-        double angle = sin(progress * M_PI) * config.sweep_range;
+        int16_t angle = static_cast<int16_t>(sin(progress * M_PI) * config.sweep_range);
 
-        // Create position - only set the target joint's angle
-        LegPosition pos(
-            joint_index == 0 ? static_cast<int16_t>(angle) : 0,
-            joint_index == 1 ? static_cast<int16_t>(angle) : 0,
-            joint_index == 2 ? static_cast<int16_t>(angle) : 0);
+        // Only set the target joint's angle - more efficient than creating a new object each time
+        if (joint_index == 0)
+            pos.setHip(angle);
+        else if (joint_index == 1)
+            pos.setKnee(angle);
+        else
+            pos.setAnkle(angle);
 
-        // Set position with retry logic
+        // Set position with enhanced retry logic and backoff
         bool success = false;
         for (int retry = 0; retry < 3 && !success; retry++)
         {
@@ -102,11 +117,14 @@ bool test_joint(Hexapod &hexapod, uint8_t leg_num, int joint_index, const char *
             {
                 success = true;
                 success_count++;
+                consecutive_errors = 0; // Reset consecutive errors counter
+                break;
             }
-            else if (retry < 2)
-            { // Don't sleep on last retry
+
+            if (retry < 2) // Don't sleep on last retry
+            {
                 fprintf(stderr, "Retrying position set (%d)...\n", retry + 1);
-                usleep(50000); // 50ms delay before retry
+                usleep(50000 * (retry + 1)); // Increasing backoff for retries
             }
         }
 
@@ -115,11 +133,12 @@ bool test_joint(Hexapod &hexapod, uint8_t leg_num, int joint_index, const char *
             fprintf(stderr, "Failed to set position: %s\n",
                     hexapod.getLastErrorMessage().c_str());
             error_count++;
+            consecutive_errors++;
 
-            // Skip ahead if too many errors
-            if (error_count > 5)
+            // Skip ahead if too many consecutive errors
+            if (consecutive_errors > 3)
             {
-                fprintf(stderr, "Too many errors, skipping remainder of test\n");
+                fprintf(stderr, "Too many consecutive errors, skipping remainder of test\n");
                 break;
             }
         }
@@ -150,14 +169,30 @@ bool test_joint(Hexapod &hexapod, uint8_t leg_num, int joint_index, const char *
     return (error_count == 0);
 }
 
+// Restore terminal settings on exit
+void restore_terminal(struct termios *orig_termios)
+{
+    if (tcsetattr(STDIN_FILENO, TCSANOW, orig_termios) < 0)
+    {
+        fprintf(stderr, "Warning: Failed to restore terminal attributes\n");
+    }
+}
+
 int main(int argc, char *argv[])
 {
     double total_start_time = get_current_time();
     bool test_success = true;
+    struct termios orig_termios;
 
     // Set up signal handlers for clean termination
     signal(SIGINT, handle_signal);
     signal(SIGTERM, handle_signal);
+
+    // Save original terminal settings
+    if (tcgetattr(STDIN_FILENO, &orig_termios) < 0)
+    {
+        fprintf(stderr, "Warning: Failed to get terminal attributes\n");
+    }
 
     // Process command line arguments with better error checking
     for (int i = 1; i < argc; i++)
@@ -220,6 +255,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "  1. Is the hexapod driver loaded? (lsmod | grep hexapod)\n");
         fprintf(stderr, "  2. Do you have permission to access the device? (ls -l /dev/hexapod)\n");
         fprintf(stderr, "  3. Is the hardware properly connected? (I2C bus, power supply)\n");
+        restore_terminal(&orig_termios);
         return 1;
     }
 
@@ -246,6 +282,7 @@ int main(int argc, char *argv[])
         {
             fprintf(stderr, "Emergency recovery failed. Exiting.\n");
             hexapod.cleanup();
+            restore_terminal(&orig_termios);
             return 1;
         }
     }
@@ -301,10 +338,17 @@ int main(int argc, char *argv[])
         hexapod.centerAll();
     }
 
+    // Explicitly cleanup hexapod resources
+    printf("Cleaning up hexapod resources...\n");
+    hexapod.cleanup();
+
     // Report total runtime
     double total_time = get_current_time() - total_start_time;
     printf("Test program completed in %.2f seconds\n", total_time);
     printf("Status: %s\n", test_success ? "SUCCESS" : "ERRORS ENCOUNTERED");
+
+    // Restore terminal settings
+    restore_terminal(&orig_termios);
 
     // Return appropriate exit code
     return test_success ? 0 : 1;
