@@ -25,7 +25,7 @@ This document describes the hardware components of the hexapod robot and provide
 
 | Component                 | Quantity | Description                            |
 |---------------------------|----------|----------------------------------------|
-| BeagleBone Black/Green    | 1        | Main control board                     |
+| BeagleBone AI/Black       | 1        | Main control board                     |
 | MG996R Servo Motors       | 18       | 3 per leg (hip, knee, ankle)           |
 | PCA9685 PWM Controller    | 2        | 16-channel PWM controller              |
 | MPU6050 IMU Sensor        | 1        | 6-axis accelerometer + gyroscope       |
@@ -73,7 +73,7 @@ The hexapod follows a standard hexapod design with 6 legs arranged radially arou
 
 ### Control System
 
-- **Main Controller**: BeagleBone Black/Green
+- **Main Controller**: BeagleBone AI/Black
   - AM335x 1GHz ARM Cortex-A8 processor
   - 512MB DDR3 RAM
   - Linux operating system
@@ -161,4 +161,13 @@ The MPU6050 provides orientation data for the hexapod:
 | Sample Rate         | 100Hz                         |
 | Low-Pass Filter     | 10Hz                          |
 | Orientation         | X forward, Y right, Z up      |
+
+### Power Management
+
+The MPU6050 has built-in power management features that may put it into sleep mode after periods of inactivity. The driver automatically handles waking the device when readings are requested, ensuring consistent sensor data even after extended periods between readings.
+
+Key power management features:
+- Sleep mode: Automatically entered to conserve power
+- Wake-on-read: Driver automatically detects and wakes the device when readings are requested
+- Clock source: PLL with X-axis gyroscope reference for stability
 

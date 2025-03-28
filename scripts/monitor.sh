@@ -69,6 +69,7 @@ Options:
                           ioctl:    Monitor IOCTL commands
                           dmesg:    Show detailed kernel messages
                           live:     Real-time IOCTL monitoring
+                          imu:      Focus on MPU6050/IMU monitoring
   -p, --pid PID         Target a specific process by PID
   -c, --check           Check for required dependencies and exit
   -o, --continuous      Run in continuous mode (for IOCTL monitoring)
@@ -77,11 +78,12 @@ Options:
   -h, --help            Show this help message
 
 Examples:
-  $(basename "$0")                      # Monitor everything with default settings
-  $(basename "$0") --check              # Verify all required packages are installed
-  $(basename "$0") --mode ioctl         # Focus on IOCTL command monitoring
+  $(basename "$0")                          # Monitor everything with default settings
+  $(basename "$0") --check                  # Verify all required packages are installed
+  $(basename "$0") --mode ioctl             # Focus on IOCTL command monitoring
+  $(basename "$0") --mode imu               # Focus on MPU6050/IMU monitoring
   $(basename "$0") --mode ioctl --pid 1234  # Monitor IOCTLs for specific process
-  $(basename "$0") --mode live          # Show IOCTL calls in real-time
+  $(basename "$0") --mode live              # Show IOCTL calls in real-time
 EOT
 }
 
@@ -230,9 +232,20 @@ check_kernel_messages() {
     echo -e "\n${BLUE}Servo Controller Messages:${NC}"
     dmesg | grep -i "servo\|pca9685" | tail -5 | sed 's/^/  /'
     
-    # Show sensor messages
+    # Show sensor messages with improved MPU6050 info
     echo -e "\n${BLUE}Sensor Messages:${NC}"
     dmesg | grep -i "mpu6050\|imu\|sensor" | tail -5 | sed 's/^/  /'
+    
+    # Look for sleep/wake cycles in MPU6050 with improved patterns
+    echo -e "\n${BLUE}MPU6050 Sleep/Wake Activity:${NC}"
+    MPU_SLEEP=$(dmesg | grep -i "mpu6050" | grep -i "sleep\|wake\|power\|reset" | tail -5)
+    if [ -n "$MPU_SLEEP" ]; then
+        echo "  Recent sleep/wake activity detected:"
+        echo "$MPU_SLEEP" | sed 's/^/    /'
+    else
+        echo "  No recent sleep/wake activity detected in logs"
+        echo "  Note: Driver may handle sleep/wake internally without logging"
+    fi
     
     # Show most recent driver messages
     echo -e "\n${BLUE}Recent Driver Messages (last $KERNEL_LOG_LINES):${NC}"
@@ -322,6 +335,7 @@ monitor_ioctl_flow() {
                             ;;
                         "cmd=0x8002")
                             name="GET_IMU_DATA"
+                            data_info="Reading accelerometer and gyroscope data"
                             ;;
                         "cmd=0x4803")
                             name="CALIBRATE"
@@ -334,14 +348,22 @@ monitor_ioctl_flow() {
                             ;;
                     esac
                     
-                    # Check for error return value
+                    # Check for error return value with better diagnostics
                     if echo "$line" | grep -q "= -1"; then
-                        echo -e "$(date +%H:%M:%S.%N | cut -c1-15) ${RED}IOCTL $name ($cmd) FAILED${NC}"
+                        if [ "$name" = "GET_IMU_DATA" ]; then
+                            echo -e "$(date +%H:%M:%S.%N | cut -c1-15) ${RED}IOCTL $name ($cmd) FAILED - Possible MPU6050 sleep mode issue${NC}"
+                        else
+                            echo -e "$(date +%H:%M:%S.%N | cut -c1-15) ${RED}IOCTL $name ($cmd) FAILED${NC}"
+                        fi
                     else
                         # Shows success in green and command details
                         result=$(echo "$line" | grep -o "= [0-9]*")
                         data=$(echo "$line" | grep -o "{.*}")
-                        echo -e "$(date +%H:%M:%S.%N | cut -c1-15) ${GREEN}IOCTL $name ($cmd)${NC} $result $data"
+                        if [ "$name" = "GET_IMU_DATA" ]; then
+                            echo -e "$(date +%H:%M:%S.%N | cut -c1-15) ${GREEN}IOCTL $name${NC} $result $data [MPU6050 active]"
+                        else
+                            echo -e "$(date +%H:%M:%S.%N | cut -c1-15) ${GREEN}IOCTL $name ($cmd)${NC} $result $data"
+                        fi
                     fi
                 fi
             done < "$FIFO"
@@ -426,6 +448,87 @@ monitor_ioctl_flow() {
     echo -e "\n${BLUE}For detailed IOCTL flow analysis:${NC}"
     echo "  Run: $(basename "$0") --mode live"
     echo "  This will show all IOCTL calls in real-time"
+}
+
+# New function for focused MPU6050 monitoring
+monitor_mpu6050() {
+    echo -e "${BLUE}=== MPU6050 IMU Sensor Monitor ===${NC}"
+    
+    # Check if driver is loaded
+    if ! lsmod | grep -q "$DRIVER_NAME"; then
+        echo -e "${RED}Hexapod driver not loaded - cannot monitor MPU6050${NC}"
+        return 1
+    fi
+    
+    # Find MPU6050 test program if running
+    MPU_PROC=$(pgrep -f "test_mpu6050" | head -1)
+    if [ -n "$MPU_PROC" ]; then
+        echo -e "${GREEN}MPU6050 test program running (PID: $MPU_PROC)${NC}"
+        echo "Command: $(ps -p $MPU_PROC -o cmd=)"
+        
+        # Show resource usage
+        echo -e "\n${BLUE}Resource Usage:${NC}"
+        ps -p $MPU_PROC -o pid,ppid,%cpu,%mem,start,time --no-headers | sed 's/^/  /'
+        
+        # Set this as target for IOCTL monitoring
+        TARGET_PID=$MPU_PROC
+    else
+        echo -e "${YELLOW}No MPU6050 test program running${NC}"
+    fi
+    
+    # Show MPU6050 kernel messages
+    echo -e "\n${BLUE}MPU6050 Kernel Messages:${NC}"
+    dmesg | grep -i "mpu6050" | tail -15 | sed 's/^/  /'
+    
+    # Look for specific MPU6050 errors
+    MPU_ERRORS=$(dmesg | grep -i "mpu6050" | grep -i "error\|fail\|timeout\|invalid")
+    if [ -n "$MPU_ERRORS" ]; then
+        echo -e "\n${RED}MPU6050 Errors Detected:${NC}"
+        echo "$MPU_ERRORS" | sed 's/^/  /'
+    fi
+    
+    # Check for I2C bus errors that might affect MPU6050
+    I2C_ERRORS=$(dmesg | grep -i "i2c" | grep -i "error\|timeout\|fail" | tail -5)
+    if [ -n "$I2C_ERRORS" ]; then
+        echo -e "\n${YELLOW}I2C Bus Errors (may affect MPU6050):${NC}"
+        echo "$I2C_ERRORS" | sed 's/^/  /'
+    fi
+    
+    # Show successful read patterns
+    echo -e "\n${BLUE}MPU6050 Read Pattern:${NC}"
+    READ_PATTERN=$(dmesg | grep -i "mpu6050.*read" | sort | uniq -c | sort -nr | head -3)
+    if [ -n "$READ_PATTERN" ]; then
+        echo "  Read patterns detected:"
+        echo "$READ_PATTERN" | sed 's/^/    /'
+    else
+        echo "  No read patterns detected in kernel logs"
+    fi
+    
+    # Show sleep/wake activity with detailed explanation
+    echo -e "\n${BLUE}MPU6050 Sleep/Wake Management:${NC}"
+    echo "  The MPU6050 automatically enters sleep mode to conserve power."
+    echo "  The driver detects this and wakes it when readings are requested."
+    
+    WAKE_COUNT=$(dmesg | grep -i "mpu6050.*wake" | wc -l)
+    SLEEP_COUNT=$(dmesg | grep -i "mpu6050.*sleep" | wc -l)
+    
+    if [ $WAKE_COUNT -gt 0 ] || [ $SLEEP_COUNT -gt 0 ]; then
+        echo "  Sleep events detected: $SLEEP_COUNT"
+        echo "  Wake events detected: $WAKE_COUNT"
+        
+        # Show recent events
+        echo -e "\n  Recent sleep/wake events:"
+        dmesg | grep -i "mpu6050" | grep -i "sleep\|wake\|power" | tail -5 | sed 's/^/    /'
+    else
+        echo "  No explicit sleep/wake events logged"
+        echo "  Note: Sleep/wake may be handled internally without kernel logging"
+    fi
+    
+    # If a test program is running, monitor its IOCTL calls
+    if [ -n "$MPU_PROC" ]; then
+        echo -e "\n${BLUE}Monitoring IMU data requests from test program...${NC}"
+        monitor_ioctl_flow
+    fi
 }
 
 # Check running processes with focus on driver interaction
@@ -550,6 +653,11 @@ run_monitoring() {
         dmesg)
             clear
             show_dmesg_flow
+            ;;
+        imu)
+            clear
+            # IMU specific monitoring mode
+            monitor_mpu6050
             ;;
         *)
             echo -e "${RED}Invalid monitoring mode: $MONITOR_MODE${NC}"

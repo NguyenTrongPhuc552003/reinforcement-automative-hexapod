@@ -151,8 +151,8 @@ DO_NO_CACHE=0
 if [ $# -eq 0 ]; then
     # Default: build everything
     DO_MODULE=1
-    DO_USER=1
     DO_UTILITY=1
+    DO_USER=1
 else
     for arg in "$@"; do
         if [[ "$arg" == "--no-cache" ]]; then
@@ -257,15 +257,15 @@ if [ $DO_MODULE -eq 1 ]; then
     COMPONENTS_BUILT=1
 fi
 
-if [ $DO_USER -eq 1 ]; then
-    build_user_space
-    log "${GREEN}" "User space programs build completed successfully!"
-    COMPONENTS_BUILT=1
-fi
-
 if [ $DO_UTILITY -eq 1 ]; then
     build_utility_scripts
     log "${GREEN}" "Utility scripts created successfully!"
+    COMPONENTS_BUILT=1
+fi
+
+if [ $DO_USER -eq 1 ]; then
+    build_user_space
+    log "${GREEN}" "User space programs build completed successfully!"
     COMPONENTS_BUILT=1
 fi
 

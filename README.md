@@ -40,7 +40,7 @@ This project implements a complete software stack for controlling a 6-legged rob
 
 ## Prerequisites
 
-- BeagleBone Black running Linux 4.14+
+- BeagleBone AI (or Black) running Linux 4.14+
 - I2C enabled (bus 3)
 - 18x servo motors (MG996R recommended)
 - MPU6050 IMU sensor
@@ -91,6 +91,16 @@ Individual tests:
 ./test_mpu6050   # Test IMU sensor
 ./test_gait      # Test gait patterns
 ```
+
+## Troubleshooting
+
+### Sensor Issues
+- **Zero IMU readings**: The MPU6050 enters sleep mode to save power. The driver now automatically wakes it before readings.
+- **Erratic IMU behavior**: Check I2C connections and ensure proper power supply voltage.
+
+### Servo Issues
+- **Servos not moving**: Check power supply and ensure driver is properly loaded
+- **Erratic movement**: Verify calibration settings and check for loose connections
 
 ## Documentation
 
