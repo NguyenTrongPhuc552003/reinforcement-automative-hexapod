@@ -6,18 +6,17 @@ This directory contains the user-space components of the hexapod control system.
 
 ```
 .
-├── include/        # Header files
+├── include/       # Header files
 │   ├── gait.h     # Gait control interface
-│   ├── hexapod.h  # Main control interface
-│   └── protocol.h # Communication protocol
+│   ├── hexapod.h  # Hexpod interface
 ├── src/           # Source files
 │   ├── gait.c     # Gait implementation
-│   └── hexapod.c  # Main control implementation
+│   └── main.c     # Main control implementation
 └── test/          # Test applications
     ├── test_servo.c
     ├── test_mpu6050.c
-    ├── test_gait.c
-    └── test_kinematics.c
+    ├── test_calibration.c
+    └── test_movement.c
 ```
 
 ## Features
@@ -51,9 +50,9 @@ make clean    # Clean build files
 Run individual tests:
 ```bash
 sudo ./test_servo       # Test servo control
-sudo ./test_mpu6050    # Test IMU sensor
-sudo ./test_gait       # Test gait patterns
-sudo ./test_kinematics # Test kinematics
+sudo ./test_mpu6050     # Test IMU sensor
+sudo ./test_movement    # Test movement patterns
+sudo ./test_kinematics  # Test kinematics
 ```
 
 ## Usage
@@ -92,7 +91,7 @@ See [API Documentation](../docs/api/user/README.md) for detailed interface descr
 ### Adding New Gaits
 1. Define gait type in `include/gait.h`
 2. Implement gait in `src/gait.c`
-3. Add test cases in `test/test_gait.c`
+3. Add test cases in `test/test_movement.c`
 
 ### Testing Guidelines
 - Test all new functions

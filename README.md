@@ -89,7 +89,7 @@ Individual tests:
 ```bash
 ./test_servo     # Test servo control
 ./test_mpu6050   # Test IMU sensor
-./test_gait      # Test gait patterns
+./test_movement  # Test movements like tripod, ripple, ...
 ```
 
 ## Troubleshooting
