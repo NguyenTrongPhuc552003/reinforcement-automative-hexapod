@@ -29,7 +29,7 @@ Linux kernel driver for hexapod robot control, handling PWM servo control and IM
 Prerequisites:
 - Linux kernel headers
 - Cross-compilation toolchain
-- BeagleBone Black device tree
+- BeagleBone AI device tree (maybe not)
 
 Build commands:
 ```bash
@@ -57,9 +57,16 @@ make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf-
 ## Driver Interface
 
 ### IOCTL Commands
-- `SET_LEG_POSITION`: Set servo angles
-- `GET_IMU_DATA`: Read IMU data
-- `SET_PWM_FREQ`: Set PWM frequency
+- `SET_LEG_POSITION`: Set servo angles for a specific leg
+- `GET_IMU_DATA`: Read IMU data (accelerometer and gyroscope)
+- `CALIBRATE`: Set servo calibration offsets
+- `CENTER_ALL`: Center all servos to neutral position
+
+### Data Structures
+- `hexapod_leg_joint`: Contains hip, knee, ankle angles
+- `hexapod_leg_cmd`: Contains leg number and joint angles
+- `hexapod_calibration`: Contains leg number and joint offsets
+- `hexapod_imu_data`: Contains accelerometer and gyroscope data
 
 ### Device Node
 - Path: `/dev/hexapod`

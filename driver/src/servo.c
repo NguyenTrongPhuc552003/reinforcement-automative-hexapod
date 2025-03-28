@@ -1,11 +1,33 @@
 #include <linux/module.h>
 #include <linux/types.h>
 #include <linux/errno.h>
+#include <linux/mutex.h>
+#include <linux/delay.h>
+#include <linux/jiffies.h>
+#include <linux/sched.h>
 #include "servo.h"
 #include "pca9685.h"
 
+/* Module parameters */
+static int servo_debug = 0;
+module_param(servo_debug, int, 0644);
+MODULE_PARM_DESC(servo_debug, "Enable debug output (0=disabled, 1=enabled)");
+
+/* Servo driver state */
+struct servo_driver
+{
+    int initialized;                                       /* Initialization status flag */
+    struct mutex lock;                                     /* Thread synchronization lock */
+    s16 offsets[SERVO_NUM_LEGS][SERVO_NUM_JOINTS_PER_LEG]; /* Calibration offsets */
+};
+
+/* Global driver state */
+static struct servo_driver servo_drv = {
+    .initialized = 0,
+};
+
 /* Servo mapping - which channel for each servo */
-static const u8 servo_map[NUM_LEGS][NUM_JOINTS_PER_LEG] = {
+static const u8 servo_map[SERVO_NUM_LEGS][SERVO_NUM_JOINTS_PER_LEG] = {
     {0, 1, 2}, /* Leg 0 - First PCA9685 */
     {3, 4, 5}, /* Leg 1 - First PCA9685 */
     {6, 7, 8}, /* Leg 2 - First PCA9685 */
@@ -14,74 +36,139 @@ static const u8 servo_map[NUM_LEGS][NUM_JOINTS_PER_LEG] = {
     {6, 7, 8}  /* Leg 5 - Second PCA9685 */
 };
 
-/* Which PCA9685 controller to use for each leg (0 = first, 1 = second) */
-static const u8 leg_controller[NUM_LEGS] = {
+/* Which PCA9685 controller to use for each leg (0=primary, 1=secondary) */
+static const u8 leg_controller[SERVO_NUM_LEGS] = {
     0, 0, 0, /* First 3 legs use first controller */
     1, 1, 1  /* Last 3 legs use second controller */
 };
 
-/* Calibration offsets */
-static s16 servo_offsets[NUM_LEGS][NUM_JOINTS_PER_LEG] = {{0}};
-
-/* Convert angle to pulse width */
-static u16 angle_to_pulse(s16 angle)
+/**
+ * Convert angle in degrees to pulse width in microseconds
+ *
+ * @param angle Angle in degrees (-90 to +90)
+ * @return Pulse width in microseconds
+ */
+static inline u16 angle_to_pulse(s16 angle)
 {
-    const s16 center = 1500; /* 1500 µs is center (0°) */
-    const s16 range = 500;   /* ±500 µs for ±90° */
-    s16 pulse;
-
-    /* Limit angle range */
+    /* Ensure angle is within valid range */
     if (angle < SERVO_MIN_ANGLE)
         angle = SERVO_MIN_ANGLE;
     else if (angle > SERVO_MAX_ANGLE)
         angle = SERVO_MAX_ANGLE;
 
-    /* Calculate pulse width in µs */
-    pulse = center + (angle * range) / SERVO_MAX_ANGLE;
-    return pulse;
+    /* Convert angle to pulse width: 1500µs ± (angle * 500µs / 90°) */
+    return SERVO_CENTER_US + ((angle * SERVO_RANGE_US) / SERVO_MAX_ANGLE);
 }
 
-/* Initialize servo subsystem */
+/**
+ * Validate channel parameters
+ *
+ * @param leg Leg number
+ * @param joint Joint number
+ * @return 0 if valid, -EINVAL if invalid
+ */
+static inline int validate_channel(u8 leg, u8 joint)
+{
+    if (leg >= SERVO_NUM_LEGS || joint >= SERVO_NUM_JOINTS_PER_LEG)
+        return -EINVAL;
+    return 0;
+}
+
+/**
+ * Initialize servo control system
+ *
+ * @return 0 on success, negative error code on failure
+ */
 int servo_init(void)
 {
     int ret;
 
-    /* Initialize all servo offsets to 0 */
-    memset(servo_offsets, 0, sizeof(servo_offsets));
+    pr_info("Servo: Initializing servo subsystem\n");
 
-    /* Set default PWM frequency for servos (50Hz) */
-    ret = pca9685_set_pwm_freq(50);
-    if (ret)
+    /* Check if already initialized */
+    if (servo_drv.initialized)
+    {
+        pr_warn("Servo: Already initialized\n");
+        return 0;
+    }
+
+    /* Initialize lock */
+    mutex_init(&servo_drv.lock);
+
+    /* Clear all calibration offsets */
+    memset(servo_drv.offsets, 0, sizeof(servo_drv.offsets));
+
+    /* Set PWM frequency for servos (50Hz standard) */
+    ret = pca9685_set_pwm_freq(SERVO_FREQ_HZ);
+    if (ret < 0)
+    {
+        pr_err("Servo: Failed to set PWM frequency: %d\n", ret);
         return ret;
+    }
 
-    /* Center all servos on startup */
+    /* Mark as initialized BEFORE centering servos */
+    servo_drv.initialized = 1;
+
+    /* Center all servos for safe starting position */
     ret = servo_center_all();
-    if (ret)
+    if (ret < 0)
+    {
+        pr_err("Servo: Failed to center servos: %d\n", ret);
+        servo_drv.initialized = 0; /* Reset flag on failure */
         return ret;
+    }
 
-    pr_info("Servo subsystem initialized\n");
+    pr_info("Servo: Subsystem initialized successfully\n");
     return 0;
 }
 
-/* Clean up servo subsystem */
+/**
+ * Clean up servo control system
+ */
 void servo_cleanup(void)
 {
-    /* Center all servos before shutting down */
-    servo_center_all();
-    pr_info("Servo subsystem cleaned up\n");
+    pr_info("Servo: Cleaning up subsystem\n");
+
+    /* Only proceed if initialized */
+    if (!servo_drv.initialized)
+        return;
+
+    /* Center all servos before shutting down for safety */
+    if (servo_center_all() < 0)
+        pr_warn("Servo: Failed to center servos during cleanup\n");
+
+    servo_drv.initialized = 0;
+    pr_info("Servo: Subsystem cleaned up\n");
 }
 
-/* Set servo angle */
+/**
+ * Set servo angle for a specific leg and joint
+ *
+ * @param leg Leg number (0-5)
+ * @param joint Joint number (0=hip, 1=knee, 2=ankle)
+ * @param angle Angle in degrees (-90 to +90)
+ * @return 0 on success, negative error code on failure
+ */
 int servo_set_angle(u8 leg, u8 joint, s16 angle)
 {
+    int ret;
     u8 channel;
     u16 pulse_width;
-    int ret;
     static int first_command = 1;
 
-    /* Validate parameters */
-    if (leg >= NUM_LEGS || joint >= NUM_JOINTS_PER_LEG)
-        return -EINVAL;
+    /* Parameter validation */
+    ret = validate_channel(leg, joint);
+    if (ret < 0)
+        return ret;
+
+    if (!servo_drv.initialized)
+    {
+        pr_err("Servo: Subsystem not initialized\n");
+        return -ENODEV;
+    }
+
+    /* Lock for thread safety */
+    mutex_lock(&servo_drv.lock);
 
     /* On first servo command, ensure PWM outputs are enabled */
     if (first_command)
@@ -90,54 +177,95 @@ int servo_set_angle(u8 leg, u8 joint, s16 angle)
         if (ret < 0)
         {
             pr_err("Servo: Failed to enable PWM outputs: %d\n", ret);
+            mutex_unlock(&servo_drv.lock);
             return ret;
         }
         first_command = 0;
     }
 
-    /* Get the appropriate channel */
+    /* Get the appropriate channel number */
     channel = servo_map[leg][joint];
 
-    /* If this leg uses the second controller, add offset to channel */
+    /* Apply controller offset for second PCA9685 */
     if (leg_controller[leg] == 1)
     {
-        channel += 16; /* Offset for second PCA9685 controller */
+        channel += PCA9685_CHANNELS_PER_DEVICE;
     }
 
     /* Apply calibration offset */
-    angle += servo_offsets[leg][joint];
+    angle += servo_drv.offsets[leg][joint];
 
     /* Convert angle to pulse width */
     pulse_width = angle_to_pulse(angle);
 
-    /* Set the pulse width */
+    if (servo_debug)
+        pr_info("Servo: Setting leg %u, joint %u (channel %u) to %d° (pulse %uµs)\n",
+                leg, joint, channel, angle, pulse_width);
+
+    /* Set the pulse width on PCA9685 */
     ret = pca9685_set_pwm_us(channel, pulse_width);
-    if (ret)
+    if (ret < 0)
     {
-        pr_err("Servo: Failed to set PWM for leg %d, joint %d (channel %d): %d\n",
+        pr_err("Servo: Failed to set PWM for leg %u, joint %u (channel %u): %d\n",
                leg, joint, channel, ret);
     }
+
+    mutex_unlock(&servo_drv.lock);
     return ret;
 }
 
-/* Set calibration for a leg */
+/**
+ * Set calibration offsets for a specific leg
+ *
+ * @param leg Leg number (0-5)
+ * @param hip_offset Hip joint offset in degrees
+ * @param knee_offset Knee joint offset in degrees
+ * @param ankle_offset Ankle joint offset in degrees
+ * @return 0 on success, negative error code on failure
+ */
 int servo_set_calibration(u8 leg, s16 hip_offset, s16 knee_offset, s16 ankle_offset)
 {
-    if (leg >= NUM_LEGS)
+    if (leg >= SERVO_NUM_LEGS)
         return -EINVAL;
 
-    /* Store offsets */
-    servo_offsets[leg][0] = hip_offset;
-    servo_offsets[leg][1] = knee_offset;
-    servo_offsets[leg][2] = ankle_offset;
+    if (!servo_drv.initialized)
+    {
+        pr_err("Servo: Subsystem not initialized\n");
+        return -ENODEV;
+    }
 
+    mutex_lock(&servo_drv.lock);
+
+    /* Store offsets for future use */
+    servo_drv.offsets[leg][0] = hip_offset;
+    servo_drv.offsets[leg][1] = knee_offset;
+    servo_drv.offsets[leg][2] = ankle_offset;
+
+    if (servo_debug)
+    {
+        pr_info("Servo: Calibration set for leg %u: hip=%d°, knee=%d°, ankle=%d°\n",
+                leg, hip_offset, knee_offset, ankle_offset);
+    }
+
+    mutex_unlock(&servo_drv.lock);
     return 0;
 }
 
-/* Center all servos */
+/**
+ * Center all servos to their zero positions
+ *
+ * @return 0 on success, negative error code on failure
+ */
 int servo_center_all(void)
 {
     int leg, joint, ret;
+    int errors = 0;
+
+    if (!servo_drv.initialized)
+    {
+        pr_err("Servo: Subsystem not initialized\n");
+        return -ENODEV;
+    }
 
     /* Ensure PWM outputs are enabled before centering */
     ret = pca9685_enable_outputs();
@@ -147,22 +275,34 @@ int servo_center_all(void)
         return ret;
     }
 
-    for (leg = 0; leg < NUM_LEGS; leg++)
+    pr_info("Servo: Centering all servos\n");
+
+    /* Center each servo individually with brief delays between them
+     * to avoid current spikes from moving all servos simultaneously */
+    for (leg = 0; leg < SERVO_NUM_LEGS; leg++)
     {
-        for (joint = 0; joint < NUM_JOINTS_PER_LEG; joint++)
+        for (joint = 0; joint < SERVO_NUM_JOINTS_PER_LEG; joint++)
         {
             ret = servo_set_angle(leg, joint, 0);
-            if (ret)
-                return ret;
+            if (ret < 0)
+            {
+                pr_err("Servo: Failed to center leg %u, joint %u: %d\n",
+                       leg, joint, ret);
+                errors++;
+            }
 
-            /* Use schedule() instead of msleep for better system responsiveness */
+            /* Small delay between commands for smoother operation */
             schedule_timeout_interruptible(msecs_to_jiffies(5));
         }
     }
 
+    if (errors)
+        return -EIO;
+
     return 0;
 }
 
+/* Export symbols for other kernel modules */
 EXPORT_SYMBOL_GPL(servo_init);
 EXPORT_SYMBOL_GPL(servo_cleanup);
 EXPORT_SYMBOL_GPL(servo_set_angle);
@@ -170,5 +310,6 @@ EXPORT_SYMBOL_GPL(servo_set_calibration);
 EXPORT_SYMBOL_GPL(servo_center_all);
 
 MODULE_LICENSE("GPL");
-MODULE_DESCRIPTION("Hexapod Servo Control");
+MODULE_DESCRIPTION("Hexapod Servo Control Driver");
 MODULE_AUTHOR("StrongFood");
+MODULE_VERSION("1.0");

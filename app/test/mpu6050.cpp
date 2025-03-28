@@ -132,6 +132,7 @@ int main(void)
 
     printf("MPU6050 Test - Press Ctrl+C to exit\n");
     printf("================================\n");
+    printf("Note: MPU6050 sensor automatically wakes from sleep mode when needed\n\n");
 
     while (!initialized && retries-- > 0)
     {
