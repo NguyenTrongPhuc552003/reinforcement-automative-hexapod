@@ -16,18 +16,18 @@ else
     CXXFLAGS += $(RELEASE_FLAGS)
 endif
 
-# Add library linking with rpath
+# Add library linking with C++17 filesystem support
 LDFLAGS = -lm -L/build/deploy -lstdc++fs
 LDFLAGS += -Wl,-O1 -Wl,--as-needed
 
-# Directories
+# Directories for source, test, binary, object, and dependency files
 SRC_DIR = src
 TEST_DIR = test
 BIN_DIR = bin
 OBJ_DIR = obj
 DEP_DIR = deps
 
-# Source files
+# Source files - all .cpp files in src directory
 SRCS = $(wildcard $(SRC_DIR)/*.cpp)
 OBJS = $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 DEPS = $(SRCS:$(SRC_DIR)/%.cpp=$(DEP_DIR)/%.d)

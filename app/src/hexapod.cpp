@@ -8,6 +8,8 @@
 #include <time.h>
 #include <stdexcept>
 #include <system_error>
+#include <iostream>
+#include <iomanip>
 #include "hexapod.hpp"
 
 //==============================================================================
@@ -130,8 +132,8 @@ namespace hexapod
             lastError = ErrorInfo(code, category, message);
             if (code != 0)
             {
-                fprintf(stderr, "Hexapod error [%s-%d]: %s\n",
-                        getCategoryName(category), code, message.c_str());
+                std::cerr << "Hexapod error [" << getCategoryName(category) << "-" << code
+                          << "]: " << message << std::endl;
             }
         }
 
@@ -281,9 +283,8 @@ namespace hexapod
 
                 // Close device file with proper error checking
                 if (close(pImpl->fd) < 0)
-                {
-                    fprintf(stderr, "Warning: Error closing hexapod device: %s\n", strerror(errno));
-                }
+                    std::cerr << "Warning: Error closing hexapod device: " << strerror(errno) << std::endl;
+
                 pImpl->fd = -1;
             }
             pImpl->initialized = false;
@@ -513,15 +514,17 @@ namespace hexapod
     // Debug utilities
     void Hexapod::printLegPosition(const LegPosition &position)
     {
-        printf("Hip: %d, Knee: %d, Ankle: %d\n",
-               position.getHip(), position.getKnee(), position.getAnkle());
+        std::cout << "Hip: " << position.getHip() << ", Knee: " << position.getKnee()
+                  << ", Ankle: " << position.getAnkle() << std::endl;
     }
 
     void Hexapod::printImuData(const ImuData &data)
     {
-        printf("\rAccel: X=%+6.2fg Y=%+6.2fg Z=%+6.2fg | Gyro: X=%+7.2f° Y=%+7.2f° Z=%+7.2f°/s",
-               data.getAccelX(), data.getAccelY(), data.getAccelZ(),
-               data.getGyroX(), data.getGyroY(), data.getGyroZ());
+        std::cout << "\rAccel: X=" << std::fixed << std::showpos << std::setprecision(2) << std::setw(6)
+                  << data.getAccelX() << "g Y=" << std::setw(6) << data.getAccelY()
+                  << "g Z=" << std::setw(6) << data.getAccelZ() << "g | Gyro: X="
+                  << std::setw(7) << data.getGyroX() << "° Y=" << std::setw(7)
+                  << data.getGyroY() << "° Z=" << std::setw(7) << data.getGyroZ() << "°/s" << std::flush;
     }
 
     // Time utility

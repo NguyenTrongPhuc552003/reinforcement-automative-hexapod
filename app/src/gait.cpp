@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <unistd.h>
 #include <cstdio>
+#include <iostream>
 #include "gait.hpp"
 
 namespace gait
@@ -120,7 +121,7 @@ namespace gait
         {
             if (!initialized)
             {
-                fprintf(stderr, "Gait not initialized\n");
+                std::cerr << "Gait not initialized" << std::endl;
                 return false;
             }
 
@@ -135,8 +136,10 @@ namespace gait
             static int debugCounter = 0;
             if (++debugCounter % 200 == 0)
             {
-                fprintf(stderr, "Gait update: time=%.2f, phase=%.2f, dir=%.1f, speed=%.2f\n",
-                        time, phase, direction, speed);
+                std::cerr << "Gait update: time=" << time
+                          << ", phase=" << phase
+                          << ", dir=" << direction
+                          << ", speed=" << speed << std::endl;
             }
 #endif
 
@@ -187,15 +190,16 @@ namespace gait
 
             if (!kinematics::Kinematics::getInstance().inverseKinematics(footPos, angles))
             {
-                fprintf(stderr, "Inverse kinematics failed for leg %d\n", legIndex);
+                std::cerr << "Inverse kinematics failed for leg " << legIndex
+                          << ": " << hexapod.getLastErrorMessage() << std::endl;
                 return false;
             }
 
             // Send command to hexapod
             if (!hexapod.setLegPosition(legIndex, angles))
             {
-                fprintf(stderr, "Failed to set position for leg %d: %s\n",
-                        legIndex, hexapod.getLastErrorMessage().c_str());
+                std::cerr << "Failed to set position for leg " << legIndex
+                          << ": " << hexapod.getLastErrorMessage() << std::endl;
                 return false;
             }
 
@@ -272,8 +276,10 @@ namespace gait
             static int debugCount = 0;
             if (++debugCount % 500 == 0)
             {
-                fprintf(stderr, "Trajectory for phase=%.2f: delta=(%.2f,%.2f,%.2f)\n",
-                        phase, position.x - origX, position.y - origY, position.z - origZ);
+                std::cerr << "Trajectory for phase=" << phase
+                          << ": delta=(" << position.x - origX
+                          << "," << position.y - origY
+                          << "," << position.z - origZ << ")" << std::endl;
             }
 #endif
         }
@@ -287,7 +293,7 @@ namespace gait
         {
             if (!initialized)
             {
-                fprintf(stderr, "Gait not initialized\n");
+                std::cerr << "Gait not initialized" << std::endl;
                 return false;
             }
 
@@ -305,15 +311,16 @@ namespace gait
 
                 if (!kinematics::Kinematics::getInstance().inverseKinematics(pos, angles))
                 {
-                    fprintf(stderr, "Inverse kinematics failed during centering for leg %d\n", i);
+                    std::cerr << "Inverse kinematics failed for leg " << i
+                              << ": " << hexapod.getLastErrorMessage() << std::endl;
                     continue; // Continue with other legs even if one fails
                 }
 
                 // Send command to hexapod
                 if (!hexapod.setLegPosition(i, angles))
                 {
-                    fprintf(stderr, "Failed to center leg %d: %s\n",
-                            i, hexapod.getLastErrorMessage().c_str());
+                    std::cerr << "Failed to center leg " << i
+                              << ": " << hexapod.getLastErrorMessage() << std::endl;
                     return false;
                 }
 
@@ -356,7 +363,7 @@ namespace gait
                 }
                 catch (const std::exception &e)
                 {
-                    fprintf(stderr, "Failed to configure gait pattern: %s\n", e.what());
+                    std::cerr << "Failed to configure gait pattern: " << e.what() << std::endl;
                     return false;
                 }
             }
@@ -438,7 +445,7 @@ namespace gait
         }
         catch (const std::exception &e)
         {
-            fprintf(stderr, "Gait initialization failed: %s\n", e.what());
+            std::cerr << "Gait initialization failed: " << e.what() << std::endl;
             return false;
         }
     }

@@ -7,6 +7,7 @@
 #include <sstream>
 #include <iomanip>
 #include <time.h>
+#include <iostream>
 #include "controller.hpp"
 
 namespace controller
@@ -69,7 +70,7 @@ namespace controller
             terminalConfigured = configureTerminal();
             if (!terminalConfigured)
             {
-                fprintf(stderr, "Warning: Failed to configure terminal for immediate input\n");
+                std::cerr << "Warning: Failed to configure terminal for immediate input" << std::endl;
                 // Continue anyway - it's not critical for operation
             }
 
@@ -83,7 +84,7 @@ namespace controller
 
             if (!gait.init(hexapod, params))
             {
-                fprintf(stderr, "Failed to initialize gait controller\n");
+                std::cerr << "Error: Failed to initialize gait controller" << std::endl;
                 return false;
             }
 
@@ -186,12 +187,12 @@ namespace controller
             // Speed control
             case '+': // Increase speed
                 speed = std::min(1.0, speed + 0.1);
-                printf("Speed: %.1f\n", speed);
+                std::cout << "Speed: " << std::fixed << std::setprecision(1) << speed << std::endl;
                 break;
 
             case '-': // Decrease speed
                 speed = std::max(0.1, speed - 0.1);
-                printf("Speed: %.1f\n", speed);
+                std::cout << "Speed: " << std::fixed << std::setprecision(1) << speed << std::endl;
                 break;
 
             // Stop/center command
@@ -317,7 +318,7 @@ namespace controller
                 gaitName = "Ripple";
                 break;
             }
-            printf("Switched to %s gait\n", gaitName);
+            std::cout << "Switched to " << gaitName << " gait" << std::endl;
         }
 
         /**
@@ -425,8 +426,8 @@ namespace controller
             // Simplified placeholder implementation
             // In a real implementation, this would ping hardware and check timeouts
 
-            printf("Controller communication test: OK\n");
-            printf("Communication latency: 2ms\n");
+            std::cout << "Controller communication test: OK" << std::endl;
+            std::cout << "Communication latency: 2ms" << std::endl;
 
             return true;
         }
@@ -442,11 +443,11 @@ namespace controller
             // Simplified placeholder implementation
             // In a real implementation, this would send test commands to each servo
 
-            printf("Testing %d servos...\n", hexapod::Config::TOTAL_SERVOS);
+            std::cout << "Testing " << hexapod::Config::TOTAL_SERVOS << " servos..." << std::endl;
 
             for (int i = 0; i < hexapod::Config::TOTAL_SERVOS; i++)
             {
-                printf("Servo %d: OK\n", i);
+                std::cout << "Servo " << i << ": OK" << std::endl;
             }
 
             return true;

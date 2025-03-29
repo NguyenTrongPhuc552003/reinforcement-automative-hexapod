@@ -1,16 +1,16 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include <iostream>
+#include <iomanip>
+#include <string>
+#include <cmath>
+#include <csignal>
 #include <unistd.h>
-#include <math.h>
-#include <signal.h>
-#include <string.h>
-#include <time.h>
+#include <chrono>
 #include <termios.h>
 #include "hexapod.hpp"
 
 // Global flags for program control
-static volatile int running = 1;
-static volatile int emergency_stop = 0;
+static volatile bool running = true;
+static volatile bool emergency_stop = false;
 
 // Configuration parameters
 static struct
@@ -33,21 +33,21 @@ void handle_signal(int sig)
 {
     if (sig == SIGINT)
     {
-        printf("\nReceived interrupt signal, initiating shutdown...\n");
-        running = 0;
+        std::cout << "\nReceived interrupt signal, initiating shutdown..." << std::endl;
+        running = false;
     }
     else if (sig == SIGTERM)
     {
-        printf("\nReceived termination signal, shutting down immediately...\n");
-        emergency_stop = 1;
-        running = 0;
+        std::cout << "\nReceived termination signal, shutting down immediately..." << std::endl;
+        emergency_stop = true;
+        running = false;
     }
 
     // Force cleanup to happen faster on second signal
     static int signal_count = 0;
     if (++signal_count >= 2)
     {
-        fprintf(stderr, "\nForced exit - multiple signals received\n");
+        std::cerr << "\nForced exit - multiple signals received" << std::endl;
         exit(1); // Force immediate exit if user is impatient
     }
 }
@@ -56,35 +56,35 @@ void handle_signal(int sig)
 void print_progress(int current, int total, const char *joint_name)
 {
     const int bar_width = 40;
-    float progress = (float)current / total;
-    int pos = bar_width * progress;
+    float progress = static_cast<float>(current) / total;
+    int pos = static_cast<int>(bar_width * progress);
 
-    printf("%s [", joint_name);
+    std::cout << joint_name << " [";
     for (int i = 0; i < bar_width; ++i)
     {
         if (i < pos)
-            printf("=");
+            std::cout << "=";
         else if (i == pos)
-            printf(">");
+            std::cout << ">";
         else
-            printf(" ");
+            std::cout << " ";
     }
-    printf("] %3d%%\r", (int)(progress * 100));
-    fflush(stdout);
+    std::cout << "] " << std::setw(3) << static_cast<int>(progress * 100) << "%\r";
+    std::cout << std::flush;
 }
 
 // Get current time for performance measurements
 double get_current_time()
 {
-    struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    return ts.tv_sec + (ts.tv_nsec / 1.0e9);
+    auto now = std::chrono::steady_clock::now();
+    auto duration = now.time_since_epoch();
+    return std::chrono::duration<double>(duration).count();
 }
 
 // Test a specific joint with improved error handling and feedback
 bool test_joint(Hexapod &hexapod, uint8_t leg_num, int joint_index, const char *joint_name)
 {
-    printf("\nTesting %s joint of leg %d...\n", joint_name, leg_num);
+    std::cout << "\nTesting " << joint_name << " joint of leg " << static_cast<int>(leg_num) << "..." << std::endl;
 
     double start_time = get_current_time();
     int success_count = 0;
@@ -98,7 +98,7 @@ bool test_joint(Hexapod &hexapod, uint8_t leg_num, int joint_index, const char *
     for (int i = 0; i < config.sweep_steps && running && !emergency_stop; i++)
     {
         // Calculate angle using sine wave: smooth transition from -range to +range
-        double progress = (double)i / config.sweep_steps;
+        double progress = static_cast<double>(i) / config.sweep_steps;
         int16_t angle = static_cast<int16_t>(sin(progress * M_PI) * config.sweep_range);
 
         // Only set the target joint's angle - more efficient than creating a new object each time
@@ -109,247 +109,289 @@ bool test_joint(Hexapod &hexapod, uint8_t leg_num, int joint_index, const char *
         else
             pos.setAnkle(angle);
 
-        // Set position with enhanced retry logic and backoff
-        bool success = false;
-        for (int retry = 0; retry < 3 && !success; retry++)
+        // Update progress bar every 5th step
+        if (i % 5 == 0)
+            print_progress(i, config.sweep_steps, joint_name);
+
+        if (hexapod.setLegPosition(leg_num, pos))
         {
-            if (hexapod.setLegPosition(leg_num, pos))
-            {
-                success = true;
-                success_count++;
-                consecutive_errors = 0; // Reset consecutive errors counter
-                break;
-            }
-
-            if (retry < 2) // Don't sleep on last retry
-            {
-                fprintf(stderr, "Retrying position set (%d)...\n", retry + 1);
-                usleep(50000 * (retry + 1)); // Increasing backoff for retries
-            }
-        }
-
-        if (!success)
-        {
-            fprintf(stderr, "Failed to set position: %s\n",
-                    hexapod.getLastErrorMessage().c_str());
-            error_count++;
-            consecutive_errors++;
-
-            // Skip ahead if too many consecutive errors
-            if (consecutive_errors > 3)
-            {
-                fprintf(stderr, "Too many consecutive errors, skipping remainder of test\n");
-                break;
-            }
-        }
-
-        // Display progress
-        print_progress(i, config.sweep_steps, joint_name);
-
-        usleep(config.delay_ms * 1000);
-    }
-
-    // Print newline after progress bar
-    printf("\n");
-
-    // Return to center position
-    LegPosition center(0, 0, 0);
-    if (!hexapod.setLegPosition(leg_num, center))
-    {
-        fprintf(stderr, "Failed to center joint: %s\n",
-                hexapod.getLastErrorMessage().c_str());
-    }
-
-    double elapsed_time = get_current_time() - start_time;
-    printf("%s joint test completed in %.2f seconds with %d successful movements and %d errors\n",
-           joint_name, elapsed_time, success_count, error_count);
-
-    usleep(config.transition_ms * 1000);
-
-    return (error_count == 0);
-}
-
-// Restore terminal settings on exit
-void restore_terminal(struct termios *orig_termios)
-{
-    if (tcsetattr(STDIN_FILENO, TCSANOW, orig_termios) < 0)
-    {
-        fprintf(stderr, "Warning: Failed to restore terminal attributes\n");
-    }
-}
-
-int main(int argc, char *argv[])
-{
-    double total_start_time = get_current_time();
-    bool test_success = true;
-    struct termios orig_termios;
-
-    // Set up signal handlers for clean termination
-    signal(SIGINT, handle_signal);
-    signal(SIGTERM, handle_signal);
-
-    // Save original terminal settings
-    if (tcgetattr(STDIN_FILENO, &orig_termios) < 0)
-    {
-        fprintf(stderr, "Warning: Failed to get terminal attributes\n");
-    }
-
-    // Process command line arguments with better error checking
-    for (int i = 1; i < argc; i++)
-    {
-        if (strcmp(argv[i], "--leg") == 0 && i + 1 < argc)
-        {
-            int leg = atoi(argv[++i]);
-            if (leg >= 0 && leg < NUM_LEGS)
-            {
-                config.leg_num = leg;
-            }
-            else
-            {
-                fprintf(stderr, "Error: Leg number must be 0-%d\n", NUM_LEGS - 1);
-                return 1;
-            }
-        }
-        else if (strcmp(argv[i], "--range") == 0 && i + 1 < argc)
-        {
-            config.sweep_range = atoi(argv[++i]);
-            if (config.sweep_range < 0 || config.sweep_range > 90)
-            {
-                fprintf(stderr, "Warning: Range should be between 0-90 degrees, using %d\n", config.sweep_range);
-            }
-        }
-        else if (strcmp(argv[i], "--steps") == 0 && i + 1 < argc)
-        {
-            config.sweep_steps = atoi(argv[++i]);
-        }
-        else if (strcmp(argv[i], "--delay") == 0 && i + 1 < argc)
-        {
-            config.delay_ms = atoi(argv[++i]);
-        }
-        else if (strcmp(argv[i], "--help") == 0)
-        {
-            printf("Usage: %s [options]\n", argv[0]);
-            printf("Options:\n");
-            printf("  --leg N       Test leg number N (0-%d)\n", NUM_LEGS - 1);
-            printf("  --range N     Set sweep range to N degrees (default: 45)\n");
-            printf("  --steps N     Set number of steps in sweep (default: 100)\n");
-            printf("  --delay N     Set delay between steps to N ms (default: 30)\n");
-            printf("  --help        Show this help message\n");
-            return 0;
+            success_count++;
+            consecutive_errors = 0; // Reset consecutive error counter
         }
         else
         {
-            fprintf(stderr, "Unknown argument: %s (use --help for usage)\n", argv[i]);
-            return 1;
+            error_count++;
+            consecutive_errors++;
+
+            std::cerr << "\nError setting " << joint_name << " angle to " << angle
+                      << ": " << hexapod.getLastErrorMessage() << std::endl;
+
+            // Bail out if too many consecutive errors
+            if (consecutive_errors >= 5)
+            {
+                std::cerr << "Too many consecutive errors, aborting joint test" << std::endl;
+                return false;
+            }
+
+            // Brief delay after error before continuing
+            usleep(100000);
         }
+
+        // Sleep for specified delay between updates
+        usleep(config.delay_ms * 1000);
     }
 
-    // Initialize hexapod with improved error messaging
-    printf("Initializing hexapod hardware interface...\n");
-    Hexapod hexapod;
-    if (!hexapod.init())
+    // Complete the progress bar
+    print_progress(config.sweep_steps, config.sweep_steps, joint_name);
+    std::cout << std::endl;
+
+    // Print performance statistics
+    double elapsed = get_current_time() - start_time;
+    double success_rate = (success_count > 0) ? (static_cast<double>(success_count) / (success_count + error_count) * 100.0) : 0.0;
+
+    std::cout << "Joint test completed in " << std::fixed << std::setprecision(2)
+              << elapsed << "s with " << success_rate << "% success rate" << std::endl;
+
+    return (success_count > 0 && success_rate >= 80.0);
+}
+
+// Test movement on a specific leg
+bool test_leg(Hexapod &hexapod, uint8_t leg_num)
+{
+    bool success = true;
+
+    std::cout << "\n=== Testing Leg " << static_cast<int>(leg_num) << " ===" << std::endl;
+
+    // Center the leg before testing
+    LegPosition center(0, 0, 0);
+    if (!hexapod.setLegPosition(leg_num, center))
     {
-        fprintf(stderr, "ERROR: Failed to initialize hexapod hardware\n");
-        fprintf(stderr, "Reason: %s\n", hexapod.getLastErrorMessage().c_str());
-        fprintf(stderr, "Please check:\n");
-        fprintf(stderr, "  1. Is the hexapod driver loaded? (lsmod | grep hexapod)\n");
-        fprintf(stderr, "  2. Do you have permission to access the device? (ls -l /dev/hexapod)\n");
-        fprintf(stderr, "  3. Is the hardware properly connected? (I2C bus, power supply)\n");
-        restore_terminal(&orig_termios);
-        return 1;
+        std::cerr << "Failed to center leg before test: "
+                  << hexapod.getLastErrorMessage() << std::endl;
+        return false;
     }
 
-    printf("\n");
-    printf("┌───────────────────────────────────────────────┐\n");
-    printf("│            SERVO TEST - LEG %-2d              │\n", config.leg_num);
-    printf("├───────────────────────────────────────────────┤\n");
-    printf("│ Range: ±%-3d° | Steps: %-3d | Delay: %-3d ms  │\n",
-           config.sweep_range, config.sweep_steps, config.delay_ms);
-    printf("└───────────────────────────────────────────────┘\n");
-    printf("\nPress Ctrl+C to exit\n\n");
+    usleep(config.transition_ms * 1000);
 
-    // Center all servos to start with timeout handling
-    printf("Centering all servos...\n");
-    double center_start = get_current_time();
+    // Test each joint
+    success &= test_joint(hexapod, leg_num, 0, "Hip  ");
+    if (!running || emergency_stop)
+        return false;
+
+    usleep(config.transition_ms * 1000);
+
+    success &= test_joint(hexapod, leg_num, 1, "Knee ");
+    if (!running || emergency_stop)
+        return false;
+
+    usleep(config.transition_ms * 1000);
+
+    success &= test_joint(hexapod, leg_num, 2, "Ankle");
+    if (!running || emergency_stop)
+        return false;
+
+    // Re-center the leg after testing
+    if (!hexapod.setLegPosition(leg_num, center))
+    {
+        std::cerr << "Failed to center leg after test: "
+                  << hexapod.getLastErrorMessage() << std::endl;
+        success = false;
+    }
+
+    std::cout << "\nLeg " << static_cast<int>(leg_num) << " test "
+              << (success ? "PASSED" : "FAILED") << std::endl;
+
+    return success;
+}
+
+// Test each leg sequentially
+void test_all_legs(Hexapod &hexapod)
+{
+    int passed = 0;
+    int failed = 0;
+
+    std::cout << "\n=== Testing All Legs ===" << std::endl;
+
+    for (uint8_t leg = 0; leg < NUM_LEGS && running && !emergency_stop; leg++)
+    {
+        if (test_leg(hexapod, leg))
+            passed++;
+        else
+            failed++;
+
+        // Brief delay between legs
+        usleep(500000);
+    }
+
+    std::cout << "\nTest Summary: " << passed << " legs passed, " << failed << " legs failed" << std::endl;
+}
+
+// Test synchronized movement of all legs
+void test_synchronized_movement(Hexapod &hexapod)
+{
+    std::cout << "\n=== Testing Synchronized Movement ===" << std::endl;
+
+    // Center all legs first
+    std::cout << "Centering all legs..." << std::endl;
     if (!hexapod.centerAll())
     {
-        fprintf(stderr, "Failed to center servos: %s\n",
-                hexapod.getLastErrorMessage().c_str());
-
-        printf("Attempting emergency recovery...\n");
-        sleep(1);
-        if (!hexapod.centerAll())
-        {
-            fprintf(stderr, "Emergency recovery failed. Exiting.\n");
-            hexapod.cleanup();
-            restore_terminal(&orig_termios);
-            return 1;
-        }
+        std::cerr << "Failed to center all legs" << std::endl;
+        return;
     }
-    printf("Centering completed in %.2f seconds\n", get_current_time() - center_start);
 
-    // Allow servos to reach position
     sleep(1);
 
-    // Main test loop with joint-specific tests
-    while (running && !emergency_stop)
+    std::cout << "Moving all legs simultaneously..." << std::endl;
+
+    // Perform synchronized sweep
+    for (int i = 0; i < config.sweep_steps && running && !emergency_stop; i++)
     {
-        // Test each joint
-        if (!test_joint(hexapod, config.leg_num, 0, "Hip"))
+        double progress = static_cast<double>(i) / config.sweep_steps;
+        int16_t hip_angle = static_cast<int16_t>(sin(progress * M_PI) * 20);         // ±20°
+        int16_t knee_angle = static_cast<int16_t>(sin(progress * M_PI * 2) * 30);    // ±30°
+        int16_t ankle_angle = static_cast<int16_t>(sin(progress * M_PI * 0.5) * 25); // ±25°
+
+        // Update all legs with the same angles
+        for (uint8_t leg = 0; leg < NUM_LEGS; leg++)
         {
-            test_success = false;
-            if (!running)
-                break;
+            LegPosition pos(hip_angle, knee_angle, ankle_angle);
+            hexapod.setLegPosition(leg, pos);
         }
 
-        if (!test_joint(hexapod, config.leg_num, 1, "Knee"))
+        // Update progress every 5th step
+        if (i % 5 == 0)
         {
-            test_success = false;
-            if (!running)
-                break;
+            print_progress(i, config.sweep_steps, "Sync");
         }
 
-        if (!test_joint(hexapod, config.leg_num, 2, "Ankle"))
-        {
-            test_success = false;
-            if (!running)
-                break;
-        }
-
-        // Test complete, show summary
-        printf("\nTest cycle complete!\n");
-
-        // If single run or interrupted, break out
-        if (!running || argc > 1)
-            break;
-
-        printf("Starting next test cycle in 3 seconds... (Press Ctrl+C to exit)\n");
-        sleep(3);
+        // Shorter delay for synchronized movement
+        usleep(config.delay_ms * 1000);
     }
 
-    // Center all servos before exit with visible indicator
-    printf("\nShutting down - Centering all servos for safety...\n");
+    print_progress(config.sweep_steps, config.sweep_steps, "Sync");
+    std::cout << std::endl;
+
+    // Center all legs again
+    std::cout << "Centering all legs..." << std::endl;
+    hexapod.centerAll();
+}
+
+// Parse command line arguments and set configuration
+void parse_arguments(int argc, char *argv[])
+{
+    for (int i = 1; i < argc; i++)
+    {
+        std::string arg = argv[i];
+
+        if (arg == "--leg" && i + 1 < argc)
+        {
+            config.leg_num = static_cast<uint8_t>(std::stoi(argv[++i]) % NUM_LEGS);
+        }
+        else if (arg == "--range" && i + 1 < argc)
+        {
+            config.sweep_range = std::stoi(argv[++i]);
+            config.sweep_range = std::min(90, std::max(10, config.sweep_range));
+        }
+        else if (arg == "--steps" && i + 1 < argc)
+        {
+            config.sweep_steps = std::stoi(argv[++i]);
+            config.sweep_steps = std::min(500, std::max(20, config.sweep_steps));
+        }
+        else if (arg == "--delay" && i + 1 < argc)
+        {
+            config.delay_ms = std::stoi(argv[++i]);
+            config.delay_ms = std::min(500, std::max(10, config.delay_ms));
+        }
+        else if (arg == "--help")
+        {
+            std::cout << "Usage: " << argv[0] << " [options]" << std::endl;
+            std::cout << "Options:" << std::endl;
+            std::cout << "  --leg N      Test only leg N (0-5)" << std::endl;
+            std::cout << "  --range N    Set sweep range to ±N degrees (10-90)" << std::endl;
+            std::cout << "  --steps N    Set sweep steps to N (20-500)" << std::endl;
+            std::cout << "  --delay N    Set delay between updates to N ms (10-500)" << std::endl;
+            std::cout << "  --help       Show this help message" << std::endl;
+            exit(0);
+        }
+    }
+}
+
+// Main program
+int main(int argc, char *argv[])
+{
+    // Register signal handler
+    std::signal(SIGINT, handle_signal);
+    std::signal(SIGTERM, handle_signal);
+
+    // Parse command line arguments
+    parse_arguments(argc, argv);
+
+    std::cout << "Hexapod Servo Test Utility" << std::endl;
+    std::cout << "=========================" << std::endl;
+    std::cout << "Configuration:" << std::endl;
+    std::cout << "  Leg: " << static_cast<int>(config.leg_num) << std::endl;
+    std::cout << "  Sweep Range: ±" << config.sweep_range << " degrees" << std::endl;
+    std::cout << "  Sweep Steps: " << config.sweep_steps << std::endl;
+    std::cout << "  Update Delay: " << config.delay_ms << " ms" << std::endl;
+    std::cout << "  Transition Delay: " << config.transition_ms << " ms" << std::endl;
+
+    // Initialize hexapod with retry logic
+    Hexapod hexapod;
+    bool initialized = false;
+    int retries = 3;
+
+    while (!initialized && retries-- > 0)
+    {
+        std::cout << "\nInitializing hexapod hardware (attempt " << 3 - retries << ")..." << std::endl;
+        if (hexapod.init())
+        {
+            initialized = true;
+            std::cout << "Hexapod initialized successfully!" << std::endl;
+        }
+        else
+        {
+            std::cerr << "Failed to initialize: " << hexapod.getLastErrorMessage() << std::endl;
+            if (retries > 0)
+            {
+                std::cout << "Retrying in 1 second..." << std::endl;
+                sleep(1);
+            }
+            else
+            {
+                std::cerr << "Failed to initialize after multiple attempts." << std::endl;
+                return 1;
+            }
+        }
+    }
+
+    // Center all legs initially
     if (!hexapod.centerAll())
     {
-        fprintf(stderr, "Warning: Failed to center servos during shutdown: %s\n",
-                hexapod.getLastErrorMessage().c_str());
-        // Try one more time
-        sleep(1);
-        hexapod.centerAll();
+        std::cerr << "Warning: Failed to center all legs at startup" << std::endl;
     }
 
-    // Explicitly cleanup hexapod resources
-    printf("Cleaning up hexapod resources...\n");
-    hexapod.cleanup();
+    if (argc > 1 && std::string(argv[1]) == "all")
+    {
+        // Test all legs sequentially
+        test_all_legs(hexapod);
 
-    // Report total runtime
-    double total_time = get_current_time() - total_start_time;
-    printf("Test program completed in %.2f seconds\n", total_time);
-    printf("Status: %s\n", test_success ? "SUCCESS" : "ERRORS ENCOUNTERED");
+        if (running && !emergency_stop)
+        {
+            // Test synchronized movement after individual tests
+            test_synchronized_movement(hexapod);
+        }
+    }
+    else
+    {
+        // Test specific leg from configuration
+        test_leg(hexapod, config.leg_num);
+    }
 
-    // Restore terminal settings
-    restore_terminal(&orig_termios);
+    // Center all legs before exit for safety
+    std::cout << "\nCentering all legs before exit..." << std::endl;
+    hexapod.centerAll();
 
-    // Return appropriate exit code
-    return test_success ? 0 : 1;
+    // Clean exit
+    std::cout << "\nTest completed." << std::endl;
+    return 0;
 }
