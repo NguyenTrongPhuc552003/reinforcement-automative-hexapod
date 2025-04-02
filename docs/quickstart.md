@@ -13,7 +13,7 @@ This guide helps you get your hexapod robot up and running quickly.
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/reinforcement-automative-hexapod.git
+   git clone https://github.com/NguyenTrongPhuc552003/reinforcement-automative-hexapod.git
    cd reinforcement-automative-hexapod
    ```
 

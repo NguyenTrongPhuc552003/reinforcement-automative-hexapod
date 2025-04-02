@@ -217,9 +217,9 @@ if [ $DO_CLEAN -eq 1 ]; then
     # Clean deploy directory with sudo if needed
     if [ -d "${DEPLOY_DIR}" ]; then
         log "${YELLOW}" "Cleaning deploy directory..."
-        if ! rm -rf "${DEPLOY_DIR}"/* 2>/dev/null; then
+        if ! rm -rf "${DEPLOY_DIR}" 2>/dev/null; then
             log "${YELLOW}" "Using sudo to clean deploy directory..."
-            sudo rm -rf "${DEPLOY_DIR}"/*
+            sudo rm -rf "${DEPLOY_DIR}"
         fi
     fi
     

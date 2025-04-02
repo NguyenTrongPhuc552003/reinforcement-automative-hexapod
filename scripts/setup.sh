@@ -184,10 +184,10 @@ Here's how to use it:
    ./build.sh driver  # Build only the kernel driver
    ./build.sh user    # Build only the user-space applications
 
-2. To deploy to your BeagleBone:
+2. To deploy to BeagleBone:
    ./deploy.sh        # Follow the prompts to configure your BeagleBone IP
 
-3. To test on your BeagleBone:
+3. To test on BeagleBone:
    sudo ./test_calibration reset  # Initialize calibration
    sudo ./test_servo              # Test servo movements
    sudo ./test_mpu6050            # Test IMU sensor readings

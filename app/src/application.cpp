@@ -257,6 +257,29 @@ namespace application
                       << (m_performanceMonitoringEnabled ? "enabled" : "disabled") 
                       << std::endl;
             return true; });
+
+            // Add balance mode controls
+            registerKeyCommand('b', [this]()
+                               {
+                if (m_controller)
+                    m_controller->setBalanceEnabled(!m_controller->isBalanceEnabled());
+                return true; });
+
+            registerKeyCommand('[', [this]()
+                               {
+                if (m_controller) {
+                    auto config = m_controller->getBalanceConfig();
+                    m_controller->setBalanceResponseFactor(config.response_factor - 0.1);
+                }
+                return true; });
+
+            registerKeyCommand(']', [this]()
+                               {
+                if (m_controller) {
+                    auto config = m_controller->getBalanceConfig();
+                    m_controller->setBalanceResponseFactor(config.response_factor + 0.1);
+                }
+                return true; });
         }
 
         /**
@@ -284,6 +307,9 @@ namespace application
                       << "  M: Run servo mapping diagnostics\n"
                       << "  H: Show this help\n"
                       << "  Q: Quit\n"
+                      << "  B: Toggle balance mode\n"
+                      << "  [: Decrease balance response\n"
+                      << "  ]: Increase balance response\n"
                       << std::endl;
         }
 
@@ -414,6 +440,16 @@ namespace application
                           << "Avg frame: " << avgFrameTime << "ms, "
                           << "Max frame: " << (m_maxFrameTime / 1000.0) << "ms, "
                           << "FPS: " << (1000.0 / std::max(1.0, avgFrameTime)) << "\n";
+
+                // Add balance mode status to telemetry
+                if (m_controller)
+                {
+                    std::cout << "Balance: "
+                              << (m_controller->isBalanceEnabled() ? "ENABLED" : "disabled")
+                              << " (Response: " << m_controller->getBalanceConfig().response_factor
+                              << ", Deadzone: " << m_controller->getBalanceConfig().deadzone
+                              << "°)\n";
+                }
 
                 std::cout << "\nPress 'h' for help, 'q' to quit, 't' to hide telemetry\n";
             }
