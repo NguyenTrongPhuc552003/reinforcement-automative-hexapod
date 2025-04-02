@@ -28,6 +28,17 @@ namespace controller
         TILTING   ///< Body orientation tilting
     };
 
+    /**
+     * @brief Balance configuration parameters
+     */
+    struct BalanceConfig
+    {
+        double max_tilt_adjustment = 30.0; // Maximum angle adjustment in degrees
+        double response_factor = 0.8;      // How responsive the balance is (0.0-1.0)
+        double deadzone = 2.0;             // Minimum tilt (degrees) before reacting
+        bool enabled = false;              // Whether balance mode is enabled
+    };
+
     //==============================================================================
     // Forward declarations
     //==============================================================================
@@ -156,6 +167,46 @@ namespace controller
          * @param type Gait pattern type
          */
         void setGaitType(gait::GaitType type);
+
+        //--------------------------------------------------------------------------
+        // Balance Control
+        //--------------------------------------------------------------------------
+
+        /**
+         * @brief Enable or disable balance mode
+         *
+         * @param enabled True to enable balance, false to disable
+         */
+        void setBalanceEnabled(bool enabled);
+
+        /**
+         * @brief Check if balance mode is enabled
+         *
+         * @return true if balance mode is enabled
+         * @return false if balance mode is disabled
+         */
+        bool isBalanceEnabled() const;
+
+        /**
+         * @brief Set balance response factor
+         *
+         * @param factor Response factor (0.1-1.0)
+         */
+        void setBalanceResponseFactor(double factor);
+
+        /**
+         * @brief Set balance deadzone
+         *
+         * @param degrees Deadzone in degrees (0.0-10.0)
+         */
+        void setBalanceDeadzone(double degrees);
+
+        /**
+         * @brief Get current balance configuration
+         *
+         * @return BalanceConfig Current balance settings
+         */
+        BalanceConfig getBalanceConfig() const;
 
         //--------------------------------------------------------------------------
         // Diagnostic Functions

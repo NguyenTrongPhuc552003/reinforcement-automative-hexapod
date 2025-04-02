@@ -1,7 +1,7 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <signal.h>
+#include <iostream>
+#include <iomanip>
+#include <string>
+#include <csignal>
 #include <unistd.h>
 #include <termios.h>
 #include <fcntl.h>
@@ -9,15 +9,15 @@
 #include "controller.hpp"  // Include controller for non-blocking input handling
 
 // Global flag for program termination
-static volatile int running = 1;
+static volatile bool running = true;
 static struct termios orig_termios;
 static bool terminal_modified = false;
 
 // Signal handler for graceful termination
 static void handle_signal(int sig)
 {
-    printf("\nReceived signal %d, shutting down...\n", sig);
-    running = 0;
+    std::cout << "\nReceived signal " << sig << ", shutting down..." << std::endl;
+    running = false;
 }
 
 // Setup terminal for non-blocking input
@@ -28,7 +28,7 @@ static void setup_terminal()
     // Get current terminal settings
     if (tcgetattr(STDIN_FILENO, &orig_termios) < 0)
     {
-        fprintf(stderr, "Warning: Failed to get terminal attributes\n");
+        std::cerr << "Warning: Failed to get terminal attributes" << std::endl;
         return;
     }
 
@@ -56,7 +56,7 @@ static void setup_terminal()
     // Apply the new settings
     if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &new_termios) < 0)
     {
-        fprintf(stderr, "Warning: Failed to set terminal attributes\n");
+        std::cerr << "Warning: Failed to set terminal attributes" << std::endl;
         terminal_modified = false;
     }
 }
@@ -69,7 +69,7 @@ static void restore_terminal()
         // Restore original terminal settings
         if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios) < 0)
         {
-            fprintf(stderr, "Warning: Failed to restore terminal attributes\n");
+            std::cerr << "Warning: Failed to restore terminal attributes" << std::endl;
         }
         terminal_modified = false;
     }
@@ -78,7 +78,7 @@ static void restore_terminal()
 // Test loading and saving calibration
 static bool test_load_save_calibration()
 {
-    printf("Testing calibration loading and saving...\n");
+    std::cout << "Testing calibration loading and saving..." << std::endl;
 
     // Generate test calibration data
     std::vector<Calibration> testCalibrations(NUM_LEGS);
@@ -90,26 +90,26 @@ static bool test_load_save_calibration()
         testCalibrations[i].ankle_offset = (i % 2) ? 7 : -7;  // -7, 7, -7, 7, -7, 7
     }
 
-    printf("Saving test calibration data...\n");
+    std::cout << "Saving test calibration data..." << std::endl;
     if (!CalibrationManager::saveCalibration(testCalibrations))
     {
-        fprintf(stderr, "Failed to save calibration data\n");
+        std::cerr << "Failed to save calibration data" << std::endl;
         return false;
     }
 
     // Clear and reload
     std::vector<Calibration> loadedCalibrations;
-    printf("Loading calibration data...\n");
+    std::cout << "Loading calibration data..." << std::endl;
     if (!CalibrationManager::loadCalibration(loadedCalibrations))
     {
-        fprintf(stderr, "Failed to load calibration data\n");
+        std::cerr << "Failed to load calibration data" << std::endl;
         return false;
     }
 
     // Verify data matches
     if (loadedCalibrations.size() != NUM_LEGS)
     {
-        fprintf(stderr, "Invalid number of calibrations loaded: %zu\n", loadedCalibrations.size());
+        std::cerr << "Invalid number of calibrations loaded: " << loadedCalibrations.size() << std::endl;
         return false;
     }
 
@@ -121,15 +121,14 @@ static bool test_load_save_calibration()
             loadedCalibrations[i].knee_offset != testCalibrations[i].knee_offset ||
             loadedCalibrations[i].ankle_offset != testCalibrations[i].ankle_offset)
         {
-
-            fprintf(stderr, "Mismatch in calibration data for leg %d\n", i);
+            std::cerr << "Mismatch in calibration data for leg " << i << std::endl;
             match = false;
         }
     }
 
     if (match)
     {
-        printf("Calibration data saved and loaded successfully\n");
+        std::cout << "Calibration data saved and loaded successfully" << std::endl;
     }
 
     return match;
@@ -138,12 +137,12 @@ static bool test_load_save_calibration()
 // Apply calibration to the hexapod
 static bool test_apply_calibration(Hexapod &hexapod)
 {
-    printf("Testing calibration application to hexapod...\n");
+    std::cout << "Testing calibration application to hexapod..." << std::endl;
 
     std::vector<Calibration> calibrations;
     if (!CalibrationManager::loadCalibration(calibrations))
     {
-        fprintf(stderr, "Failed to load calibration data\n");
+        std::cerr << "Failed to load calibration data" << std::endl;
         return false;
     }
 
@@ -151,8 +150,10 @@ static bool test_apply_calibration(Hexapod &hexapod)
     size_t success_count = 0;
     for (const auto &cal : calibrations)
     {
-        printf("Applying calibration to leg %d: hip=%d, knee=%d, ankle=%d\n",
-               cal.leg_num, cal.hip_offset, cal.knee_offset, cal.ankle_offset);
+        std::cout << "Applying calibration to leg " << static_cast<int>(cal.leg_num)
+                  << ": hip=" << cal.hip_offset
+                  << ", knee=" << cal.knee_offset
+                  << ", ankle=" << cal.ankle_offset << std::endl;
 
         // Added retry logic for calibration application
         bool success = false;
@@ -165,37 +166,38 @@ static bool test_apply_calibration(Hexapod &hexapod)
             }
             else if (retry < 2)
             {
-                fprintf(stderr, "Retrying calibration for leg %d (attempt %d)...\n",
-                        cal.leg_num, retry + 2);
+                std::cerr << "Retrying calibration for leg " << static_cast<int>(cal.leg_num)
+                          << " (attempt " << retry + 2 << ")..." << std::endl;
                 usleep(100000); // 100ms delay between retries
             }
         }
 
         if (!success)
         {
-            fprintf(stderr, "Failed to apply calibration to leg %d: %s\n",
-                    cal.leg_num, hexapod.getLastErrorMessage().c_str());
+            std::cerr << "Failed to apply calibration to leg " << static_cast<int>(cal.leg_num)
+                      << ": " << hexapod.getLastErrorMessage() << std::endl;
         }
 
         // Short delay between legs
         usleep(100000);
     }
 
-    printf("%d of %zu legs calibrated successfully\n", success_count, calibrations.size());
+    std::cout << success_count << " of " << calibrations.size()
+              << " legs calibrated successfully" << std::endl;
     return (success_count == calibrations.size());
 }
 
 // Test with visual verification
 static bool test_visual_calibration(Hexapod &hexapod)
 {
-    printf("Testing calibration with visual verification...\n");
-    printf("This will move each leg to show calibration effect\n");
+    std::cout << "Testing calibration with visual verification..." << std::endl;
+    std::cout << "This will move each leg to show calibration effect" << std::endl;
 
     // Center all legs first
-    printf("Centering all legs...\n");
+    std::cout << "Centering all legs..." << std::endl;
     if (!hexapod.centerAll())
     {
-        fprintf(stderr, "Failed to center legs\n");
+        std::cerr << "Failed to center legs" << std::endl;
         return false;
     }
     sleep(1);
@@ -203,14 +205,14 @@ static bool test_visual_calibration(Hexapod &hexapod)
     // For each leg, move to show calibration effect
     for (int leg = 0; leg < NUM_LEGS && running; leg++)
     {
-        printf("Testing leg %d calibration effect...\n", leg);
+        std::cout << "Testing leg " << leg << " calibration effect..." << std::endl;
 
         // Move to 15 degrees on all joints to show calibration
         LegPosition pos(15, 15, 15);
         if (!hexapod.setLegPosition(leg, pos))
         {
-            fprintf(stderr, "Failed to set leg position: %s\n",
-                    hexapod.getLastErrorMessage().c_str());
+            std::cerr << "Failed to set leg position: "
+                      << hexapod.getLastErrorMessage() << std::endl;
             continue;
         }
 
@@ -223,7 +225,7 @@ static bool test_visual_calibration(Hexapod &hexapod)
     }
 
     // Center all legs again
-    printf("Centering all legs...\n");
+    std::cout << "Centering all legs..." << std::endl;
     hexapod.centerAll();
 
     return true;
@@ -232,14 +234,14 @@ static bool test_visual_calibration(Hexapod &hexapod)
 // Reset to default calibration
 static bool reset_calibration(Hexapod &hexapod)
 {
-    printf("Resetting to default calibration...\n");
+    std::cout << "Resetting to default calibration..." << std::endl;
 
     std::vector<Calibration> defaults = CalibrationManager::getDefaultCalibration();
 
     // Save defaults to file
     if (!CalibrationManager::saveCalibration(defaults))
     {
-        fprintf(stderr, "Failed to save default calibration\n");
+        std::cerr << "Failed to save default calibration" << std::endl;
         return false;
     }
 
@@ -248,13 +250,13 @@ static bool reset_calibration(Hexapod &hexapod)
     {
         if (!hexapod.setCalibration(cal.leg_num, cal.hip_offset, cal.knee_offset, cal.ankle_offset))
         {
-            fprintf(stderr, "Failed to apply default calibration to leg %d: %s\n",
-                    cal.leg_num, hexapod.getLastErrorMessage().c_str());
+            std::cerr << "Failed to apply default calibration to leg " << static_cast<int>(cal.leg_num)
+                      << ": " << hexapod.getLastErrorMessage() << std::endl;
             return false;
         }
     }
 
-    printf("Calibration reset to defaults\n");
+    std::cout << "Calibration reset to defaults" << std::endl;
     return true;
 }
 
@@ -262,14 +264,14 @@ static bool reset_calibration(Hexapod &hexapod)
 int main(int argc, char *argv[])
 {
     // Set signal handler
-    signal(SIGINT, handle_signal);
-    signal(SIGTERM, handle_signal);
+    std::signal(SIGINT, handle_signal);
+    std::signal(SIGTERM, handle_signal);
 
     // Setup terminal
     setup_terminal();
 
-    printf("Hexapod Calibration Test\n");
-    printf("------------------------\n");
+    std::cout << "Hexapod Calibration Test" << std::endl;
+    std::cout << "------------------------" << std::endl;
 
     // Initialize hexapod with retry logic
     Hexapod hexapod;
@@ -278,17 +280,17 @@ int main(int argc, char *argv[])
 
     while (!initialized && retries-- > 0)
     {
-        printf("Initializing hexapod hardware (attempt %d)...\n", 3 - retries);
+        std::cout << "Initializing hexapod hardware (attempt " << 3 - retries << ")..." << std::endl;
         if (hexapod.init())
         {
             initialized = true;
         }
         else
         {
-            fprintf(stderr, "Failed to initialize: %s\n", hexapod.getLastErrorMessage().c_str());
+            std::cerr << "Failed to initialize: " << hexapod.getLastErrorMessage() << std::endl;
             if (retries > 0)
             {
-                printf("Retrying in 1 second...\n");
+                std::cout << "Retrying in 1 second..." << std::endl;
                 sleep(1);
             }
         }
@@ -296,7 +298,7 @@ int main(int argc, char *argv[])
 
     if (!initialized)
     {
-        fprintf(stderr, "Maximum retries reached, giving up.\n");
+        std::cerr << "Maximum retries reached, giving up." << std::endl;
         restore_terminal();
         return 1;
     }
@@ -304,46 +306,48 @@ int main(int argc, char *argv[])
     // Process command line arguments
     if (argc > 1)
     {
-        if (strcmp(argv[1], "loadsave") == 0)
+        std::string test_type = argv[1];
+
+        if (test_type == "loadsave")
         {
             test_load_save_calibration();
         }
-        else if (strcmp(argv[1], "apply") == 0)
+        else if (test_type == "apply")
         {
             test_apply_calibration(hexapod);
         }
-        else if (strcmp(argv[1], "visual") == 0)
+        else if (test_type == "visual")
         {
             test_visual_calibration(hexapod);
         }
-        else if (strcmp(argv[1], "reset") == 0)
+        else if (test_type == "reset")
         {
             reset_calibration(hexapod);
         }
         else
         {
-            printf("Unknown test: %s\n", argv[1]);
-            printf("Available tests: loadsave, apply, visual, reset\n");
+            std::cout << "Unknown test: " << test_type << std::endl;
+            std::cout << "Available tests: loadsave, apply, visual, reset" << std::endl;
         }
     }
     else
     {
         // Run all tests
-        printf("Running all calibration tests. Press Ctrl+C to skip to next test.\n");
+        std::cout << "Running all calibration tests. Press Ctrl+C to skip to next test." << std::endl;
 
-        printf("\n=== Testing Load/Save Calibration ===\n");
+        std::cout << "\n=== Testing Load/Save Calibration ===" << std::endl;
         test_load_save_calibration();
         if (!running)
             goto cleanup;
         sleep(1);
 
-        printf("\n=== Testing Apply Calibration ===\n");
+        std::cout << "\n=== Testing Apply Calibration ===" << std::endl;
         test_apply_calibration(hexapod);
         if (!running)
             goto cleanup;
         sleep(1);
 
-        printf("\n=== Testing Visual Calibration ===\n");
+        std::cout << "\n=== Testing Visual Calibration ===" << std::endl;
         test_visual_calibration(hexapod);
         if (!running)
             goto cleanup;
@@ -352,16 +356,16 @@ int main(int argc, char *argv[])
 
 cleanup:
     // Center all legs before exit
-    printf("\nCentering all legs...\n");
+    std::cout << "\nCentering all legs..." << std::endl;
     hexapod.centerAll();
 
     // Explicitly cleanup hexapod resources
-    printf("Cleaning up hexapod resources...\n");
+    std::cout << "Cleaning up hexapod resources..." << std::endl;
     hexapod.cleanup();
 
     // Restore terminal settings
     restore_terminal();
 
-    printf("Test program completed.\n");
+    std::cout << "Test program completed." << std::endl;
     return 0;
 }

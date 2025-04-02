@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <system_error>
 #include <unistd.h>
+#include <iostream>
 #include "calibration.hpp"
 
 // Default calibration filename
@@ -111,7 +112,7 @@ namespace calibration
         std::ifstream file(path, std::ios::binary);
         if (!file)
         {
-            fprintf(stderr, "Failed to open calibration file: %s\n", path.c_str());
+            std::cerr << "Failed to open calibration file: " << path << std::endl;
             return false;
         }
 
@@ -124,21 +125,21 @@ namespace calibration
             // Validate file format
             if (header.magic != CalibrationManagerImpl::FILE_MAGIC)
             {
-                fprintf(stderr, "Invalid calibration file format\n");
+                std::cerr << "Invalid calibration file format" << std::endl;
                 return false;
             }
 
             // Check version compatibility
             if (header.version != CalibrationManagerImpl::FILE_VERSION)
             {
-                fprintf(stderr, "Unsupported calibration file version: %u\n", header.version);
+                std::cerr << "Unsupported calibration file version: " << header.version << std::endl;
                 return false;
             }
 
             // Validate entry count
             if (header.num_entries > 100)
             { // Sanity check to prevent huge allocations
-                fprintf(stderr, "Invalid number of calibration entries: %u\n", header.num_entries);
+                std::cerr << "Invalid number of calibration entries: " << header.num_entries << std::endl;
                 return false;
             }
 
@@ -150,8 +151,8 @@ namespace calibration
             // Verify we read the expected number of legs
             if (calibrations.size() != hexapod::Config::NUM_LEGS)
             {
-                fprintf(stderr, "Warning: Expected %d legs, loaded %zu\n",
-                        hexapod::Config::NUM_LEGS, calibrations.size());
+                std::cerr << "Warning: Expected " << hexapod::Config::NUM_LEGS
+                          << " legs, loaded " << calibrations.size() << std::endl;
                 // Continue anyway - might be a different configuration
             }
 
@@ -159,7 +160,7 @@ namespace calibration
         }
         catch (const std::exception &e)
         {
-            fprintf(stderr, "Exception while loading calibration: %s\n", e.what());
+            std::cerr << "Exception while loading calibration: " << e.what() << std::endl;
             return false;
         }
     }
@@ -184,7 +185,7 @@ namespace calibration
             }
             catch (const std::filesystem::filesystem_error &e)
             {
-                fprintf(stderr, "Failed to create directory: %s\n", e.what());
+                std::cerr << "Failed to create directory: " << e.what() << std::endl;
                 return false;
             }
         }
@@ -193,7 +194,7 @@ namespace calibration
         std::ofstream file(path, std::ios::binary | std::ios::trunc);
         if (!file)
         {
-            fprintf(stderr, "Failed to open calibration file for writing: %s\n", path.c_str());
+            std::cerr << "Failed to open calibration file for writing: " << path << std::endl;
             return false;
         }
 
@@ -216,7 +217,7 @@ namespace calibration
         }
         catch (const std::exception &e)
         {
-            fprintf(stderr, "Exception while saving calibration: %s\n", e.what());
+            std::cerr << "Exception while saving calibration: " << e.what() << std::endl;
             return false;
         }
     }
@@ -245,14 +246,14 @@ namespace calibration
     {
         if (calibrations.empty())
         {
-            fprintf(stderr, "No calibration data to apply\n");
+            std::cerr << "No calibration data to apply" << std::endl;
             return false;
         }
 
         // Before applying, validate the calibrations
         if (!validateCalibration(calibrations))
         {
-            fprintf(stderr, "Calibration validation failed\n");
+            std::cerr << "Calibration validation failed" << std::endl;
             return false;
         }
 
@@ -263,7 +264,7 @@ namespace calibration
             // Skip entries with invalid leg numbers
             if (cal.leg_num >= hexapod::Config::NUM_LEGS)
             {
-                fprintf(stderr, "Invalid leg number in calibration: %d\n", cal.leg_num);
+                std::cerr << "Invalid leg number in calibration: " << cal.leg_num << std::endl;
                 continue;
             }
 
@@ -279,8 +280,8 @@ namespace calibration
                 }
                 else if (retry < 2)
                 {
-                    fprintf(stderr, "Retrying calibration for leg %d (attempt %d)...\n",
-                            cal.leg_num, retry + 2);
+                    std::cerr << "Retrying calibration for leg " << cal.leg_num
+                              << " (attempt " << (retry + 2) << ")..." << std::endl;
                     usleep(100000); // 100ms delay between retries
                 }
             }
@@ -288,14 +289,14 @@ namespace calibration
             // Report failure for this leg
             if (!success)
             {
-                fprintf(stderr, "Failed to apply calibration to leg %d: %s\n",
-                        cal.leg_num, hexapod.getLastErrorMessage().c_str());
+                std::cerr << "Failed to apply calibration to leg " << cal.leg_num
+                          << ": " << hexapod.getLastErrorMessage() << std::endl;
             }
         }
 
         // Report overall result
-        fprintf(stderr, "%zu of %zu legs calibrated successfully\n",
-                success_count, calibrations.size());
+        std::cerr << success_count << " of " << calibrations.size()
+                  << " legs calibrated successfully" << std::endl;
 
         // Success if all calibrations were applied
         return (success_count == calibrations.size());
@@ -325,8 +326,8 @@ namespace calibration
         // Check if we have the right number of legs
         if (calibrations.size() != hexapod::Config::NUM_LEGS)
         {
-            fprintf(stderr, "Invalid number of calibration entries: %zu (expected %d)\n",
-                    calibrations.size(), hexapod::Config::NUM_LEGS);
+            std::cerr << "Invalid number of calibration entries: " << calibrations.size()
+                      << " (expected " << hexapod::Config::NUM_LEGS << ")" << std::endl;
             return false;
         }
 
@@ -339,14 +340,14 @@ namespace calibration
             // Check leg number is valid
             if (cal.leg_num >= hexapod::Config::NUM_LEGS)
             {
-                fprintf(stderr, "Invalid leg number: %d\n", cal.leg_num);
+                std::cerr << "Invalid leg number: " << cal.leg_num << std::endl;
                 return false;
             }
 
             // Check if this leg has already been seen
             if (legs_found[cal.leg_num])
             {
-                fprintf(stderr, "Duplicate calibration for leg %d\n", cal.leg_num);
+                std::cerr << "Duplicate calibration for leg " << cal.leg_num << std::endl;
                 return false;
             }
 
@@ -356,19 +357,22 @@ namespace calibration
             // Validate offset ranges
             if (std::abs(cal.hip_offset) > CalibrationManagerImpl::CalibrationLimits::MAX_HIP_OFFSET)
             {
-                fprintf(stderr, "Hip offset for leg %d out of range: %d\n", cal.leg_num, cal.hip_offset);
+                std::cerr << "Hip offset for leg " << cal.leg_num
+                          << " out of range: " << cal.hip_offset << std::endl;
                 return false;
             }
 
             if (std::abs(cal.knee_offset) > CalibrationManagerImpl::CalibrationLimits::MAX_KNEE_OFFSET)
             {
-                fprintf(stderr, "Knee offset for leg %d out of range: %d\n", cal.leg_num, cal.knee_offset);
+                std::cerr << "Knee offset for leg " << cal.leg_num
+                          << " out of range: " << cal.knee_offset << std::endl;
                 return false;
             }
 
             if (std::abs(cal.ankle_offset) > CalibrationManagerImpl::CalibrationLimits::MAX_ANKLE_OFFSET)
             {
-                fprintf(stderr, "Ankle offset for leg %d out of range: %d\n", cal.leg_num, cal.ankle_offset);
+                std::cerr << "Ankle offset for leg " << cal.leg_num
+                          << " out of range: " << cal.ankle_offset << std::endl;
                 return false;
             }
         }
@@ -378,7 +382,7 @@ namespace calibration
         {
             if (!legs_found[i])
             {
-                fprintf(stderr, "Missing calibration for leg %d\n", i);
+                std::cerr << "Missing calibration for leg " << i << std::endl;
                 return false;
             }
         }

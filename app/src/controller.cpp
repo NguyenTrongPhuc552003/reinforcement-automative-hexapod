@@ -7,6 +7,7 @@
 #include <sstream>
 #include <iomanip>
 #include <time.h>
+#include <iostream>
 #include "controller.hpp"
 
 namespace controller
@@ -69,7 +70,7 @@ namespace controller
             terminalConfigured = configureTerminal();
             if (!terminalConfigured)
             {
-                fprintf(stderr, "Warning: Failed to configure terminal for immediate input\n");
+                std::cerr << "Warning: Failed to configure terminal for immediate input" << std::endl;
                 // Continue anyway - it's not critical for operation
             }
 
@@ -83,7 +84,7 @@ namespace controller
 
             if (!gait.init(hexapod, params))
             {
-                fprintf(stderr, "Failed to initialize gait controller\n");
+                std::cerr << "Error: Failed to initialize gait controller" << std::endl;
                 return false;
             }
 
@@ -186,12 +187,12 @@ namespace controller
             // Speed control
             case '+': // Increase speed
                 speed = std::min(1.0, speed + 0.1);
-                printf("Speed: %.1f\n", speed);
+                std::cout << "Speed: " << std::fixed << std::setprecision(1) << speed << std::endl;
                 break;
 
             case '-': // Decrease speed
                 speed = std::max(0.1, speed - 0.1);
-                printf("Speed: %.1f\n", speed);
+                std::cout << "Speed: " << std::fixed << std::setprecision(1) << speed << std::endl;
                 break;
 
             // Stop/center command
@@ -234,23 +235,35 @@ namespace controller
             // Track update result
             bool result = true;
 
-            // Handle state-specific updates
-            switch (state)
+            // Apply balance adjustments if enabled (in any state)
+            if (balanceConfig.enabled)
             {
-            case ControllerState::WALKING:
-            case ControllerState::ROTATING:
-                // Use gait controller for walking/rotating
-                result = gait.update(now.tv_sec + now.tv_nsec / 1.0e9, direction, speed);
-                break;
+                result = updateBalance() && result;
+            }
+            else
+            {
+                // Handle state-specific updates when balance is disabled
+                switch (state)
+                {
+                case ControllerState::WALKING:
+                case ControllerState::ROTATING:
+                    // Use gait controller for walking/rotating
+                    result = gait.update(now.tv_sec + now.tv_nsec / 1.0e9, direction, speed);
+                    break;
 
-            case ControllerState::TILTING:
-                // Apply body tilt
-                result = applyTilt();
-                break;
+                case ControllerState::TILTING:
+                    // Apply body tilt
+                    result = applyTilt();
+                    break;
 
-            case ControllerState::IDLE:
-                // No action needed in idle state
-                break;
+                case ControllerState::IDLE:
+                    // Check if height has changed even in idle state
+                    if (std::abs(height) > 0.1)
+                    {
+                        result = applyTilt(); // Use applyTilt to apply height changes
+                    }
+                    break;
+                }
             }
 
             // Store current time for next update
@@ -317,7 +330,7 @@ namespace controller
                 gaitName = "Ripple";
                 break;
             }
-            printf("Switched to %s gait\n", gaitName);
+            std::cout << "Switched to " << gaitName << " gait" << std::endl;
         }
 
         /**
@@ -353,10 +366,74 @@ namespace controller
                 }
             }
 
-            // TODO: Implement body orientation control using inverse kinematics
-            // This would calculate individualized leg positions based on tilt angles
+            // Implementation of body orientation control using inverse kinematics
+            bool success = true;
 
-            return true;
+            // Loop through each leg to apply tilt and height adjustments
+            for (int leg = 0; leg < hexapod::Config::NUM_LEGS; leg++)
+            {
+                // Define base position for this leg - depends on leg position around body
+                double baseX, baseY, baseZ = -120.0 + height; // Apply height adjustment here
+
+                // Default leg positions when standing
+                switch (leg)
+                {
+                case 0: // Front right
+                    baseX = 100.0;
+                    baseY = 100.0;
+                    break;
+                case 1: // Middle right
+                    baseX = 0.0;
+                    baseY = 120.0;
+                    break;
+                case 2: // Rear right
+                    baseX = -100.0;
+                    baseY = 100.0;
+                    break;
+                case 3: // Front left
+                    baseX = 100.0;
+                    baseY = -100.0;
+                    break;
+                case 4: // Middle left
+                    baseX = 0.0;
+                    baseY = -120.0;
+                    break;
+                case 5: // Rear left
+                    baseX = -100.0;
+                    baseY = -100.0;
+                    break;
+                }
+
+                // Calculate height adjustment based on tilt angles
+                double zAdjustment = sin(tiltY * M_PI / 180.0) * baseY +
+                                     sin(tiltX * M_PI / 180.0) * baseX;
+
+                // Apply adjustment to position - create a tilted plane
+                kinematics::Point3D targetPos(baseX, baseY, baseZ + zAdjustment);
+
+                // Use inverse kinematics to get joint angles
+                hexapod::LegPosition legPos;
+                legPos.leg_num = leg;
+
+                if (kinematics::Kinematics::getInstance().inverseKinematics(targetPos, legPos))
+                {
+                    // Apply the calculated position
+                    if (!hexapod.setLegPosition(leg, legPos))
+                    {
+                        if (debug)
+                            std::cerr << "Failed to set position for leg " << leg << std::endl;
+                        success = false;
+                    }
+                }
+                else
+                {
+                    if (debug)
+                        std::cerr << "Inverse kinematics failed for leg " << leg << std::endl;
+                    success = false;
+                }
+            }
+
+            return success;
         }
 
         /**
@@ -425,8 +502,8 @@ namespace controller
             // Simplified placeholder implementation
             // In a real implementation, this would ping hardware and check timeouts
 
-            printf("Controller communication test: OK\n");
-            printf("Communication latency: 2ms\n");
+            std::cout << "Controller communication test: OK" << std::endl;
+            std::cout << "Communication latency: 2ms" << std::endl;
 
             return true;
         }
@@ -442,11 +519,11 @@ namespace controller
             // Simplified placeholder implementation
             // In a real implementation, this would send test commands to each servo
 
-            printf("Testing %d servos...\n", hexapod::Config::TOTAL_SERVOS);
+            std::cout << "Testing " << hexapod::Config::TOTAL_SERVOS << " servos..." << std::endl;
 
             for (int i = 0; i < hexapod::Config::TOTAL_SERVOS; i++)
             {
-                printf("Servo %d: OK\n", i);
+                std::cout << "Servo " << i << ": OK" << std::endl;
             }
 
             return true;
@@ -471,6 +548,193 @@ namespace controller
 
         // Timing
         struct timespec lastUpdate; ///< Timestamp of last update
+
+        // Balance settings
+        BalanceConfig balanceConfig;
+
+        /**
+         * @brief Calculate tilt angles from accelerometer data
+         *
+         * @param imu_data IMU data
+         * @param roll Output roll angle
+         * @param pitch Output pitch angle
+         */
+        void calculateTilt(const hexapod::ImuData &imu_data, double &roll, double &pitch)
+        {
+            // Conversion for accessing accelerometer data in g units
+            double ax = imu_data.getAccelX();
+            double ay = imu_data.getAccelY();
+            double az = imu_data.getAccelZ();
+
+            // Calculate roll and pitch in degrees
+            roll = atan2(ay, az) * 180.0 / M_PI;
+            pitch = atan2(-ax, sqrt(ay * ay + az * az)) * 180.0 / M_PI;
+        }
+
+        /**
+         * @brief Apply balance adjustments to leg positions
+         *
+         * @param roll Current roll angle in degrees
+         * @param pitch Current pitch angle in degrees
+         * @return true if adjustments were successful
+         * @return false if adjustments failed
+         */
+        bool applyBalanceAdjustments(double roll, double pitch)
+        {
+            // Apply deadzone - ignore small tilts
+            if (fabs(roll) < balanceConfig.deadzone)
+                roll = 0;
+            if (fabs(pitch) < balanceConfig.deadzone)
+                pitch = 0;
+
+            // Cap maximum adjustment
+            roll = std::max(-balanceConfig.max_tilt_adjustment,
+                            std::min(balanceConfig.max_tilt_adjustment, roll));
+            pitch = std::max(-balanceConfig.max_tilt_adjustment,
+                             std::min(balanceConfig.max_tilt_adjustment, pitch));
+
+            // Scale by response factor
+            roll *= balanceConfig.response_factor;
+            pitch *= balanceConfig.response_factor;
+
+            // No need to adjust if tilt is negligible
+            if (fabs(roll) < 0.1 && fabs(pitch) < 0.1)
+                return true;
+
+            // Current leg positions - used when combining with gait
+            std::vector<kinematics::Point3D> legPositions(hexapod::Config::NUM_LEGS);
+            std::vector<hexapod::LegPosition> currentAngles(hexapod::Config::NUM_LEGS);
+
+            // Get current leg positions if we're in walking state
+            if (state == ControllerState::WALKING || state == ControllerState::ROTATING)
+            {
+                for (int leg = 0; leg < hexapod::Config::NUM_LEGS; leg++)
+                {
+                    hexapod::LegPosition angles;
+                    if (hexapod.getLegPosition(leg, angles))
+                    {
+                        currentAngles[leg] = angles;
+                        kinematics::Point3D pos;
+                        if (kinematics::Kinematics::getInstance().forwardKinematics(angles, pos))
+                        {
+                            legPositions[leg] = pos;
+                        }
+                    }
+                }
+            }
+
+            // Loop through each leg to calculate and apply adjustments
+            bool success = true;
+            for (int leg = 0; leg < hexapod::Config::NUM_LEGS; leg++)
+            {
+                // Define base position for this leg
+                double baseX, baseY, baseZ = -120.0; // Default base height
+
+                // If we're in walking state, use current positions as base
+                if (state == ControllerState::WALKING || state == ControllerState::ROTATING)
+                {
+                    baseX = legPositions[leg].x;
+                    baseY = legPositions[leg].y;
+                    baseZ = legPositions[leg].z;
+                }
+                else
+                {
+                    // Default leg positions when standing
+                    switch (leg)
+                    {
+                    case 0: // Front right
+                        baseX = 100.0;
+                        baseY = 100.0;
+                        break;
+                    case 1: // Middle right
+                        baseX = 0.0;
+                        baseY = 120.0;
+                        break;
+                    case 2: // Rear right
+                        baseX = -100.0;
+                        baseY = 100.0;
+                        break;
+                    case 3: // Front left
+                        baseX = 100.0;
+                        baseY = -100.0;
+                        break;
+                    case 4: // Middle left
+                        baseX = 0.0;
+                        baseY = -120.0;
+                        break;
+                    case 5: // Rear left
+                        baseX = -100.0;
+                        baseY = -100.0;
+                        break;
+                    }
+                }
+
+                // Calculate leg height adjustment based on tilt
+                double zAdjustment = sin(roll * M_PI / 180.0) * baseY -
+                                     sin(pitch * M_PI / 180.0) * baseX;
+
+                // Apply adjustment to position - create a tilted plane
+                kinematics::Point3D targetPos(baseX, baseY, baseZ + zAdjustment);
+
+                // Use inverse kinematics to get joint angles
+                hexapod::LegPosition legPos;
+                legPos.leg_num = leg;
+
+                if (kinematics::Kinematics::getInstance().inverseKinematics(targetPos, legPos))
+                {
+                    // Apply the calculated position
+                    if (!hexapod.setLegPosition(leg, legPos))
+                    {
+                        if (debug)
+                            std::cerr << "Failed to set position for leg " << leg << std::endl;
+                        success = false;
+                    }
+                }
+                else
+                {
+                    if (debug)
+                        std::cerr << "Inverse kinematics failed for leg " << leg << std::endl;
+                    success = false;
+                }
+            }
+
+            return success;
+        }
+
+        /**
+         * @brief Process IMU data for balance adjustments
+         *
+         * @return true if balance adjustments succeeded
+         * @return false if balance adjustments failed
+         */
+        bool processBalanceAdjustments()
+        {
+            if (!balanceConfig.enabled)
+                return true;
+
+            // Read IMU data
+            hexapod::ImuData imuData;
+            if (!hexapod.getImuData(imuData))
+                return false;
+
+            // Calculate tilt angles from accelerometer data
+            double roll, pitch;
+            calculateTilt(imuData, roll, pitch);
+
+            // Apply balance adjustments based on tilt
+            return applyBalanceAdjustments(roll, pitch);
+        }
+
+        /**
+         * @brief Handle balance logic in update method
+         */
+        bool updateBalance()
+        {
+            return processBalanceAdjustments();
+        }
+
+        // Add debug flag for optional console output
+        bool debug = false;
     };
 
     //==============================================================================
@@ -556,6 +820,42 @@ namespace controller
     bool Controller::testServoConnectivity() const
     {
         return pImpl->testServoConnectivity();
+    }
+
+    // Implement new balance methods in Controller class
+    void Controller::setBalanceEnabled(bool enabled)
+    {
+        pImpl->balanceConfig.enabled = enabled;
+
+        // Provide user feedback
+        if (enabled)
+            std::cout << "Balance mode enabled" << std::endl;
+        else
+            std::cout << "Balance mode disabled" << std::endl;
+    }
+
+    bool Controller::isBalanceEnabled() const
+    {
+        return pImpl->balanceConfig.enabled;
+    }
+
+    void Controller::setBalanceResponseFactor(double factor)
+    {
+        pImpl->balanceConfig.response_factor = std::max(0.1, std::min(1.0, factor));
+        std::cout << "Balance response factor set to "
+                  << pImpl->balanceConfig.response_factor << std::endl;
+    }
+
+    void Controller::setBalanceDeadzone(double degrees)
+    {
+        pImpl->balanceConfig.deadzone = std::max(0.0, std::min(10.0, degrees));
+        std::cout << "Balance deadzone set to "
+                  << pImpl->balanceConfig.deadzone << " degrees" << std::endl;
+    }
+
+    BalanceConfig Controller::getBalanceConfig() const
+    {
+        return pImpl->balanceConfig;
     }
 
 } // namespace controller

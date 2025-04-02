@@ -74,7 +74,7 @@ struct hexapod_data
     struct mutex lock;                                /**< Synchronization lock */
     struct hexapod_leg_position positions[NUM_LEGS];  /**< Current leg positions */
     struct hexapod_calibration calibration[NUM_LEGS]; /**< Calibration values */
-    int initialized;                                 /**< Driver initialization flag */
+    int initialized;                                  /**< Driver initialization flag */
 };
 
 /**

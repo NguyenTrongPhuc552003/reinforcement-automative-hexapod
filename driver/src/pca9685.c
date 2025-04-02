@@ -8,7 +8,6 @@
 #include <linux/sched.h>
 #include "pca9685.h"
 
-#define PCA9685_I2C_RETRIES 3    /* Number of I2C retry attempts */
 #define PCA9685_RESET_DELAY 10   /* Delay after reset (ms) */
 #define PCA9685_OSCSTART_DELAY 5 /* Delay after restart (ms) */
 
@@ -50,23 +49,15 @@ static inline u8 pca9685_get_channel_offset(u8 channel)
  */
 static int pca9685_write_reg_client(struct i2c_client *client, u8 reg, u8 val)
 {
-    int ret, retries = PCA9685_I2C_RETRIES;
+    int ret;
 
     if (!client)
         return -EINVAL;
 
-    /* Try multiple times with delay between attempts */
-    while (retries--)
-    {
-        ret = i2c_smbus_write_byte_data(client, reg, val);
-        if (ret == 0)
-            return 0;
+    ret = i2c_smbus_write_byte_data(client, reg, val);
+    if (ret < 0)
+        dev_err(&client->dev, "Failed to write register 0x%02x: %d\n", reg, ret);
 
-        /* Delay before retry */
-        schedule_timeout_interruptible(msecs_to_jiffies(5));
-    }
-
-    dev_err(&client->dev, "Failed to write to register 0x%02x: %d\n", reg, ret);
     return ret;
 }
 
@@ -115,23 +106,15 @@ static int pca9685_write_reg(u8 reg, u8 val, int channel)
  */
 static int pca9685_read_reg_client(struct i2c_client *client, u8 reg)
 {
-    int ret, retries = PCA9685_I2C_RETRIES;
+    int ret;
 
     if (!client)
         return -EINVAL;
 
-    /* Try multiple times with delay between attempts */
-    while (retries--)
-    {
-        ret = i2c_smbus_read_byte_data(client, reg);
-        if (ret >= 0)
-            return ret;
+    ret = i2c_smbus_read_byte_data(client, reg);
+    if (ret < 0)
+        dev_err(&client->dev, "Failed to read register 0x%02x: %d\n", reg, ret);
 
-        /* Delay before retry */
-        schedule_timeout_interruptible(msecs_to_jiffies(5));
-    }
-
-    dev_err(&client->dev, "Failed to read register 0x%02x: %d\n", reg, ret);
     return ret;
 }
 
@@ -159,36 +142,29 @@ static __maybe_unused int pca9685_read_reg(u8 reg, u8 channel)
  */
 static int pca9685_write_block(struct i2c_client *client, u8 reg, u8 len, const u8 *buf)
 {
-    int ret, retries = PCA9685_I2C_RETRIES;
+    int ret;
 
     if (!client || !buf)
         return -EINVAL;
 
-    /* Try multiple times with delay between attempts */
-    while (retries--)
+    if (i2c_check_functionality(client->adapter, I2C_FUNC_SMBUS_WRITE_I2C_BLOCK))
     {
-        if (i2c_check_functionality(client->adapter, I2C_FUNC_SMBUS_WRITE_I2C_BLOCK))
+        ret = i2c_smbus_write_i2c_block_data(client, reg, len, buf);
+        if (ret == 0)
+            return 0;
+    }
+    else
+    {
+        /* Fall back to individual byte writes */
+        int i;
+        for (i = 0; i < len; i++)
         {
-            ret = i2c_smbus_write_i2c_block_data(client, reg, len, buf);
-            if (ret == 0)
-                return 0;
+            ret = i2c_smbus_write_byte_data(client, reg + i, buf[i]);
+            if (ret < 0)
+                break;
         }
-        else
-        {
-            /* Fall back to individual byte writes */
-            int i;
-            for (i = 0; i < len; i++)
-            {
-                ret = i2c_smbus_write_byte_data(client, reg + i, buf[i]);
-                if (ret < 0)
-                    break;
-            }
-            if (i == len)
-                return 0;
-        }
-
-        /* Delay before retry */
-        schedule_timeout_interruptible(msecs_to_jiffies(5));
+        if (i == len)
+            return 0;
     }
 
     dev_err(&client->dev, "Failed to write block to register 0x%02x: %d\n", reg, ret);

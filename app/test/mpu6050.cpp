@@ -1,15 +1,17 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <signal.h>
+#include <iostream>
+#include <iomanip>
+#include <string>
+#include <cmath>
+#include <csignal>
 #include <unistd.h>
-#include <math.h>
 #include <termios.h>
 #include <fcntl.h>
-#include <time.h>
+#include <ctime>
+#include <algorithm>
 #include "hexapod.hpp"
 
 // Global flag for termination
-static volatile int running = 1;
+static volatile bool running = true;
 
 // Terminal state
 static struct termios orig_termios;
@@ -17,8 +19,8 @@ static struct termios orig_termios;
 // Signal handler
 static void test_mpu6050_signal_handler(int sig)
 {
-    running = 0;
-    printf("\nReceived signal %d, exiting...\n", sig);
+    running = false;
+    std::cout << "\nReceived signal " << sig << ", exiting..." << std::endl;
 }
 
 // Setup terminal for non-blocking input
@@ -29,7 +31,7 @@ static void setup_terminal()
     // Get current terminal settings
     if (tcgetattr(STDIN_FILENO, &orig_termios) < 0)
     {
-        fprintf(stderr, "Warning: Failed to get terminal attributes\n");
+        std::cerr << "Warning: Failed to get terminal attributes" << std::endl;
         return;
     }
 
@@ -55,18 +57,18 @@ static void setup_terminal()
     // Apply the new settings
     if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &new_termios) < 0)
     {
-        fprintf(stderr, "Warning: Failed to set terminal attributes\n");
+        std::cerr << "Warning: Failed to set terminal attributes" << std::endl;
     }
 
     // Set stdin to non-blocking mode
     int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
     if (flags == -1)
     {
-        fprintf(stderr, "Warning: Failed to get file flags\n");
+        std::cerr << "Warning: Failed to get file flags" << std::endl;
     }
     else if (fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK) == -1)
     {
-        fprintf(stderr, "Warning: Failed to set non-blocking mode\n");
+        std::cerr << "Warning: Failed to set non-blocking mode" << std::endl;
     }
 }
 
@@ -76,7 +78,7 @@ static void restore_terminal()
     // Restore original terminal settings
     if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios) < 0)
     {
-        fprintf(stderr, "Warning: Failed to restore terminal attributes\n");
+        std::cerr << "Warning: Failed to restore terminal attributes" << std::endl;
     }
 }
 
@@ -94,10 +96,8 @@ static void print_timing_stats(const double *intervals, int count)
     // Calculate min, max, sum
     for (int i = 0; i < count; i++)
     {
-        if (intervals[i] < min)
-            min = intervals[i];
-        if (intervals[i] > max)
-            max = intervals[i];
+        min = std::min(min, intervals[i]);
+        max = std::max(max, intervals[i]);
         sum += intervals[i];
     }
 
@@ -109,18 +109,21 @@ static void print_timing_stats(const double *intervals, int count)
     {
         std_dev += (intervals[i] - avg) * (intervals[i] - avg);
     }
-    std_dev = sqrt(std_dev / count);
+    std_dev = std::sqrt(std_dev / count);
 
-    printf("\nIMU Timing Statistics (ms):\n");
-    printf("  Min: %.2f | Max: %.2f | Avg: %.2f | Std Dev: %.2f | Samples: %d\n",
-           min * 1000.0, max * 1000.0, avg * 1000.0, std_dev * 1000.0, count);
+    std::cout << "\nIMU Timing Statistics (ms):" << std::endl;
+    std::cout << "  Min: " << std::fixed << std::setprecision(2) << min * 1000.0
+              << " | Max: " << max * 1000.0
+              << " | Avg: " << avg * 1000.0
+              << " | Std Dev: " << std_dev * 1000.0
+              << " | Samples: " << count << std::endl;
 }
 
-int main(void)
+int main()
 {
     // Set up signal handler for clean termination
-    signal(SIGINT, test_mpu6050_signal_handler);
-    signal(SIGTERM, test_mpu6050_signal_handler);
+    std::signal(SIGINT, test_mpu6050_signal_handler);
+    std::signal(SIGTERM, test_mpu6050_signal_handler);
 
     // Set up terminal
     setup_terminal();
@@ -130,29 +133,30 @@ int main(void)
     bool initialized = false;
     int retries = 3;
 
-    printf("MPU6050 Test - Press Ctrl+C to exit\n");
-    printf("================================\n");
-    printf("Note: MPU6050 sensor automatically wakes from sleep mode when needed\n\n");
+    std::cout << "MPU6050 Test - Press Ctrl+C to exit" << std::endl;
+    std::cout << "================================" << std::endl;
+    std::cout << "Note: MPU6050 sensor automatically wakes from sleep mode when needed\n"
+              << std::endl;
 
     while (!initialized && retries-- > 0)
     {
-        printf("Initializing hexapod hardware (attempt %d)...\n", 3 - retries);
+        std::cout << "Initializing hexapod hardware (attempt " << (3 - retries) << ")..." << std::endl;
         if (hexapod.init())
         {
             initialized = true;
-            printf("Hexapod initialized successfully!\n");
+            std::cout << "Hexapod initialized successfully!" << std::endl;
         }
         else
         {
-            fprintf(stderr, "Failed to initialize: %s\n", hexapod.getLastErrorMessage().c_str());
+            std::cerr << "Failed to initialize: " << hexapod.getLastErrorMessage() << std::endl;
             if (retries > 0)
             {
-                printf("Retrying in 1 second...\n");
+                std::cout << "Retrying in 1 second..." << std::endl;
                 sleep(1);
             }
             else
             {
-                fprintf(stderr, "Maximum retries reached, giving up.\n");
+                std::cerr << "Maximum retries reached, giving up." << std::endl;
                 restore_terminal();
                 return 1;
             }
@@ -167,8 +171,9 @@ int main(void)
     int successful_reads = 0;
     double last_stats_time = hexapod.getCurrentTime();
 
-    printf("\nReading IMU data...\n");
-    printf("Press 'q' to quit, 's' to show statistics\n\n");
+    std::cout << "\nReading IMU data..." << std::endl;
+    std::cout << "Press 'q' to quit, 's' to show statistics\n"
+              << std::endl;
 
     while (running)
     {
@@ -181,12 +186,12 @@ int main(void)
         {
             if (key == 'q' || key == 'Q')
             {
-                printf("\nUser requested exit\n");
+                std::cout << "\nUser requested exit" << std::endl;
                 break;
             }
             else if (key == 's' || key == 'S')
             {
-                print_timing_stats(read_intervals, (total_reads > 100) ? 100 : total_reads);
+                print_timing_stats(read_intervals, std::min(total_reads, 100));
             }
         }
 
@@ -204,8 +209,11 @@ int main(void)
             interval_idx = (interval_idx + 1) % 100;
 
             // Print formatted IMU data
-            hexapod.printImuData(imuData);
-            fflush(stdout);
+            std::cout << "\rAccel: X=" << std::fixed << std::showpos << std::setprecision(2) << std::setw(6)
+                      << imuData.getAccelX() << "g Y=" << std::setw(6) << imuData.getAccelY()
+                      << "g Z=" << std::setw(6) << imuData.getAccelZ() << "g | Gyro: X="
+                      << std::setw(7) << imuData.getGyroX() << "° Y=" << std::setw(7)
+                      << imuData.getGyroY() << "° Z=" << std::setw(7) << imuData.getGyroZ() << "°/s" << std::flush;
             last_successful_read = now;
             successful_reads++;
         }
@@ -213,17 +221,19 @@ int main(void)
         {
             if (now - last_successful_read > 5.0) // 5 second timeout
             {
-                fprintf(stderr, "\nNo response from IMU for 5 seconds, exiting...\n");
+                std::cerr << "\nNo response from IMU for 5 seconds, exiting..." << std::endl;
                 break;
             }
-            fprintf(stderr, "\rFailed to read IMU: %s", hexapod.getLastErrorMessage().c_str());
+            std::cerr << "\rFailed to read IMU: " << hexapod.getLastErrorMessage() << std::flush;
         }
 
         // Show statistics periodically
         if (now - last_stats_time > 10.0)
         {
-            printf("\n\nSuccess rate: %.1f%% (%d/%d) in last 10 seconds\n",
-                   (successful_reads * 100.0) / total_reads, successful_reads, total_reads);
+            double success_rate = (successful_reads * 100.0) / total_reads;
+            std::cout << "\n\nSuccess rate: " << std::fixed << std::setprecision(1)
+                      << success_rate << "% (" << successful_reads << "/"
+                      << total_reads << ") in last 10 seconds" << std::endl;
             last_stats_time = now;
         }
 
@@ -231,12 +241,18 @@ int main(void)
         usleep(elapsed < 0.005 ? 50000 : 10000); // Sleep longer if reads are fast
     }
 
-    printf("\n\nExiting MPU6050 test program...\n");
+    std::cout << "\n\nExiting MPU6050 test program..." << std::endl;
 
     // Print final statistics
-    print_timing_stats(read_intervals, (total_reads > 100) ? 100 : total_reads);
-    printf("Overall success rate: %.1f%% (%d/%d)\n",
-           (successful_reads * 100.0) / total_reads, successful_reads, total_reads);
+    print_timing_stats(read_intervals, std::min(total_reads, 100));
+
+    if (total_reads > 0)
+    {
+        double overall_success_rate = (successful_reads * 100.0) / total_reads;
+        std::cout << "Overall success rate: " << std::fixed << std::setprecision(1)
+                  << overall_success_rate << "% (" << successful_reads << "/"
+                  << total_reads << ")" << std::endl;
+    }
 
     // Explicitly cleanup
     hexapod.cleanup();
