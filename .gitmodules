@@ -1,0 +1,6 @@
+[submodule "opencl/api"]
+	path = opencl/api
+	url = https://github.com/rcn-ee/ti-opencl.git
+[submodule "tidl/api"]
+	path = tidl/api
+	url = https://github.com/rcn-ee/tidl-api.git
