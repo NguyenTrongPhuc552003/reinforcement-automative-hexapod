@@ -14,6 +14,7 @@ PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 KERNEL_MODULE_DIR="${PROJECT_ROOT}/driver"
 USER_SPACE_DIR="${PROJECT_ROOT}/app"
 DEPLOY_DIR="${PROJECT_ROOT}/deploy"
+UTILS_DIR="${PROJECT_ROOT}/utils"
 
 # Create deploy directory with "whoami" user permission if it doesn't exist
 if [ ! -d "${DEPLOY_DIR}" ]; then
@@ -127,14 +128,13 @@ build_user_space() {
 # Function to create utility scripts
 build_utility_scripts() {
     log "${YELLOW}" "Copying utility scripts..."
-    local script_dir="$(dirname "${BASH_SOURCE[0]}")"
     
     # Copy installation script
-    cp "${script_dir}/install.sh" "${DEPLOY_DIR}/"
+    cp "${UTILS_DIR}/install.sh" "${DEPLOY_DIR}/"
     chmod +x "${DEPLOY_DIR}/install.sh"
     
     # Copy monitoring script
-    cp "${script_dir}/monitor.sh" "${DEPLOY_DIR}/"
+    cp "${UTILS_DIR}/monitor.sh" "${DEPLOY_DIR}/"
     chmod +x "${DEPLOY_DIR}/monitor.sh"
     
     log "${GREEN}" "Utility scripts prepared successfully"
