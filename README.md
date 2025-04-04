@@ -106,8 +106,7 @@ Individual tests:
 
 - [Hardware Setup](docs/hardware.md)
 - [Software Architecture](docs/architecture.md)
-- [API Documentation](docs/api/README.md)
-- [Testing Guide](docs/testing.md)
+- [Quick Start Guide](docs/quickstart.md)
 
 ## Contributing
 

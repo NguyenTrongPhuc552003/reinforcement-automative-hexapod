@@ -5,7 +5,7 @@ This guide helps you get your hexapod robot up and running quickly.
 ## Prerequisites
 
 - BeagleBone AI/Black with Debian installed
-- I2C enabled on bus 2
+- I2C enabled on bus 3
 - 18 servos connected to PCA9685 controllers
 - Power supply connected
 
@@ -23,10 +23,10 @@ This guide helps you get your hexapod robot up and running quickly.
    ```
    This builds both kernel and user-space components and prepares the deployment package.
 
-3. **Install the drivers**
+3. **Install the drivers on BeagleBone**
    ```bash
-   cd deploy
-   sudo ./install.sh
+   cd hexapod_driver
+   ./install.sh
    ```
    
    Verify the driver is loaded:

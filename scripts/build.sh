@@ -33,6 +33,7 @@ usage() {
     echo "  -t, utility       Create utility scripts (install.sh, monitor.sh)"
     echo "  -n, --no-cache    Build all without cache"
     echo "  -h, --help        Show this help message"
+    echo "  -d, td3learn      Build TD3Learn reinforcement learning module"
     echo ""
     echo "Options can be combined, e.g., -mt to build modules & utility scripts"
     echo ""
@@ -140,12 +141,40 @@ build_utility_scripts() {
     log "${GREEN}" "Utility scripts prepared successfully"
 }
 
+# Function to build TD3Learn module
+build_td3learn() {
+    log "${YELLOW}" "Building TD3Learn module..."
+    
+    # Create build directory if it doesn't exist
+    if [ ! -d "${PROJECT_ROOT}/td3learn/build" ]; then
+        mkdir -p "${PROJECT_ROOT}/td3learn/build"
+    fi
+    
+    # Run Docker with proper command format
+    docker run --rm \
+        -v "${PROJECT_ROOT}/td3learn:/build/td3learn" \
+        -v "${PROJECT_ROOT}/driver:/build/driver" \
+        -v "${DEPLOY_DIR}:/build/deploy" \
+        hexapod-builder td3learn
+    
+    if [ $? -eq 0 ]; then
+        log "${GREEN}" "TD3Learn build successful!"
+        # Copy relevant files to deploy directory
+        mkdir -p "${DEPLOY_DIR}/td3learn"
+        cp -r "${PROJECT_ROOT}/td3learn/build/"*.a "${PROJECT_ROOT}/td3learn/build/td3learn_"* "${DEPLOY_DIR}/td3learn/" 2>/dev/null || true
+    else
+        log "${RED}" "TD3Learn build failed!"
+        return 1
+    fi
+}
+
 # Initialize option flags
 DO_CLEAN=0
 DO_MODULE=0
 DO_USER=0
 DO_UTILITY=0
 DO_NO_CACHE=0
+DO_TD3LEARN=0  # Add this after DO_UTILITY=0
 
 # Parse command-line arguments
 if [ $# -eq 0 ]; then
@@ -153,6 +182,7 @@ if [ $# -eq 0 ]; then
     DO_MODULE=1
     DO_UTILITY=1
     DO_USER=1
+    DO_TD3LEARN=1
 else
     for arg in "$@"; do
         if [[ "$arg" == "--no-cache" ]]; then
@@ -161,12 +191,14 @@ else
             usage
         elif [[ "$arg" == "clean" || "$arg" == "-c" ]]; then
             DO_CLEAN=1
-        elif [[ "$arg" == "module" ]]; then
+        elif [[ "$arg" == "module" || "$arg" == "-m"  ]]; then
             DO_MODULE=1
-        elif [[ "$arg" == "user" ]]; then
+        elif [[ "$arg" == "user" || "$arg" == "-u"  ]]; then
             DO_USER=1
-        elif [[ "$arg" == "utility" ]]; then
+        elif [[ "$arg" == "utility" || "$arg" == "-t"  ]]; then
             DO_UTILITY=1
+        elif [[ "$arg" == "td3learn" || "$arg" == "-d" ]]; then
+            DO_TD3LEARN=1
         elif [[ "$arg" == -* && "$arg" != "--"* ]]; then
             # Process combined short options like -imu
             flags=${arg#-}
@@ -267,6 +299,11 @@ if [ $DO_USER -eq 1 ]; then
     build_user_space
     log "${GREEN}" "User space programs build completed successfully!"
     COMPONENTS_BUILT=1
+fi
+
+# Build TD3Learn if requested
+if [ $DO_TD3LEARN -eq 1 ]; then
+    build_td3learn || EXIT_CODE=1
 fi
 
 # Print overall success message if anything was built
