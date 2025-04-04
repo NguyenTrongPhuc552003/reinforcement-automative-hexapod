@@ -117,6 +117,36 @@ case "$1" in
         log "${GREEN}" "Clean completed!"
         ;;
         
+    "td3learn")
+        cd /build/td3learn/build
+        log "${GREEN}" "Building TD3Learn module..."
+        
+        # Clean build directory
+        rm -rf /build/td3learn/build/*
+        
+        # Configure with CMake
+        cmake .. \
+            -DCMAKE_INCLUDE_PATH=/build/driver/inc \
+            -DCMAKE_INSTALL_PREFIX=/build/deploy/td3learn || {
+            log "${RED}" "CMake configuration failed!"
+            exit 1
+        }
+        
+        # Build
+        make -j$(nproc) || {
+            log "${RED}" "Build failed!"
+            exit 1
+        }
+        
+        # Install to deploy directory
+        make install || {
+            log "${RED}" "Installation to deploy directory failed!"
+            exit 1
+        }
+        
+        log "${GREEN}" "TD3Learn build successful!"
+        ;;
+
     *)
         exec "$@"
         ;;

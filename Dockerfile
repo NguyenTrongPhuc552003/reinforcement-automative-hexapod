@@ -26,6 +26,8 @@ RUN apt-get update && apt-get install -y \
     cpio \
     rsync \
     libmicrohttpd-dev \
+    cmake \
+    g++ \
     && rm -rf /var/lib/apt/lists/*
 
 # 2. Install ARM cross-compiler toolchain for BeagleBone (GLIBC 2.28 compatible)
@@ -40,7 +42,7 @@ RUN ln -s /usr/bin/arm-linux-gnueabihf-g++-${GCC_VERSION} /usr/bin/arm-linux-gnu
 
 # 3. Directory Structure
 WORKDIR /build
-RUN mkdir -p /build/kernel /build/module /build/deploy /build/user
+RUN mkdir -p /build/kernel /build/module /build/deploy /build/user /build/td3learn
 
 # 4. Kernel Headers for BeagleBone AI
 RUN wget https://rcn-ee.com/repos/debian/pool/main/l/linux-upstream/linux-headers-${KERNEL_VERSION}_1${DEBIAN_VERSION}_armhf.deb && dpkg -x linux-headers-${KERNEL_VERSION}_1${DEBIAN_VERSION}_armhf.deb /build/kernel

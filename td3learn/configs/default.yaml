@@ -1,0 +1,67 @@
+# TD3Learn default configuration for hexapod robot locomotion
+
+[td3]
+state_dim = 24        # 6 legs x 3 joints + IMU (3 accel, 3 gyro)
+action_dim = 18       # 6 legs x 3 joints
+gamma = 0.99          # Discount factor
+tau = 0.005           # Target network update rate
+policy_noise = 0.2    # Noise added to target policy
+noise_clip = 0.5      # Noise clip value
+policy_freq = 2       # Policy update frequency
+batch_size = 256      # Batch size for training
+buffer_size = 1000000 # Replay buffer size
+device = cpu          # Device to run on (cpu, tidl, opencl)
+exploration_noise = true        # Add exploration noise during training
+exploration_noise_std = 0.1     # Standard deviation of exploration noise
+
+[td3.actor]
+hidden_layers = [256, 256]   # Hidden layer sizes
+activation = relu            # Activation function
+learning_rate = 0.001        # Learning rate for optimizer
+weight_decay = 0.0           # L2 regularization
+batch_norm = false           # Use batch normalization
+
+[td3.critic]
+hidden_layers = [256, 256]   # Hidden layer sizes
+activation = relu            # Activation function
+learning_rate = 0.001        # Learning rate for optimizer
+weight_decay = 0.0001        # L2 regularization
+batch_norm = false           # Use batch normalization
+
+[env]
+type = simulation         # Environment type (simulation, real)
+max_episode_steps = 1000  # Maximum steps per episode
+reward_function = default # Reward function to use
+reward_scale = 1.0        # Scaling factor for rewards
+
+[hexapod]
+velocity_weight = 1.0    # Weight for velocity reward component
+energy_weight = 0.1      # Weight for energy efficiency component
+stability_weight = 1.0   # Weight for stability component
+smoothness_weight = 0.5  # Weight for motion smoothness component
+use_imu = true           # Use IMU data in state
+use_leg_positions = true # Use leg positions in state
+step_time = 0.05         # Time step duration in seconds
+
+[training]
+max_epochs = 500          # Maximum training epochs
+steps_per_epoch = 5000    # Steps per epoch
+evaluate_every = 5        # Evaluate every N epochs
+evaluation_episodes = 10  # Number of episodes for evaluation
+save_path = models        # Path to save models
+log_path = logs           # Path for tensorboard logs
+render = false            # Render environment during training
+
+[tidl]
+model_path = models/tidl_model   # Path to TIDL model
+num_eve_cores = 2                # Number of EVE cores to use
+num_dsp_cores = 2                # Number of DSP cores to use
+quantize = true                  # Quantize model for inference
+quantization_bits = 8            # Quantization bit depth
+calibration_file = models/calibration.bin  # Calibration data for quantization
+
+[opencl]
+platform_index = 0      # OpenCL platform index
+device_index = 0        # OpenCL device index
+use_local_mem = true    # Use local memory optimization
+profiling = false       # Enable profiling
