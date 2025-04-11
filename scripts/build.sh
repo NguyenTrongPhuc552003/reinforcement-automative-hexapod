@@ -13,6 +13,7 @@ NC='\033[0m'
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 KERNEL_MODULE_DIR="${PROJECT_ROOT}/driver"
 USER_SPACE_DIR="${PROJECT_ROOT}/app"
+TD3_LEARN_DIR="${PROJECT_ROOT}/td3learn"
 DEPLOY_DIR="${PROJECT_ROOT}/deploy"
 UTILS_DIR="${PROJECT_ROOT}/utils"
 
@@ -153,7 +154,7 @@ build_td3learn() {
     # Run Docker with proper command format
     docker run --rm \
         -v "${PROJECT_ROOT}/td3learn:/build/td3learn" \
-        -v "${PROJECT_ROOT}/driver:/build/driver" \
+        -v "${PROJECT_ROOT}/app:/build/app" \
         -v "${DEPLOY_DIR}:/build/deploy" \
         hexapod-builder td3learn
     
@@ -161,7 +162,9 @@ build_td3learn() {
         log "${GREEN}" "TD3Learn build successful!"
         # Copy relevant files to deploy directory
         mkdir -p "${DEPLOY_DIR}/td3learn"
-        cp -r "${PROJECT_ROOT}/td3learn/build/"*.a "${PROJECT_ROOT}/td3learn/build/td3learn_"* "${DEPLOY_DIR}/td3learn/" 2>/dev/null || true
+        cp -r "${PROJECT_ROOT}/td3learn/build/"*.a \
+            "${PROJECT_ROOT}/td3learn/build/td3learn_"* \
+            "${DEPLOY_DIR}/td3learn/" 2>/dev/null || true
     else
         log "${RED}" "TD3Learn build failed!"
         return 1
@@ -209,6 +212,7 @@ else
                     m) DO_MODULE=1 ;;
                     u) DO_USER=1 ;;
                     t) DO_UTILITY=1 ;;
+                    d) DO_TD3LEARN=1 ;;
                     n) DO_NO_CACHE=1 ;;
                     h) usage ;;
                     *) 
@@ -261,6 +265,15 @@ if [ $DO_CLEAN -eq 1 ]; then
         if ! rm -rf "${USER_SPACE_DIR}/bin" 2>/dev/null; then
             log "${YELLOW}" "Using sudo to clean user space binaries..."
             sudo rm -rf "${USER_SPACE_DIR}/bin"
+        fi
+    fi
+
+    # Clean TD3Learn build directory with sudo if needed
+    if [ -d "${TD3_LEARN_DIR}/build" ]; then
+        log "${GREEN}" "Cleaning TD3Learn build directory..."
+        if ! rm -rf "${TD3_LEARN_DIR}/build" 2>/dev/null; then
+            log "${YELLOW}" "Using sudo to clean TD3Learn build directory..."
+            sudo rm -rf "${TD3_LEARN_DIR}/build"
         fi
     fi
     
