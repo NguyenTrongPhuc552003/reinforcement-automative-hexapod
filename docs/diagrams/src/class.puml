@@ -1,0 +1,382 @@
+@startuml Hexapod Class Diagram
+
+' Style and theme settings
+!theme plain
+skinparam {
+    classAttributeIconSize 0
+    classBackgroundColor #FEFECE
+    classBorderColor #A80036
+    packageBackgroundColor #FEFECE
+    packageBorderColor #A80036
+    ArrowColor #A80036
+    defaultFontName Arial
+    shadowing false
+}
+
+' Title
+title Hexapod Robot Control System - Class Architecture
+
+' Packages
+package "hexapod" {
+  class Hexapod {
+    -pImpl: unique_ptr<HexapodImpl>
+    +Hexapod()
+    +~Hexapod()
+    +init(): bool
+    +cleanup(): void
+    +setLegPosition(leg_num: uint8_t, position: LegPosition): bool
+    +getLegPosition(leg_num: uint8_t, position: LegPosition&): bool
+    +centerAll(): bool
+    +getImuData(data: ImuData&): bool
+    +setCalibration(leg_num: uint8_t, hip_offset: int16_t, knee_offset: int16_t, ankle_offset: int16_t): bool
+    +getCurrentTime(): double
+    +getLastError(): ErrorInfo
+    +getLastErrorMessage(): string
+    +getLastErrorCode(): int
+    +getLastErrorCategory(): ErrorCategory
+  }
+  
+  class LegPosition {
+    +leg_num: uint8_t
+    +joints: JointAngles
+    +LegPosition(hip: int16_t, knee: int16_t, ankle: int16_t)
+    +getHip(): int16_t
+    +getKnee(): int16_t
+    +getAnkle(): int16_t
+    +setHip(value: int16_t): void
+    +setKnee(value: int16_t): void
+    +setAnkle(value: int16_t): void
+  }
+  
+  class ImuData {
+    +accel_x: int16_t
+    +accel_y: int16_t
+    +accel_z: int16_t
+    +gyro_x: int16_t
+    +gyro_y: int16_t
+    +gyro_z: int16_t
+    +getAccelX(): float
+    +getAccelY(): float
+    +getAccelZ(): float
+    +getGyroX(): float
+    +getGyroY(): float
+    +getGyroZ(): float
+  }
+  
+  class ErrorInfo {
+    -code: int
+    -category: ErrorCategory
+    -message: string
+    +ErrorInfo()
+    +ErrorInfo(code: int, category: ErrorCategory, message: string)
+    +getCode(): int
+    +getCategory(): ErrorCategory
+    +getMessage(): string
+    +hasError(): bool
+    +{static} invalidParameter(details: string): ErrorInfo
+    +{static} deviceNotFound(details: string): ErrorInfo
+    +{static} communicationError(details: string): ErrorInfo
+    +{static} notInitialized(): ErrorInfo
+  }
+
+  class HexapodImpl << (P,#FF7700) PIMPL >> {
+    -fd: int
+    -error: ErrorInfo
+    -positions: LegPosition[NUM_LEGS]
+    -calibration: array<array<int16_t, 3>, NUM_LEGS>
+    -initialized: bool
+    -openDevice(): bool
+    -validateLegNum(leg_num: uint8_t): bool
+    -setLastError(code: int, category: ErrorCategory, message: string): void
+  }
+  
+  enum ErrorCategory {
+    NONE
+    DEVICE
+    COMMUNICATION
+    PARAMETER
+    SYSTEM
+    HARDWARE
+  }
+  
+  struct JointAngles {
+    +hip: int16_t
+    +knee: int16_t
+    +ankle: int16_t
+  }
+  
+  struct Config {
+    +{static} NUM_LEGS: int = 6
+    +{static} SERVOS_PER_LEG: int = 3
+    +{static} TOTAL_SERVOS: int = 18
+  }
+  
+  struct Dimensions {
+    +{static} COXA_LENGTH: int = 30
+    +{static} FEMUR_LENGTH: int = 85
+    +{static} TIBIA_LENGTH: int = 130
+  }
+  
+  struct AngleLimits {
+    +{static} HIP_MIN: int = -90
+    +{static} HIP_MAX: int = 90
+    +{static} KNEE_MIN: int = -90
+    +{static} KNEE_MAX: int = 90
+    +{static} ANKLE_MIN: int = -90
+    +{static} ANKLE_MAX: int = 90
+  }
+}
+
+package "gait" {
+  class Gait {
+    -pImpl: unique_ptr<GaitImpl>
+    +Gait()
+    +~Gait()
+    +init(hexapod: Hexapod&, params: GaitParameters): bool
+    +getParameters(): GaitParameters
+    +setParameters(params: GaitParameters): bool
+    +update(time: double, direction: double, speed: double): bool
+    +centerLegs(): bool
+    +calculateLegPhase(legIndex: int, time: double): double
+    +isInitialized(): bool
+  }
+  
+  class GaitParameters {
+    +type: GaitType
+    +stepHeight: double
+    +stepLength: double
+    +cycleTime: double
+    +dutyFactor: double
+    +GaitParameters()
+    +GaitParameters(type: GaitType, stepHeight: double, stepLength: double, cycleTime: double, dutyFactor: double)
+    +validate(): bool
+  }
+  
+  enum GaitType {
+    TRIPOD
+    WAVE
+    RIPPLE
+  }
+  
+  class GaitImpl << (P,#FF7700) PIMPL >> {
+    -hexapod: Hexapod*
+    -params: GaitParameters
+    -startTime: double
+    -lastUpdateTime: double
+    -initialized: bool
+    -legStartPhases: array<double, 6>
+    -calculateLegPosition(legIndex: int, phase: double, direction: double, speed: double): Point3D
+  }
+}
+
+package "kinematics" {
+  class Kinematics {
+    -pImpl: unique_ptr<KinematicsImpl>
+    +{static} getInstance(): Kinematics&
+    +forwardKinematics(angles: LegPosition, position: Point3D&): bool
+    +inverseKinematics(position: Point3D, angles: LegPosition&): bool
+    +isPositionReachable(position: Point3D): bool
+    +setLegParameters(legIndex: int, coxaLength: double, femurLength: double, tibiaLength: double): bool
+  }
+
+  class Point3D {
+    +x: double
+    +y: double
+    +z: double
+    +Point3D(x: double = 0.0, y: double = 0.0, z: double = 0.0)
+    +operator+(other: Point3D): Point3D
+    +operator-(other: Point3D): Point3D
+    +operator*(scalar: double): Point3D
+    +operator/(scalar: double): Point3D
+    +operator+=(other: Point3D): Point3D&
+    +operator-=(other: Point3D): Point3D&
+    +operator*=(scalar: double): Point3D&
+    +operator/=(scalar: double): Point3D&
+    +length(): double
+    +normalize(): void
+    +distanceTo(other: Point3D): double
+    +{static} lerp(a: Point3D, b: Point3D, t: double): Point3D
+    +{static} dot(a: Point3D, b: Point3D): double
+    +{static} cross(a: Point3D, b: Point3D): Point3D
+  }
+  
+  class KinematicsImpl << (P,#FF7700) PIMPL >> {
+    -legLengths: array<array<double, 3>, 6>
+    -calculateInverseKinematics(position: Point3D, out_angles: JointAngles&): bool
+    -calculateForwardKinematics(angles: JointAngles, out_position: Point3D&): bool
+  }
+  
+  struct AngleConversion {
+    +{static} DEG_TO_RAD: double = 0.0174532925
+    +{static} RAD_TO_DEG: double = 57.2957795131
+  }
+}
+
+package "controller" {
+  class Controller {
+    -pImpl: unique_ptr<ControllerImpl>
+    +Controller(hexapod: Hexapod&)
+    +~Controller()
+    +init(): bool
+    +processKey(key: char): bool
+    +update(): bool
+    +getState(): ControllerState
+    +setSpeed(speed: double): void
+    +setDirection(direction: double): void
+    +setHeight(height: double): void
+    +setTilt(tiltX: double, tiltY: double): void
+    +setGaitType(type: GaitType): void
+    +setBalanceEnabled(enabled: bool): void
+    +isBalanceEnabled(): bool
+    +setBalanceResponseFactor(factor: double): void
+    +setBalanceDeadzone(degrees: double): void
+    +getBalanceConfig(): BalanceConfig
+  }
+  
+  enum ControllerState {
+    IDLE
+    WALKING
+    ROTATING
+    TILTING
+  }
+  
+  struct BalanceConfig {
+    +max_tilt_adjustment: double
+    +response_factor: double
+    +deadzone: double
+    +enabled: bool
+  }
+  
+  class ControllerImpl << (P,#FF7700) PIMPL >> {
+    -hexapod: Hexapod*
+    -gait: Gait
+    -state: ControllerState
+    -speed: double
+    -direction: double
+    -height: double
+    -tiltX: double
+    -tiltY: double
+    -balance: BalanceConfig
+    -lastUpdateTime: double
+    -processWalking(): bool
+    -processBalancing(): bool
+    -applyTiltAdjustment(): bool
+  }
+}
+
+package "calibration" {
+  class CalibrationManager {
+    -pImpl: unique_ptr<CalibrationManagerImpl>
+    +{static} getInstance(): CalibrationManager&
+    +{static} loadCalibration(calibrations: vector<Calibration>&, filename: string): bool
+    +{static} saveCalibration(calibrations: vector<Calibration>&, filename: string): bool
+    +{static} getDefaultCalibration(): vector<Calibration>
+    +{static} applyCalibration(hexapod: Hexapod&, calibrations: vector<Calibration>): bool
+    +{static} applyCalibrationFromFile(hexapod: Hexapod&, filename: string): bool
+    +{static} validateCalibration(calibrations: vector<Calibration>): bool
+    +{static} getDefaultCalibrationPath(): string
+  }
+  
+  struct Calibration {
+    +leg_num: uint8_t
+    +hip_offset: int16_t
+    +knee_offset: int16_t
+    +ankle_offset: int16_t
+    +Calibration()
+    +Calibration(leg: uint8_t, hip: int16_t, knee: int16_t, ankle: int16_t)
+  }
+  
+  class CalibrationException {
+    -message: string
+    +CalibrationException(message: string)
+    +what(): const char*
+  }
+  
+  class CalibrationManagerImpl << (P,#FF7700) PIMPL >> {
+    -defaultPath: string
+    -parseCalibrationFile(filename: string, out_calibrations: vector<Calibration>&): bool
+    -writeCalibrationFile(filename: string, calibrations: vector<Calibration>&): bool
+  }
+}
+
+package "application" {
+  class Application {
+    -{static} m_running: atomic<bool>
+    -{static} m_telemetryActive: atomic<bool>
+    -pImpl: unique_ptr<ApplicationImpl>
+    +{static} getInstance(): Application&
+    +init(): bool
+    +run(): ExecutionResult
+    +shutdown(): void
+    +switchMode(mode: ControlMode): bool
+    +getCurrentMode(): ControlMode
+    +getLastErrorMessage(): string
+    +{static} signalHandler(signal: int): void
+  }
+  
+  enum ControlMode {
+    MANUAL
+    AUTONOMOUS
+    SEQUENCE
+    CALIBRATION
+  }
+  
+  enum ExecutionResult {
+    SUCCESS
+    ERROR_INITIALIZATION
+    ERROR_RUNTIME
+    ERROR_SHUTDOWN
+    TERMINATED_BY_USER
+  }
+  
+  class ApplicationImpl << (P,#FF7700) PIMPL >> {
+    -hexapod: Hexapod
+    -controller: Controller
+    -mode: ControlMode
+    -lastErrorMsg: string
+    -frameRateHz: int
+    -setupSignalHandlers(): bool
+    -setupTerminal(): bool
+    -restoreTerminal(): void
+    -processInput(): bool
+    -updateDisplay(): void
+    -maintainFrameRate(): void
+  }
+}
+
+' Core relationships
+Hexapod *-- HexapodImpl
+Gait *-- GaitImpl
+Kinematics *-- KinematicsImpl
+Controller *-- ControllerImpl
+CalibrationManager *-- CalibrationManagerImpl
+Application *-- ApplicationImpl
+
+' Composition relationships
+LegPosition *-- JointAngles
+ErrorInfo -- ErrorCategory
+
+' Usage relationships - main components
+Controller --> Hexapod : uses
+Controller --> Gait : uses
+Gait --> Hexapod : uses
+CalibrationManager --> Hexapod : uses
+Application --> Controller : uses
+Application --> Hexapod : uses
+
+' Usage relationships - details
+GaitImpl ..> Kinematics : uses
+GaitImpl ..> Point3D : uses
+ControllerImpl ..> Kinematics : uses
+ControllerImpl ..> GaitImpl : uses
+ControllerImpl ..> ImuData : uses
+
+' Legend
+legend right
+  Hexapod Robot Control System - Class Architecture
+  --
+  Classes with yellow background use PIMPL idiom
+  for implementation hiding and ABI stability
+endlegend
+
+@enduml

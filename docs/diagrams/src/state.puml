@@ -1,0 +1,93 @@
+@startuml Hexapod Controller State Diagram
+
+!theme plain
+skinparam stateBackgroundColor #FEFECE
+skinparam stateBorderColor #A80036
+skinparam stateArrowColor #A80036
+skinparam stateFontStyle bold
+
+' Main states based on ControllerState enum
+state IDLE {
+  state "Standing Position" as standing
+  standing: All legs in neutral position
+  standing: Ready to receive commands
+}
+
+state WALKING {
+  state "Forward/Backward Movement" as walking
+  walking: Direction: 0° to 359° 
+  walking: Primary directions:
+  walking: - 0° (forward)
+  walking: - 180° (backward)
+  walking: Speed: 0.0-1.0
+}
+
+state ROTATING {
+  state "Turning Movement" as rotating
+  rotating: Direction: clockwise/counter-clockwise
+  rotating: Speed: 0.0-1.0
+}
+
+state TILTING {
+  state "Body Orientation" as tilting
+  tilting: Pitch: tiltX adjustment
+  tilting: Roll: tiltY adjustment
+  tilting: Height: vertical adjustment
+}
+
+' Additional balance mode (from controller.hpp)
+state "BALANCE MODE" as BALANCE_MODE <<choice>>
+
+' Transitions from the code behaviors
+[*] --> IDLE : init()
+
+IDLE --> WALKING : w (forward)\ns (backward)
+IDLE --> ROTATING : a (left)\nd (right)
+IDLE --> TILTING : j/l (tilt left/right)\ni/k (tilt forward/back)\nu/o (height adjust)
+
+WALKING --> IDLE : space (stop) or key release
+ROTATING --> IDLE : space (stop) or key release
+TILTING --> IDLE : space (stop) or key release
+
+' Balance mode transitions (from processKey() handling)
+IDLE --> BALANCE_MODE : b (toggle balance)
+WALKING --> BALANCE_MODE : b (toggle balance)
+ROTATING --> BALANCE_MODE : b (toggle balance)
+TILTING --> BALANCE_MODE : b (toggle balance)
+
+BALANCE_MODE --> IDLE : [balance disabled]
+BALANCE_MODE --> WALKING : [balance enabled and walking]
+BALANCE_MODE --> ROTATING : [balance enabled and rotating]
+BALANCE_MODE --> TILTING : [balance enabled and tilting]
+
+' Notes based on code documentation
+note right of WALKING
+  Movement direction and speed controlled via:
+  - setDirection() 
+  - setSpeed()
+  Updates leg positions using gait patterns
+end note
+
+note right of BALANCE_MODE
+  Automatically compensates for tilt using IMU data
+  Balance parameters:
+  - response_factor: How quickly to respond (0.0-1.0)
+  - deadzone: Minimum tilt before responding (degrees)
+  - max_tilt_adjustment: Maximum correction angle
+end note
+
+note bottom of TILTING
+  Body orientation controlled via:
+  - setTilt(tiltX, tiltY)
+  - setHeight(height)
+  Uses inverse kinematics calculations
+end note
+
+' Footer legend
+legend right
+  Hexapod Controller States
+  --
+  Based on controller.hpp implementation
+endlegend
+
+@enduml
