@@ -17,7 +17,7 @@ hexapod_driver-objs := \
                 $(SRC_DIR)/pca9685.o \
                 $(SRC_DIR)/servo.o
 
-# Define the module
+# Define the final module
 obj-m += hexapod_driver.o
 
 # Current directory
@@ -60,7 +60,4 @@ clean:
 	$(MAKE) -C $(KERNEL_DIR) M=$(PWD) clean
 	rm -f Module.symvers modules.order
 	rm -rf $(INSTALL_MOD_PATH)
-	# Clean organized build artifacts (matching entrypoint.sh)
-	rm -rf $(PWD)/obj
-	rm -rf $(PWD)/cmd
-	rm -rf $(PWD)/deps
+	rm -rf $(PWD)/{obj,cmd,deps}

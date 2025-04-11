@@ -1,0 +1,111 @@
+@startuml Hexapod Deployment Diagram
+
+!theme plain
+skinparam nodeBackgroundColor #FEFECE
+skinparam nodeBorderColor #A80036
+skinparam deviceBackgroundColor #FEFECE
+skinparam deviceBorderColor #A80036
+skinparam artifactBackgroundColor #FEFECE
+skinparam artifactBorderColor #A80036
+skinparam ArrowColor #A80036
+
+' Physical devices based on the actual hardware configuration
+node "BeagleBone AI" as sbc {
+  frame "User Space" {
+    artifact "Applications" as app {
+      artifact "hexapod_app" #ADD8E6
+      artifact "test_servo"
+      artifact "test_movement"
+      artifact "test_balance"
+      artifact "test_calibration"
+      artifact "td3learn_app" #ADD8E6
+    }
+    
+    artifact "Libraries" as lib {
+      artifact "libhexapod.so" #ADD8E6
+      artifact "libtd3learn.a" #ADD8E6
+    }
+  }
+  
+  frame "Kernel Space" {
+    artifact "Kernel Modules" as driver {
+      artifact "hexapod_driver.ko" #ADD8E6
+      artifact "pca9685.ko" #ADD8E6
+      artifact "mpu6050.ko" #ADD8E6
+    }
+    
+    artifact "Device Nodes" as device {
+      file "/dev/hexapod" #ADD8E6
+      file "/dev/i2c-3"
+    }
+  }
+  
+  artifact "Configuration" as config {
+    file "~/.config/hexapod/calibration.cfg" #ADD8E6
+  }
+}
+
+device "PWM Controllers" as pca9685 {
+  artifact "PCA9685 Primary (0x40)" #ADD8E6
+  artifact "PCA9685 Secondary (0x41)" #ADD8E6
+}
+
+device "IMU Sensor" as mpu6050 {
+  artifact "MPU6050 (0x68)" #ADD8E6
+}
+
+device "Servo Motors (18x)" as servos {
+  frame "Left Side" {
+    artifact "Front Left (3x)"
+    artifact "Middle Left (3x)"
+    artifact "Rear Left (3x)"
+  }
+  frame "Right Side" {
+    artifact "Front Right (3x)" 
+    artifact "Middle Right (3x)"
+    artifact "Rear Right (3x)"
+  }
+}
+
+' Connections based on actual system architecture
+app --> lib : <<uses>>
+lib --> device : <<reads/writes>>
+device --> driver : <<managed by>>
+driver --> pca9685 : <<I2C@0x40,0x41>>
+driver --> mpu6050 : <<I2C@0x68>>
+pca9685 --> servos : <<PWM signals>>
+
+' Notes based on code documentation
+note right of app
+  C++ applications that provide:
+  - Manual control
+  - Autonomous movement
+  - Calibration utilities 
+  - TD3 reinforcement learning
+end note
+
+note right of lib
+  Provides C++ API for:
+  - Hardware abstraction
+  - Kinematics calculations
+  - Gait generation
+  - Calibration management
+end note
+
+note right of driver
+  Kernel modules handle:
+  - I2C communication
+  - PWM signal generation
+  - Servo positioning
+  - IMU data acquisition
+end note
+
+note bottom of servos
+  18 servos total:
+  - 6 hip joints
+  - 6 knee joints
+  - 6 ankle joints
+  Each controlled through PWM signals
+end note
+
+@enduml

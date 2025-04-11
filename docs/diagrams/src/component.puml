@@ -1,0 +1,106 @@
+@startuml Hexapod Component Diagram
+
+!theme plain
+skinparam {
+    componentStyle rectangle
+    componentBackgroundColor #FEFECE
+    componentBorderColor #A80036
+    DatabaseBackgroundColor #EEEEEE
+    interfaceBackgroundColor #EEEEEE
+    ArrowColor #A80036
+    NoteBorderColor #A80036
+    NoteBorderThickness 1
+    NoteBackgroundColor #FDFDFD
+    defaultFontName Arial
+    shadowing false
+}
+
+' Package definitions
+package "User Interface Layer" {
+    [Hexapod User Interface] as UI
+    interface "User Input" as UserInput
+}
+
+package "Application Layer" {
+    [Application Controller] as App
+    [Hexapod Controller] as Controller
+}
+
+package "Motion Control Layer" {
+    [Gait Generator] as Gait
+    [Kinematics Engine] as Kinematics
+    [Calibration Manager] as Calibration
+    database "Calibration Files" as CalibrationFiles
+}
+
+package "Hardware Layer" {
+    [Hexapod Hardware Interface] as HexapodIF
+    [Kernel Driver] as Driver
+    interface "Hardware Control" as HardwareControl
+    interface "Device IO" as DeviceIO
+    interface "/dev/hexapod" as DevNode
+}
+
+' Relationships
+UI - UserInput
+UserInput - App
+
+App -> Controller
+Controller --> Gait : commands
+Controller --> HexapodIF : direct control
+Gait --> Kinematics : calculates
+Gait --> HexapodIF : positions
+Kinematics --> HexapodIF : joint angles
+Calibration --> HexapodIF : offsets
+
+HexapodIF - HardwareControl
+HardwareControl - Driver
+Driver - DeviceIO
+DeviceIO - DevNode
+
+Calibration ..> CalibrationFiles : reads/writes
+
+' Notes
+note right of HexapodIF
+  Provides unified interface to hardware
+  through kernel driver
+end note
+
+note right of Gait
+  Implements different walking patterns:
+  - Tripod gait
+  - Wave gait
+  - Ripple gait
+end note
+
+note right of Kinematics
+  Performs forward and inverse
+  kinematics calculations
+end note
+
+note left of Driver
+  Kernel module that handles:
+  - Servo control via I2C
+  - IMU data via I2C
+  - Error handling & recovery
+end note
+
+note bottom of App
+  Manages application lifecycle,
+  user input, and coordinates 
+  system components
+end note
+
+note right of Calibration
+  Manages servo calibration offsets
+  to compensate for mechanical variations
+end note
+
+' Legend
+legend right
+  Hexapod Control System - Component Architecture
+  --
+  Shows primary components and their relationships
+endlegend
+
+@enduml

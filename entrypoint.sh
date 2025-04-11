@@ -114,19 +114,32 @@ case "$1" in
         log "${GREEN}" "Cleaning user space programs..."
         make clean || true
         
+        # Clean td3learn build directory
+        if [ -d "/build/td3learn/build" ]; then
+            cd /build/td3learn/build
+            log "${GREEN}" "Cleaning TD3Learn build..."
+            rm -rf /build/td3learn/build/*
+            log "${GREEN}" "TD3Learn build directory cleaned"
+        fi
+        
         log "${GREEN}" "Clean completed!"
         ;;
         
     "td3learn")
-        cd /build/td3learn/build
+        cd /build/td3learn
         log "${GREEN}" "Building TD3Learn module..."
+        
+        # Create build directory if it doesn't exist
+        mkdir -p /build/td3learn/build
+        cd /build/td3learn/build
         
         # Clean build directory
         rm -rf /build/td3learn/build/*
         
         # Configure with CMake
         cmake .. \
-            -DCMAKE_INCLUDE_PATH=/build/driver/inc \
+            -DENABLE_TIDL=ON \
+            -DENABLE_OPENCL=ON \
             -DCMAKE_INSTALL_PREFIX=/build/deploy/td3learn || {
             log "${RED}" "CMake configuration failed!"
             exit 1

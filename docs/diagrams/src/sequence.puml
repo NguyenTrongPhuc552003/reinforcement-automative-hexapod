@@ -1,0 +1,207 @@
+@startuml Hexapod Sequence Diagram
+
+!theme plain
+skinparam {
+    SequenceArrowThickness 1
+    SequenceGroupBodyBackgroundColor #FEFECE
+    SequenceGroupBorderColor #A80036
+    SequenceLifeLineBorderColor #A80036
+    SequenceLifeLineBackgroundColor #FEFECE
+    ParticipantBorderColor #A80036
+    ParticipantBackgroundColor #FEFECE
+    ActorBorderColor #A80036
+    ActorBackgroundColor #FEFECE
+    defaultFontName Arial
+    NoteBorderColor #A80036
+    NoteBackgroundColor #FDFDFD
+}
+
+' Participants
+actor "User" as User
+participant "App" as App
+participant "Controller" as Controller
+participant "Gait" as Gait
+participant "Kinematics" as Kinematics
+participant "Hexapod" as Hexapod
+participant "Driver" as Driver
+participant "Hardware" as Hardware
+
+' Title
+title Hexapod Operation Sequence
+
+' Startup sequence
+group Startup Sequence
+    User -> App: launch()
+    activate App
+    
+    App -> Hexapod: initialize()
+    activate Hexapod
+    
+    Hexapod -> Driver: open("/dev/hexapod")
+    activate Driver
+    
+    Driver -> Hardware: initialize hardware
+    activate Hardware
+    Hardware --> Driver: initialized
+    deactivate Hardware
+    
+    Driver --> Hexapod: file descriptor
+    deactivate Driver
+    
+    Hexapod -> Hexapod: configDefaults()
+    Hexapod --> App: ready
+    deactivate Hexapod
+    
+    App -> Controller: initialize()
+    activate Controller
+    Controller -> Gait: initialize()
+    activate Gait
+    Gait --> Controller: ready
+    deactivate Gait
+    Controller --> App: ready
+    deactivate Controller
+    
+    App -> Hexapod: centerAll()
+    activate Hexapod
+    Hexapod -> Driver: ioctl(HEXAPOD_IOCTL_CENTER_ALL)
+    activate Driver
+    Driver -> Hardware: center servos
+    activate Hardware
+    Hardware --> Driver: done
+    deactivate Hardware
+    Driver --> Hexapod: success
+    deactivate Driver
+    Hexapod --> App: ready
+    deactivate Hexapod
+    
+    App --> User: system ready
+end
+
+' Main loop
+group Main Loop
+    loop while running
+        User -> App: processInput()
+        activate App
+        
+        App -> Controller: update(input, deltaTime)
+        activate Controller
+        
+        alt walking mode
+            Controller -> Gait: update(direction, speed)
+            activate Gait
+            
+            loop for each leg
+                Gait -> Gait: calculateLegPhase()
+                Gait -> Gait: computeLegTrajectory()
+                
+                Gait -> Kinematics: inverseKinematics(position)
+                activate Kinematics
+                Kinematics --> Gait: joint angles
+                deactivate Kinematics
+                
+                Gait -> Hexapod: setLegPosition(leg, angles)
+                activate Hexapod
+                Hexapod -> Driver: ioctl(HEXAPOD_IOCTL_SET_LEG)
+                activate Driver
+                Driver -> Hardware: set servo positions
+                activate Hardware
+                Hardware --> Driver: servos updated
+                deactivate Hardware
+                Driver --> Hexapod: success
+                deactivate Driver
+                Hexapod --> Gait: position set
+                deactivate Hexapod
+            end
+            
+            Gait --> Controller: update complete
+            deactivate Gait
+            
+        else balance mode
+            Controller -> Hexapod: getImuData()
+            activate Hexapod
+            Hexapod -> Driver: ioctl(HEXAPOD_IOCTL_GET_IMU)
+            activate Driver
+            Driver -> Hardware: read IMU
+            activate Hardware
+            Hardware --> Driver: IMU data
+            deactivate Hardware
+            Driver --> Hexapod: IMU data
+            deactivate Driver
+            Hexapod --> Controller: IMU data
+            deactivate Hexapod
+            
+            Controller -> Controller: calculateTilt()
+            Controller -> Controller: applyBalanceAdjustments()
+            
+            loop for each leg
+                Controller -> Kinematics: inverseKinematics(position)
+                activate Kinematics
+                Kinematics --> Controller: joint angles
+                deactivate Kinematics
+                
+                Controller -> Hexapod: setLegPosition(leg, angles)
+                activate Hexapod
+                Hexapod -> Driver: ioctl(HEXAPOD_IOCTL_SET_LEG)
+                activate Driver
+                Driver -> Hardware: set servo positions
+                activate Hardware
+                Hardware --> Driver: servos updated
+                deactivate Hardware
+                Driver --> Hexapod: success
+                deactivate Driver
+                Hexapod --> Controller: position set
+                deactivate Hexapod
+            end
+        end
+        
+        Controller --> App: update complete
+        deactivate Controller
+        
+        App -> App: processInput() (non-blocking)
+        App -> App: sleep to maintain frame rate
+        App --> User: display telemetry (if enabled)
+        deactivate App
+    end
+end
+
+' Shutdown sequence
+group Shutdown Sequence
+    User -> App: processKey('q')
+    activate App
+    App -> App: running = false
+    
+    App -> Hexapod: centerAll()
+    activate Hexapod
+    Hexapod -> Driver: ioctl(HEXAPOD_IOCTL_CENTER_ALL)
+    activate Driver
+    Driver -> Hardware: center all servos
+    activate Hardware
+    Hardware --> Driver: servos centered
+    deactivate Hardware
+    Driver --> Hexapod: success
+    deactivate Driver
+    Hexapod --> App: all legs centered
+    deactivate Hexapod
+    
+    App -> Hexapod: cleanup()
+    activate Hexapod
+    Hexapod -> Driver: close(fd)
+    activate Driver
+    Driver --> Hexapod: closed
+    deactivate Driver
+    Hexapod --> App: cleanup complete
+    deactivate Hexapod
+    
+    App -> App: exit(0)
+    App --> User: application terminated
+    deactivate App
+end
+
+' Footer
+legend right
+  Hexapod System - Operation Sequence
+  --
+  Shows startup, operation, and shutdown sequence
+endlegend
+
+@enduml
