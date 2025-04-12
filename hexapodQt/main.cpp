@@ -4,6 +4,7 @@
 #include <QFile>
 #include <QDir>
 #include "mainwindow.h"
+#include "hexapodcontext.h"
 
 // Application configuration constants
 #define APP_NAME "Hexapod Controller"
@@ -37,8 +38,12 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    // Create shared context
+    HexapodContext *sharedContext = new HexapodContext(&app);
+
     // Create and show the main window
     MainWindow mainWindow;
+    mainWindow.setContext(sharedContext);
     mainWindow.show();
 
     // Load window geometry and state from settings
@@ -64,48 +69,32 @@ int main(int argc, char *argv[])
 
 void loadStylesheet()
 {
-    // Try to load stylesheet if it exists
-    QFile file(":/styles/hexapod.qss");
-    if (file.exists() && file.open(QFile::ReadOnly | QFile::Text))
+    QFile styleFile(":/styles/hexapod.qss");
+    if (styleFile.open(QFile::ReadOnly | QFile::Text))
     {
-        QString style = QLatin1String(file.readAll());
-        qApp->setStyleSheet(style);
-        file.close();
+        qApp->setStyleSheet(styleFile.readAll());
+        styleFile.close();
     }
 }
 
 bool checkRequiredFiles()
 {
-    // Check for required files and directories
-    bool allFilesPresent = true;
-
-    // Check if the UI resource file is available in the resource system
-    QFile uiFile(":/forms/mainwindow.ui");
-    if (!uiFile.exists())
+    // Check for required resources and files
+    if (!QFile::exists(":/styles/hexapod.qss"))
     {
-        QMessageBox::warning(nullptr, APP_NAME,
-                             "Warning: UI resource file not found. Application may not display correctly.");
-        allFilesPresent = false;
+        QMessageBox::critical(nullptr, APP_NAME,
+                              "Missing required resource files.\n"
+                              "Application may not display correctly.");
+        // Continue anyway, just with a warning
     }
-
-    // Create configuration directory if it doesn't exist
-    QDir configDir(QDir::homePath() + "/.config/hexapodQt");
-    if (!configDir.exists())
-    {
-        configDir.mkpath(".");
-    }
-
-    return allFilesPresent;
+    return true;
 }
 
 void setupApplicationInfo()
 {
-    // Set application metadata
-    QCoreApplication::setApplicationName(APP_NAME);
-    QCoreApplication::setApplicationVersion(APP_VERSION);
-    QCoreApplication::setOrganizationName(ORGANIZATION_NAME);
-    QCoreApplication::setOrganizationDomain(ORGANIZATION_DOMAIN);
-
-    // Configure settings format
-    QSettings::setDefaultFormat(QSettings::IniFormat);
+    // Set application information
+    QApplication::setApplicationName(APP_NAME);
+    QApplication::setApplicationVersion(APP_VERSION);
+    QApplication::setOrganizationName(ORGANIZATION_NAME);
+    QApplication::setOrganizationDomain(ORGANIZATION_DOMAIN);
 }

@@ -1,9 +1,9 @@
-QT += core gui network widgets
+QT += core gui network widgets quick qml quickcontrols2
 
 TARGET = hexapodQt
 TEMPLATE = app
 
-CONFIG += c++17
+CONFIG += c++17 qml
 
 DEFINES += QT_DEPRECATED_WARNINGS
 
@@ -13,20 +13,23 @@ SOURCES += \
     mainwindow.cpp \
     hexapodconnection.cpp \
     hexapodprotocol.cpp \
-    hexapodvisualization.cpp
+    hexapodvisualization.cpp \
+    hexapodcontext.cpp
 
 HEADERS += \
     mainwindow.h \
     hexapodconnection.h \
     hexapodprotocol.h \
-    hexapodvisualization.h
+    hexapodvisualization.h \
+    hexapodcontext.h
 
 FORMS += \
     mainwindow.ui
 
 # Resources
 RESOURCES += \
-    resources.qrc
+    res.qrc \
+    qml.qrc
 
 # Default rules for deployment
 qnx: target.path = /tmp/$${TARGET}/bin

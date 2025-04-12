@@ -6,14 +6,20 @@
 #include <QCloseEvent>
 #include <QKeySequence>
 #include <QShortcut>
-#include <QStyle>  // Add this include for QStyle
-#include <QAction> // Add this include for QAction
+#include <QStyle>
+#include <QAction>
+#include <QComboBox>
+#include <QListWidget>
 #include "hexapodprotocol.h"
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent), ui(new Ui::MainWindow), m_connection(new HexapodConnection(this)), m_imuUpdateTimer(new QTimer(this)), m_keyProcessTimer(new QTimer(this)), m_settings(QSettings::IniFormat, QSettings::UserScope, "HexapodRobotics", "HexapodController"), m_forwardPressed(false), m_backwardPressed(false), m_leftPressed(false), m_rightPressed(false), m_darkMode(false)
+    : QMainWindow(parent), ui(new Ui::MainWindow), m_connection(new HexapodConnection(this)),
+      m_imuUpdateTimer(new QTimer(this)), m_keyProcessTimer(new QTimer(this)),
+      m_settings(QSettings::IniFormat, QSettings::UserScope, "HexapodRobotics", "HexapodController"),
+      m_forwardPressed(false), m_backwardPressed(false), m_leftPressed(false),
+      m_rightPressed(false), m_darkMode(false)
 {
     ui->setupUi(this);
 
@@ -25,6 +31,7 @@ MainWindow::MainWindow(QWidget *parent)
     QAction *actionTheme = new QAction("Dark Theme", this);
     actionTheme->setCheckable(true);
     actionTheme->setChecked(m_darkMode);
+    actionTheme->setObjectName("actionTheme");
     connect(actionTheme, &QAction::toggled, this, &MainWindow::on_actionTheme_toggled);
 
     // Add to View menu if it exists, otherwise create a new menu
@@ -37,6 +44,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     // Create keyboard shortcut menu action
     QAction *actionKeyboardShortcuts = new QAction("Keyboard Shortcuts", this);
+    actionKeyboardShortcuts->setObjectName("actionKeyboardShortcuts");
     connect(actionKeyboardShortcuts, &QAction::triggered, this, &MainWindow::on_actionKeyboardShortcuts_triggered);
     viewMenu->addAction(actionKeyboardShortcuts);
 
@@ -60,7 +68,7 @@ MainWindow::MainWindow(QWidget *parent)
     // Initial UI setup
     ui->statusLabel->setText("Disconnected");
     ui->statusLabel->setProperty("status", "disconnected");
-    ui->statusLabel->setStyleSheet(""); // Will be set by theme
+    ui->statusLabel->setStyleSheet("");
 
     // Set up sliders
     ui->speedSlider->setRange(0, 100);
@@ -104,6 +112,28 @@ MainWindow::MainWindow(QWidget *parent)
     // Setup keyboard focus and controls
     setFocusPolicy(Qt::StrongFocus);
     setupKeyboardControls();
+
+    // Create connection status indicator in status bar
+    m_connectionStatusIndicator = new QLabel("Disconnected");
+    m_connectionStatusIndicator->setStyleSheet("QLabel { background-color: #FF3333; color: white; padding: 3px; border-radius: 3px; }");
+    statusBar()->addPermanentWidget(m_connectionStatusIndicator);
+
+    // Load recent connections
+    loadRecentConnections();
+
+    // Connect connection-related signals
+    connect(m_connection, &HexapodConnection::serverFound,
+            this, &MainWindow::handleDiscoveredServer);
+    connect(m_connection, &HexapodConnection::discoveryComplete,
+            this, &MainWindow::handleDiscoveryComplete);
+    connect(m_connection, &HexapodConnection::discoveryProgress,
+            this, &MainWindow::handleDiscoveryProgress);
+    connect(m_connection, &HexapodConnection::connectionInProgress,
+            [this](bool connecting) {
+                ui->connectButton->setEnabled(!connecting);
+                ui->connectButton->setText(connecting ? "Connecting..." :
+                                          (m_connection->isConnected() ? "Disconnect" : "Connect"));
+            });
 }
 
 MainWindow::~MainWindow()
@@ -427,30 +457,273 @@ void MainWindow::on_connectButton_clicked()
         ui->rightButton->setEnabled(false);
         ui->stopButton->setEnabled(false);
         ui->balanceCheckbox->setEnabled(false);
+        
+        // Update status indicator
+        updateConnectionStatusIndicator();
     }
     else
     {
-        // Connect to host
-        QString hostname = ui->hostEdit->text();
-        int port = ui->portSpin->value();
+        // Show connection dialog instead of connecting directly
+        showConnectionDialog();
+    }
+}
 
+void MainWindow::showConnectionDialog()
+{
+    // Create a dialog to manage server connections
+    QDialog dialog(this);
+    dialog.setWindowTitle("Connect to Hexapod Server");
+    dialog.setMinimumWidth(400);
+    
+    // Create dialog layout
+    QVBoxLayout *layout = new QVBoxLayout(&dialog);
+    
+    // Create form layout for connection settings
+    QFormLayout *formLayout = new QFormLayout();
+    
+    QComboBox *hostCombo = new QComboBox();
+    hostCombo->setEditable(true);
+    hostCombo->addItem("beaglebone.local");
+    hostCombo->addItem("localhost");
+    hostCombo->setCurrentText(ui->hostEdit->text());
+    
+    // Add recent connections to combo box
+    for (const QString &recent : m_recentConnections) {
+        if (recent.contains(":")) {
+            QString host = recent.section(":", 0, 0);
+            if (!hostCombo->findText(host)) {
+                hostCombo->addItem(host);
+            }
+        }
+    }
+    
+    QSpinBox *portSpin = new QSpinBox();
+    portSpin->setRange(1, 65535);
+    portSpin->setValue(ui->portSpin->value());
+    
+    formLayout->addRow("Hostname:", hostCombo);
+    formLayout->addRow("Port:", portSpin);
+    
+    layout->addLayout(formLayout);
+    
+    // Add auto-discovery option
+    QPushButton *discoverButton = new QPushButton("Auto-Discover Servers");
+    layout->addWidget(discoverButton);
+    
+    // Recent connections list
+    if (!m_recentConnections.isEmpty()) {
+        QGroupBox *recentGroup = new QGroupBox("Recent Connections");
+        QVBoxLayout *recentLayout = new QVBoxLayout(recentGroup);
+        
+        QListWidget *recentList = new QListWidget();
+        for (const QString &recent : m_recentConnections) {
+            recentList->addItem(recent);
+        }
+        
+        recentLayout->addWidget(recentList);
+        layout->addWidget(recentGroup);
+        
+        // Connect double-click to select a recent connection
+        connect(recentList, &QListWidget::itemDoubleClicked, [&](QListWidgetItem *item) {
+            QString text = item->text();
+            if (text.contains(":")) {
+                QString host = text.section(":", 0, 0);
+                int port = text.section(":", 1, 1).toInt();
+                
+                hostCombo->setCurrentText(host);
+                portSpin->setValue(port);
+            }
+        });
+    }
+    
+    // Dialog buttons
+    QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+    layout->addWidget(buttonBox);
+    
+    // Connect signals
+    connect(buttonBox, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+    connect(buttonBox, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+    connect(discoverButton, &QPushButton::clicked, this, &MainWindow::startServerDiscovery);
+    
+    // Execute dialog
+    if (dialog.exec() == QDialog::Accepted) {
+        QString hostname = hostCombo->currentText();
+        int port = portSpin->value();
+        
+        // Update UI fields
+        ui->hostEdit->setText(hostname);
+        ui->portSpin->setValue(port);
+        
+        // Try to connect
         logInfo(QString("Connecting to %1:%2...").arg(hostname).arg(port));
 
-        if (m_connection->connectToHost(hostname, port))
-        {
+        if (m_connection->connectToHost(hostname, port)) {
             ui->connectButton->setText("Connecting...");
             ui->connectButton->setEnabled(false);
 
             // Update status indicator
             ui->statusLabel->setText("Connecting...");
             ui->statusLabel->setProperty("status", "connecting");
-            ui->statusLabel->update(); // Just update instead of style manipulation
-        }
-        else
-        {
+            ui->statusLabel->update();
+            
+            // Add to recent connections
+            addRecentConnection(hostname, port);
+        } else {
             logError("Failed to initiate connection");
         }
     }
+}
+
+void MainWindow::startServerDiscovery()
+{
+    // Show progress dialog
+    if (!m_discoveryDialog) {
+        m_discoveryDialog = new QProgressDialog("Discovering hexapod servers...", "Cancel", 0, 100, this);
+        m_discoveryDialog->setWindowModality(Qt::WindowModal);
+        m_discoveryDialog->setAutoReset(false);
+        m_discoveryDialog->setAutoClose(false);
+        m_discoveryDialog->setMinimumDuration(0);
+    }
+    
+    // Reset dialog
+    m_discoveryDialog->setRange(0, 100);
+    m_discoveryDialog->setValue(0);
+    m_discoveryDialog->show();
+    
+    // Connect cancel button
+    connect(m_discoveryDialog, &QProgressDialog::canceled, [this]() {
+        m_connection->stopServerDiscovery();
+    });
+    
+    // Start discovery
+    m_connection->startServerDiscovery();
+    
+    logInfo("Searching for hexapod servers...");
+}
+
+void MainWindow::handleDiscoveredServer(const QString &hostname, int port, bool isSimulation)
+{
+    QString serverType = isSimulation ? "simulation" : "hardware";
+    logSuccess(QString("Found %1 server at %2:%3").arg(serverType).arg(hostname).arg(port));
+    
+    // Add to recent connections
+    addRecentConnection(hostname, port);
+    
+    // Ask if user wants to connect to this server
+    QMessageBox::StandardButton reply = QMessageBox::question(
+        this, 
+        "Server Found",
+        QString("Found %1 server at %2:%3.\n\nConnect to this server?")
+            .arg(serverType).arg(hostname).arg(port),
+        QMessageBox::Yes | QMessageBox::No
+    );
+    
+    if (reply == QMessageBox::Yes) {
+        // Update UI fields
+        ui->hostEdit->setText(hostname);
+        ui->portSpin->setValue(port);
+        
+        // Try to connect
+        m_connection->connectToHost(hostname, port);
+    }
+}
+
+void MainWindow::handleDiscoveryProgress(int current, int total)
+{
+    if (m_discoveryDialog) {
+        m_discoveryDialog->setRange(0, total);
+        m_discoveryDialog->setValue(current);
+    }
+}
+
+void MainWindow::handleDiscoveryComplete()
+{
+    logInfo("Server discovery complete");
+    
+    if (m_discoveryDialog) {
+        m_discoveryDialog->hide();
+    }
+}
+
+void MainWindow::addRecentConnection(const QString &hostname, int port)
+{
+    QString connectionString = QString("%1:%2").arg(hostname).arg(port);
+    
+    // Remove existing entry
+    m_recentConnections.removeAll(connectionString);
+    
+    // Add to front
+    m_recentConnections.prepend(connectionString);
+    
+    // Keep list to reasonable size
+    while (m_recentConnections.size() > 10) {
+        m_recentConnections.removeLast();
+    }
+    
+    // Save to settings
+    saveRecentConnections();
+}
+
+void MainWindow::loadRecentConnections()
+{
+    m_recentConnections = m_settings.value("connections/recent").toStringList();
+}
+
+void MainWindow::saveRecentConnections()
+{
+    m_settings.setValue("connections/recent", m_recentConnections);
+    m_settings.sync();
+}
+
+void MainWindow::updateConnectionStatusIndicator()
+{
+    if (!m_connectionStatusIndicator)
+        return;
+        
+    bool isConnected = m_connection && m_connection->isConnected();
+    bool isConnecting = false;
+    
+    if (m_connection) {
+        isConnecting = !isConnected && m_connection->property("connecting").toBool();
+    }
+    
+    // Update status indicator color and text
+    QString text, style;
+    if (isConnected) {
+        text = "Connected";
+        style = "QLabel { background-color: #4CAF50; color: white; padding: 3px; border-radius: 3px; }";
+        
+        // Add server info if available
+        if (m_connection->isInSimulationMode()) {
+            text += " (Simulation)";
+        }
+        text += QString(" - %1:%2").arg(m_connection->getConnectedHost()).arg(m_connection->getConnectedPort());
+    } 
+    else if (isConnecting) {
+        text = "Connecting...";
+        style = "QLabel { background-color: #FFA500; color: white; padding: 3px; border-radius: 3px; }";
+    }
+    else {
+        text = "Disconnected";
+        style = "QLabel { background-color: #FF3333; color: white; padding: 3px; border-radius: 3px; }";
+    }
+    
+    m_connectionStatusIndicator->setText(text);
+    m_connectionStatusIndicator->setStyleSheet(style);
+    
+    // Update UI controls based on connection state
+    ui->connectButton->setText(isConnected ? "Disconnect" : "Connect");
+    ui->hostEdit->setEnabled(!isConnected);
+    ui->portSpin->setEnabled(!isConnected);
+    ui->speedSlider->setEnabled(isConnected);
+    ui->balanceCheckbox->setEnabled(isConnected);
+    
+    // Update movement controls
+    ui->forwardButton->setEnabled(isConnected);
+    ui->backwardButton->setEnabled(isConnected);
+    ui->leftButton->setEnabled(isConnected);
+    ui->rightButton->setEnabled(isConnected);
+    ui->stopButton->setEnabled(isConnected);
 }
 
 void MainWindow::on_actionExit_triggered()
@@ -572,54 +845,20 @@ void MainWindow::on_rollSlider_valueChanged(int value)
 
 void MainWindow::handleConnectionStatus(bool connected)
 {
-    if (connected)
-    {
+    if (connected) {
         logSuccess("Connected to server");
-        ui->statusLabel->setText("Connected");
-        ui->statusLabel->setProperty("status", "connected");
-        ui->connectButton->setText("Disconnect");
-        ui->connectButton->setEnabled(true);
-
-        // Enable controls
-        ui->speedSlider->setEnabled(true);
-        ui->pitchSlider->setEnabled(true);
-        ui->rollSlider->setEnabled(true);
-        ui->forwardButton->setEnabled(true);
-        ui->backwardButton->setEnabled(true);
-        ui->leftButton->setEnabled(true);
-        ui->rightButton->setEnabled(true);
-        ui->stopButton->setEnabled(true);
-        ui->balanceCheckbox->setEnabled(true);
-
-        // Start timers
+        if (m_connection->isInSimulationMode()) {
+            logInfo("Running in SIMULATION mode");
+        }
+        // Start IMU updates
         m_imuUpdateTimer->start();
-        m_keyProcessTimer->start();
-    }
-    else
-    {
-        ui->statusLabel->setText("Disconnected");
-        ui->statusLabel->setProperty("status", "disconnected");
-        ui->connectButton->setText("Connect");
-        ui->connectButton->setEnabled(true);
-
-        // Stop timers
+    } else {
+        logError("Disconnected from server");
         m_imuUpdateTimer->stop();
-        m_keyProcessTimer->stop();
-
-        // Disable controls
-        ui->speedSlider->setEnabled(false);
-        ui->pitchSlider->setEnabled(false);
-        ui->rollSlider->setEnabled(false);
-        ui->forwardButton->setEnabled(false);
-        ui->backwardButton->setEnabled(false);
-        ui->leftButton->setEnabled(false);
-        ui->rightButton->setEnabled(false);
-        ui->stopButton->setEnabled(false);
-        ui->balanceCheckbox->setEnabled(false);
     }
-
-    // Update status label
-    ui->statusLabel->update();
+    
+    // Update the connection status indicator
+    updateConnectionStatusIndicator();
 }
 
 void MainWindow::handleResponseReceived(const QJsonObject &response)
@@ -714,4 +953,17 @@ void MainWindow::logError(const QString &message)
 void MainWindow::logSuccess(const QString &message)
 {
     logMessage("SUCCESS: " + message);
+}
+
+void MainWindow::setContext(HexapodContext *context)
+{
+    if (context)
+    {
+        m_sharedContext = context;
+        qDebug() << "Context set successfully";
+    }
+    else
+    {
+        qDebug() << "Warning: Null context provided";
+    }
 }

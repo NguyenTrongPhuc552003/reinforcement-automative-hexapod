@@ -5,7 +5,9 @@
 #include <QTimer>
 #include <QKeyEvent>
 #include <QSettings>
+#include <QProgressDialog>
 #include "hexapodconnection.h"
+#include "hexapodcontext.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -21,6 +23,9 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+
+    // Set shared context
+    void setContext(HexapodContext *context);
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;
@@ -49,14 +54,21 @@ private slots:
 
     void handleConnectionStatus(bool connected);
     void handleResponseReceived(const QJsonObject &response);
-    void handleImuDataReceived(double accelX, double accelY, double accelZ, 
-                             double gyroX, double gyroY, double gyroZ);
+    void handleImuDataReceived(double accelX, double accelY, double accelZ,
+                               double gyroX, double gyroY, double gyroZ);
     void handleErrorOccurred(const QString &errorMessage);
-    
+
     void requestImuUpdate();
     void updateMovement();
     void toggleTheme();
     void showKeyboardShortcutsDialog();
+
+    // New connection dialog related slots
+    void showConnectionDialog();
+    void handleDiscoveredServer(const QString &hostname, int port, bool isSimulation);
+    void handleDiscoveryComplete();
+    void handleDiscoveryProgress(int current, int total);
+    void startServerDiscovery();
 
 private:
     Ui::MainWindow *ui;
@@ -65,23 +77,35 @@ private:
     QTimer *m_keyProcessTimer;
     QSettings m_settings;
     QAction *m_actionTheme;
-    
+
     bool m_forwardPressed;
     bool m_backwardPressed;
     bool m_leftPressed;
     bool m_rightPressed;
     bool m_darkMode;
-    
+
+    HexapodContext *m_sharedContext;
+
     void loadSettings();
     void saveSettings();
     void applyTheme();
     void setupKeyboardControls();
-    
+
     // Helper methods for logging
     void logMessage(const QString &message);
     void logInfo(const QString &message);
-    void logError(const QString &errorMessage);
+    void logError(const QString &message);
     void logSuccess(const QString &message);
+
+    // New UI elements for connection status
+    QLabel *m_connectionStatusIndicator;
+    QProgressDialog *m_discoveryDialog;
+    QStringList m_recentConnections; // List of recently used connections
+
+    void saveRecentConnections();
+    void loadRecentConnections();
+    void updateConnectionStatusIndicator();
+    void addRecentConnection(const QString &hostname, int port);
 };
 
 #endif // MAINWINDOW_H
