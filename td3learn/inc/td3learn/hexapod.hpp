@@ -5,6 +5,12 @@
 #include "td3learn/environment.hpp"
 #include "td3learn/config.hpp"
 
+// Forward declaration for user space hexapod interface
+namespace hexapod
+{
+    class Hexapod;
+}
+
 namespace td3learn
 {
 
@@ -57,19 +63,19 @@ namespace td3learn
             std::string &info) override;
 
         /**
-         * @brief Get state dimension for hexapod
+         * @brief Get state dimension
          * @return State dimension
          */
         int getStateDimension() const override;
 
         /**
-         * @brief Get action dimension for hexapod
+         * @brief Get action dimension
          * @return Action dimension
          */
         int getActionDimension() const override;
 
         /**
-         * @brief Get action limits for hexapod
+         * @brief Get action limits
          * @param[out] low Lower bounds
          * @param[out] high Upper bounds
          */
@@ -83,12 +89,13 @@ namespace td3learn
         Result setSimulationMode(bool simulation);
 
         /**
-         * @brief Check if running in simulation
-         * @return True if in simulation
+         * @brief Check if in simulation mode
+         * @return True if in simulation mode
          */
         bool isSimulation() const;
 
     private:
+        // Implementation using PIMPL idiom
         std::unique_ptr<HexapodEnvironmentImpl> impl;
     };
 

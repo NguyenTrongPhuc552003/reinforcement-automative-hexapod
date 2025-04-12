@@ -1,10 +1,7 @@
 #include <linux/module.h>
 #include <linux/i2c.h>
-#include <linux/types.h>
 #include <linux/errno.h>
 #include <linux/mutex.h>
-#include <linux/delay.h>
-#include <linux/jiffies.h>
 #include <linux/sched.h>
 #include "pca9685.h"
 

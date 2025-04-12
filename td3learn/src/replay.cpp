@@ -1,7 +1,6 @@
 #include <vector>
 #include <random>
 #include <stdexcept>
-
 #include "td3learn/replay.hpp"
 
 namespace td3learn

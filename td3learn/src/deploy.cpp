@@ -8,12 +8,10 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
-
 #include "td3learn/config.hpp"
 #include "td3learn/agent.hpp"
 #include "td3learn/environment.hpp"
 #include "td3learn/hexapod.hpp"
-#include "td3learn/tidl.hpp"
 #include "td3learn/utils.hpp"
 
 using namespace td3learn;

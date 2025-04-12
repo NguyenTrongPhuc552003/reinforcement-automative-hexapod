@@ -45,16 +45,16 @@ node "BeagleBone AI" as sbc {
   }
 }
 
-device "PWM Controllers" as pca9685 {
+artifact "PWM Controllers" as pca9685 {
   artifact "PCA9685 Primary (0x40)" #ADD8E6
   artifact "PCA9685 Secondary (0x41)" #ADD8E6
 }
 
-device "IMU Sensor" as mpu6050 {
+artifact "IMU Sensor" as mpu6050 {
   artifact "MPU6050 (0x68)" #ADD8E6
 }
 
-device "Servo Motors (18x)" as servos {
+artifact "Servo Motors (18x)" as servos {
   frame "Left Side" {
     artifact "Front Left (3x)"
     artifact "Middle Left (3x)"

@@ -39,6 +39,11 @@ namespace td3learn
         std::string device = "cpu";          // Device to run on (cpu, tidl, opencl)
         bool exploration_noise = true;       // Add exploration noise during training
         Scalar exploration_noise_std = 0.1f; // Standard deviation of exploration noise
+        std::string noise_type = "gaussian"; // Noise type: "gaussian" or "ou"
+
+        // Hexapod-specific TD3 parameters
+        bool adaptive_noise = false;     // Reduce noise over time
+        bool prioritized_replay = false; // Use prioritized experience replay
     };
 
     /**
@@ -68,6 +73,7 @@ namespace td3learn
         bool use_imu = true;             // Use IMU data in state
         bool use_leg_positions = true;   // Use leg positions in state
         Scalar step_time = 0.05f;        // Time step duration in seconds
+        int action_dim = 18;             // Action dimension (6 legs x 3 joints)
 
         // Virtual destructor
         virtual ~HexapodEnvironmentConfig() = default;
@@ -92,12 +98,16 @@ namespace td3learn
      */
     struct TIDLConfig
     {
-        std::string model_path;       // Path to TIDL model
-        int num_eve_cores = 4;        // Number of EVE cores to use
-        int num_dsp_cores = 2;        // Number of DSP cores to use
-        bool quantize = true;         // Quantize model for inference
-        int quantization_bits = 8;    // Quantization bit depth
-        std::string calibration_file; // Calibration data for quantization
+        std::string model_path;             // Path to TIDL model
+        int num_eve_cores = 4;              // Number of EVE cores to use
+        int num_dsp_cores = 2;              // Number of DSP cores to use
+        bool quantize = true;               // Quantize model for inference
+        int quantization_bits = 8;          // Quantization bit depth
+        std::string calibration_file;       // Calibration data for quantization
+        int layer_group_size = 3;           // Group size for layer fusion
+        bool optimize_memory = true;        // Optimize for memory usage
+        bool enable_pre_processing = true;  // Enable pre-processing on DSP
+        bool enable_post_processing = true; // Enable post-processing on DSP
     };
 
     /**
@@ -105,10 +115,15 @@ namespace td3learn
      */
     struct OpenCLConfig
     {
-        int platform_index = 0;    // OpenCL platform index
-        int device_index = 0;      // OpenCL device index
-        bool use_local_mem = true; // Use local memory optimization
-        bool profiling = false;    // Enable profiling
+        int platform_index = 0;                  // OpenCL platform index
+        int device_index = 0;                    // OpenCL device index
+        bool use_local_mem = true;               // Use local memory optimization
+        bool profiling = false;                  // Enable profiling
+        bool enable_cache = true;                // Enable OpenCL program cache
+        std::string cache_dir = ".opencl_cache"; // OpenCL program cache directory
+        bool optimize_matrix_mult = true;        // Use optimized matrix multiplication
+        int work_group_size = 64;                // Default work group size
+        bool fp16_enabled = false;               // Enable FP16 computation if supported
     };
 
     /**

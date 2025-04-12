@@ -1,14 +1,12 @@
 #include <linux/module.h>
 #include <linux/kernel.h>
-#include <linux/init.h>
 #include <linux/cdev.h>
 #include <linux/uaccess.h>
 #include <linux/miscdevice.h>
-#include <linux/slab.h>
 #include "hexapod.h"
-#include "servo.h"
 #include "mpu6050.h"
 #include "pca9685.h"
+#include "servo.h"
 
 /* Module parameters */
 static int debug = 0;

@@ -102,9 +102,7 @@ case "$1" in
         
         # Remove organized build artifacts directories first
         log "${YELLOW}" "Removing organized build artifacts..."
-        rm -rf /build/module/obj/
-        rm -rf /build/module/cmd/
-        rm -rf /build/module/deps/
+        rm -rf /build/module/{obj,cmd,deps}
         
         # Run the normal make clean
         make ${MAKE_PARAMS} clean || true

@@ -1,5 +1,4 @@
 #include <stdexcept>
-
 #include "td3learn/environment.hpp"
 #include "td3learn/hexapod.hpp"
 #include "td3learn/utils.hpp"
