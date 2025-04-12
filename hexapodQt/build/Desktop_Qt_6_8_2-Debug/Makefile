@@ -14,10 +14,10 @@ EQ            = =
 
 CC            = gcc
 CXX           = g++
-DEFINES       = -DQT_DEPRECATED_WARNINGS -DQT_QML_DEBUG -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_CORE_LIB
+DEFINES       = -DQT_DEPRECATED_WARNINGS -DQT_QML_DEBUG -DQT_WIDGETS_LIB -DQT_QUICKCONTROLS2_LIB -DQT_QUICK_LIB -DQT_OPENGL_LIB -DQT_GUI_LIB -DQT_QMLMETA_LIB -DQT_QMLMODELS_LIB -DQT_QMLWORKERSCRIPT_LIB -DQT_QML_LIB -DQT_NETWORK_LIB -DQT_QMLINTEGRATION_LIB -DQT_CORE_LIB
 CFLAGS        = -pipe -g -Wall -Wextra -fPIC -D_REENTRANT $(DEFINES)
 CXXFLAGS      = -pipe -g -std=gnu++1z -Wall -Wextra -fPIC -D_REENTRANT $(DEFINES)
-INCPATH       = -I../../../hexapodQt -I. -I/home/strongfood/Qt/6.8.2/gcc_64/include -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtWidgets -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtNetwork -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore -I. -I. -I/home/strongfood/Qt/6.8.2/gcc_64/mkspecs/linux-g++
+INCPATH       = -I../../../hexapodQt -I. -I/home/strongfood/Qt/6.8.2/gcc_64/include -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtWidgets -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtQuickControls2 -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtQuick -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtOpenGL -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtQmlMeta -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtQmlModels -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtQmlWorkerScript -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtQml -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtNetwork -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtQmlIntegration -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore -I. -I. -I/home/strongfood/Qt/6.8.2/gcc_64/mkspecs/linux-g++
 QMAKE         = /home/strongfood/Qt/6.8.2/gcc_64/bin/qmake
 DEL_FILE      = rm -f
 CHK_DIR_EXISTS= test -d
@@ -40,7 +40,7 @@ DISTNAME      = hexapodQt1.0.0
 DISTDIR = /home/strongfood/Projects/reinforcement-automative-hexapod/hexapodQt/build/Desktop_Qt_6_8_2-Debug/.tmp/hexapodQt1.0.0
 LINK          = g++
 LFLAGS        = -Wl,-rpath,/home/strongfood/Qt/6.8.2/gcc_64/lib -Wl,-rpath-link,/home/strongfood/Qt/6.8.2/gcc_64/lib
-LIBS          = $(SUBLIBS) /home/strongfood/Qt/6.8.2/gcc_64/lib/libQt6Widgets.so /home/strongfood/Qt/6.8.2/gcc_64/lib/libQt6Gui.so /home/strongfood/Qt/6.8.2/gcc_64/lib/libQt6Network.so /home/strongfood/Qt/6.8.2/gcc_64/lib/libQt6Core.so -lpthread -lGL   
+LIBS          = $(SUBLIBS) /home/strongfood/Qt/6.8.2/gcc_64/lib/libQt6Widgets.so /home/strongfood/Qt/6.8.2/gcc_64/lib/libQt6QuickControls2.so /home/strongfood/Qt/6.8.2/gcc_64/lib/libQt6Quick.so /home/strongfood/Qt/6.8.2/gcc_64/lib/libQt6OpenGL.so /home/strongfood/Qt/6.8.2/gcc_64/lib/libQt6Gui.so /home/strongfood/Qt/6.8.2/gcc_64/lib/libQt6QmlMeta.so /home/strongfood/Qt/6.8.2/gcc_64/lib/libQt6QmlModels.so /home/strongfood/Qt/6.8.2/gcc_64/lib/libQt6QmlWorkerScript.so /home/strongfood/Qt/6.8.2/gcc_64/lib/libQt6Qml.so -pthread /home/strongfood/Qt/6.8.2/gcc_64/lib/libQt6Network.so /home/strongfood/Qt/6.8.2/gcc_64/lib/libQt6Core.so -lpthread -lGL   
 AR            = ar cqs
 RANLIB        = 
 SED           = sed
@@ -56,19 +56,25 @@ SOURCES       = ../../main.cpp \
 		../../mainwindow.cpp \
 		../../hexapodconnection.cpp \
 		../../hexapodprotocol.cpp \
-		../../hexapodvisualization.cpp qrc_resources.cpp \
+		../../hexapodvisualization.cpp \
+		../../hexapodcontext.cpp qrc_res.cpp \
+		qrc_qml.cpp \
 		moc_mainwindow.cpp \
 		moc_hexapodconnection.cpp \
-		moc_hexapodvisualization.cpp
+		moc_hexapodvisualization.cpp \
+		moc_hexapodcontext.cpp
 OBJECTS       = main.o \
 		mainwindow.o \
 		hexapodconnection.o \
 		hexapodprotocol.o \
 		hexapodvisualization.o \
-		qrc_resources.o \
+		hexapodcontext.o \
+		qrc_res.o \
+		qrc_qml.o \
 		moc_mainwindow.o \
 		moc_hexapodconnection.o \
-		moc_hexapodvisualization.o
+		moc_hexapodvisualization.o \
+		moc_hexapodcontext.o
 DIST          = /home/strongfood/Qt/6.8.2/gcc_64/mkspecs/features/spec_pre.prf \
 		/home/strongfood/Qt/6.8.2/gcc_64/mkspecs/common/unix.conf \
 		/home/strongfood/Qt/6.8.2/gcc_64/mkspecs/common/linux.conf \
@@ -305,11 +311,13 @@ DIST          = /home/strongfood/Qt/6.8.2/gcc_64/mkspecs/features/spec_pre.prf \
 		../../../../hexapodQt.pro ../../mainwindow.h \
 		../../hexapodconnection.h \
 		../../hexapodprotocol.h \
-		../../hexapodvisualization.h ../../main.cpp \
+		../../hexapodvisualization.h \
+		../../hexapodcontext.h ../../main.cpp \
 		../../mainwindow.cpp \
 		../../hexapodconnection.cpp \
 		../../hexapodprotocol.cpp \
-		../../hexapodvisualization.cpp
+		../../hexapodvisualization.cpp \
+		../../hexapodcontext.cpp
 QMAKE_TARGET  = hexapodQt
 DESTDIR       = 
 TARGET        = hexapodQt
@@ -555,9 +563,17 @@ Makefile: ../../hexapodQt.pro /home/strongfood/Qt/6.8.2/gcc_64/mkspecs/linux-g++
 		/home/strongfood/Qt/6.8.2/gcc_64/mkspecs/features/yacc.prf \
 		/home/strongfood/Qt/6.8.2/gcc_64/mkspecs/features/lex.prf \
 		../../hexapodQt.pro \
-		../../resources.qrc \
+		../../res.qrc \
+		../../qml.qrc \
 		/home/strongfood/Qt/6.8.2/gcc_64/lib/libQt6Widgets.prl \
+		/home/strongfood/Qt/6.8.2/gcc_64/lib/libQt6QuickControls2.prl \
+		/home/strongfood/Qt/6.8.2/gcc_64/lib/libQt6Quick.prl \
+		/home/strongfood/Qt/6.8.2/gcc_64/lib/libQt6OpenGL.prl \
 		/home/strongfood/Qt/6.8.2/gcc_64/lib/libQt6Gui.prl \
+		/home/strongfood/Qt/6.8.2/gcc_64/lib/libQt6QmlMeta.prl \
+		/home/strongfood/Qt/6.8.2/gcc_64/lib/libQt6QmlModels.prl \
+		/home/strongfood/Qt/6.8.2/gcc_64/lib/libQt6QmlWorkerScript.prl \
+		/home/strongfood/Qt/6.8.2/gcc_64/lib/libQt6Qml.prl \
 		/home/strongfood/Qt/6.8.2/gcc_64/lib/libQt6Network.prl \
 		/home/strongfood/Qt/6.8.2/gcc_64/lib/libQt6Core.prl
 	$(QMAKE) -o Makefile ../../hexapodQt.pro -spec linux-g++ CONFIG+=debug CONFIG+=qml_debug
@@ -795,9 +811,17 @@ Makefile: ../../hexapodQt.pro /home/strongfood/Qt/6.8.2/gcc_64/mkspecs/linux-g++
 /home/strongfood/Qt/6.8.2/gcc_64/mkspecs/features/yacc.prf:
 /home/strongfood/Qt/6.8.2/gcc_64/mkspecs/features/lex.prf:
 ../../hexapodQt.pro:
-../../resources.qrc:
+../../res.qrc:
+../../qml.qrc:
 /home/strongfood/Qt/6.8.2/gcc_64/lib/libQt6Widgets.prl:
+/home/strongfood/Qt/6.8.2/gcc_64/lib/libQt6QuickControls2.prl:
+/home/strongfood/Qt/6.8.2/gcc_64/lib/libQt6Quick.prl:
+/home/strongfood/Qt/6.8.2/gcc_64/lib/libQt6OpenGL.prl:
 /home/strongfood/Qt/6.8.2/gcc_64/lib/libQt6Gui.prl:
+/home/strongfood/Qt/6.8.2/gcc_64/lib/libQt6QmlMeta.prl:
+/home/strongfood/Qt/6.8.2/gcc_64/lib/libQt6QmlModels.prl:
+/home/strongfood/Qt/6.8.2/gcc_64/lib/libQt6QmlWorkerScript.prl:
+/home/strongfood/Qt/6.8.2/gcc_64/lib/libQt6Qml.prl:
 /home/strongfood/Qt/6.8.2/gcc_64/lib/libQt6Network.prl:
 /home/strongfood/Qt/6.8.2/gcc_64/lib/libQt6Core.prl:
 qmake: FORCE
@@ -814,10 +838,10 @@ dist: distdir FORCE
 distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
-	$(COPY_FILE) --parents ../../resources.qrc $(DISTDIR)/
+	$(COPY_FILE) --parents ../../res.qrc ../../qml.qrc $(DISTDIR)/
 	$(COPY_FILE) --parents /home/strongfood/Qt/6.8.2/gcc_64/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents ../../mainwindow.h ../../hexapodconnection.h ../../hexapodprotocol.h ../../hexapodvisualization.h $(DISTDIR)/
-	$(COPY_FILE) --parents ../../main.cpp ../../mainwindow.cpp ../../hexapodconnection.cpp ../../hexapodprotocol.cpp ../../hexapodvisualization.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents ../../mainwindow.h ../../hexapodconnection.h ../../hexapodprotocol.h ../../hexapodvisualization.h ../../hexapodcontext.h $(DISTDIR)/
+	$(COPY_FILE) --parents ../../main.cpp ../../mainwindow.cpp ../../hexapodconnection.cpp ../../hexapodprotocol.cpp ../../hexapodvisualization.cpp ../../hexapodcontext.cpp $(DISTDIR)/
 	$(COPY_FILE) --parents ../../mainwindow.ui $(DISTDIR)/
 
 
@@ -842,21 +866,34 @@ check: first
 
 benchmark: first
 
-compiler_rcc_make_all: qrc_resources.cpp
+compiler_rcc_make_all: qrc_res.cpp qrc_qml.cpp
 compiler_rcc_clean:
-	-$(DEL_FILE) qrc_resources.cpp
-qrc_resources.cpp: ../../resources.qrc \
+	-$(DEL_FILE) qrc_res.cpp qrc_qml.cpp
+qrc_res.cpp: ../../res.qrc \
 		/home/strongfood/Qt/6.8.2/gcc_64/libexec/rcc \
 		../../mainwindow.ui \
 		../../styles/hexapod_dark.qss \
 		../../styles/hexapod.qss \
+		../../icons/widgets.png \
 		../../icons/connected.png \
 		../../icons/disconnected.png \
 		../../icons/hexapod.png \
 		../../icons/check.png \
 		../../icons/keyboard.png \
+		../../icons/qml.png \
 		../../icons/gear.png
-	/home/strongfood/Qt/6.8.2/gcc_64/libexec/rcc -name resources ../../resources.qrc -o qrc_resources.cpp
+	/home/strongfood/Qt/6.8.2/gcc_64/libexec/rcc -name res ../../res.qrc -o qrc_res.cpp
+
+qrc_qml.cpp: ../../qml.qrc \
+		/home/strongfood/Qt/6.8.2/gcc_64/libexec/rcc \
+		../../qml/StatusBar.qml \
+		../../qml/ControlPanel.qml \
+		../../qml/VisualizationView.qml \
+		../../qml/ConnectionPanel.qml \
+		../../qml/Dashboard.qml \
+		../../qml/main.qml \
+		../../qml/JoystickControl.qml
+	/home/strongfood/Qt/6.8.2/gcc_64/libexec/rcc -name qml ../../qml.qrc -o qrc_qml.cpp
 
 compiler_moc_predefs_make_all: moc_predefs.h
 compiler_moc_predefs_clean:
@@ -864,9 +901,9 @@ compiler_moc_predefs_clean:
 moc_predefs.h: /home/strongfood/Qt/6.8.2/gcc_64/mkspecs/features/data/dummy.cpp
 	g++ -pipe -g -std=gnu++1z -Wall -Wextra -fPIC -dM -E -o moc_predefs.h /home/strongfood/Qt/6.8.2/gcc_64/mkspecs/features/data/dummy.cpp
 
-compiler_moc_header_make_all: moc_mainwindow.cpp moc_hexapodconnection.cpp moc_hexapodvisualization.cpp
+compiler_moc_header_make_all: moc_mainwindow.cpp moc_hexapodconnection.cpp moc_hexapodvisualization.cpp moc_hexapodcontext.cpp
 compiler_moc_header_clean:
-	-$(DEL_FILE) moc_mainwindow.cpp moc_hexapodconnection.cpp moc_hexapodvisualization.cpp
+	-$(DEL_FILE) moc_mainwindow.cpp moc_hexapodconnection.cpp moc_hexapodvisualization.cpp moc_hexapodcontext.cpp
 moc_mainwindow.cpp: ../../mainwindow.h \
 		/home/strongfood/Qt/6.8.2/gcc_64/include/QtWidgets/QMainWindow \
 		/home/strongfood/Qt/6.8.2/gcc_64/include/QtWidgets/qmainwindow.h \
@@ -1083,9 +1120,14 @@ moc_mainwindow.cpp: ../../mainwindow.h \
 		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/quuid.h \
 		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/QJsonDocument \
 		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qjsondocument.h \
+		../../hexapodcontext.h \
+		../../hexapodprotocol.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/QJsonArray \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qjsonarray.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/QDateTime \
 		moc_predefs.h \
 		/home/strongfood/Qt/6.8.2/gcc_64/libexec/moc
-	/home/strongfood/Qt/6.8.2/gcc_64/libexec/moc $(DEFINES) --include /home/strongfood/Projects/reinforcement-automative-hexapod/hexapodQt/build/Desktop_Qt_6_8_2-Debug/moc_predefs.h -I/home/strongfood/Qt/6.8.2/gcc_64/mkspecs/linux-g++ -I/home/strongfood/Projects/reinforcement-automative-hexapod/hexapodQt -I/home/strongfood/Qt/6.8.2/gcc_64/include -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtWidgets -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtNetwork -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore -I. -I/usr/include/c++/13 -I/usr/include/x86_64-linux-gnu/c++/13 -I/usr/include/c++/13/backward -I/usr/lib/gcc/x86_64-linux-gnu/13/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include ../../mainwindow.h -o moc_mainwindow.cpp
+	/home/strongfood/Qt/6.8.2/gcc_64/libexec/moc $(DEFINES) --include /home/strongfood/Projects/reinforcement-automative-hexapod/hexapodQt/build/Desktop_Qt_6_8_2-Debug/moc_predefs.h -I/home/strongfood/Qt/6.8.2/gcc_64/mkspecs/linux-g++ -I/home/strongfood/Projects/reinforcement-automative-hexapod/hexapodQt -I/home/strongfood/Qt/6.8.2/gcc_64/include -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtWidgets -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtQuickControls2 -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtQuick -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtOpenGL -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtQmlMeta -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtQmlModels -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtQmlWorkerScript -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtQml -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtNetwork -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtQmlIntegration -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore -I. -I/usr/include/c++/13 -I/usr/include/x86_64-linux-gnu/c++/13 -I/usr/include/c++/13/backward -I/usr/lib/gcc/x86_64-linux-gnu/13/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include ../../mainwindow.h -o moc_mainwindow.cpp
 
 moc_hexapodconnection.cpp: ../../hexapodconnection.h \
 		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/QObject \
@@ -1229,7 +1271,7 @@ moc_hexapodconnection.cpp: ../../hexapodconnection.h \
 		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qbasictimer.h \
 		moc_predefs.h \
 		/home/strongfood/Qt/6.8.2/gcc_64/libexec/moc
-	/home/strongfood/Qt/6.8.2/gcc_64/libexec/moc $(DEFINES) --include /home/strongfood/Projects/reinforcement-automative-hexapod/hexapodQt/build/Desktop_Qt_6_8_2-Debug/moc_predefs.h -I/home/strongfood/Qt/6.8.2/gcc_64/mkspecs/linux-g++ -I/home/strongfood/Projects/reinforcement-automative-hexapod/hexapodQt -I/home/strongfood/Qt/6.8.2/gcc_64/include -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtWidgets -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtNetwork -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore -I. -I/usr/include/c++/13 -I/usr/include/x86_64-linux-gnu/c++/13 -I/usr/include/c++/13/backward -I/usr/lib/gcc/x86_64-linux-gnu/13/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include ../../hexapodconnection.h -o moc_hexapodconnection.cpp
+	/home/strongfood/Qt/6.8.2/gcc_64/libexec/moc $(DEFINES) --include /home/strongfood/Projects/reinforcement-automative-hexapod/hexapodQt/build/Desktop_Qt_6_8_2-Debug/moc_predefs.h -I/home/strongfood/Qt/6.8.2/gcc_64/mkspecs/linux-g++ -I/home/strongfood/Projects/reinforcement-automative-hexapod/hexapodQt -I/home/strongfood/Qt/6.8.2/gcc_64/include -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtWidgets -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtQuickControls2 -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtQuick -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtOpenGL -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtQmlMeta -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtQmlModels -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtQmlWorkerScript -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtQml -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtNetwork -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtQmlIntegration -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore -I. -I/usr/include/c++/13 -I/usr/include/x86_64-linux-gnu/c++/13 -I/usr/include/c++/13/backward -I/usr/lib/gcc/x86_64-linux-gnu/13/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include ../../hexapodconnection.h -o moc_hexapodconnection.cpp
 
 moc_hexapodvisualization.cpp: ../../hexapodvisualization.h \
 		/home/strongfood/Qt/6.8.2/gcc_64/include/QtWidgets/QWidget \
@@ -1442,7 +1484,156 @@ moc_hexapodvisualization.cpp: ../../hexapodvisualization.h \
 		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/QDateTime \
 		moc_predefs.h \
 		/home/strongfood/Qt/6.8.2/gcc_64/libexec/moc
-	/home/strongfood/Qt/6.8.2/gcc_64/libexec/moc $(DEFINES) --include /home/strongfood/Projects/reinforcement-automative-hexapod/hexapodQt/build/Desktop_Qt_6_8_2-Debug/moc_predefs.h -I/home/strongfood/Qt/6.8.2/gcc_64/mkspecs/linux-g++ -I/home/strongfood/Projects/reinforcement-automative-hexapod/hexapodQt -I/home/strongfood/Qt/6.8.2/gcc_64/include -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtWidgets -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtNetwork -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore -I. -I/usr/include/c++/13 -I/usr/include/x86_64-linux-gnu/c++/13 -I/usr/include/c++/13/backward -I/usr/lib/gcc/x86_64-linux-gnu/13/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include ../../hexapodvisualization.h -o moc_hexapodvisualization.cpp
+	/home/strongfood/Qt/6.8.2/gcc_64/libexec/moc $(DEFINES) --include /home/strongfood/Projects/reinforcement-automative-hexapod/hexapodQt/build/Desktop_Qt_6_8_2-Debug/moc_predefs.h -I/home/strongfood/Qt/6.8.2/gcc_64/mkspecs/linux-g++ -I/home/strongfood/Projects/reinforcement-automative-hexapod/hexapodQt -I/home/strongfood/Qt/6.8.2/gcc_64/include -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtWidgets -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtQuickControls2 -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtQuick -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtOpenGL -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtQmlMeta -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtQmlModels -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtQmlWorkerScript -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtQml -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtNetwork -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtQmlIntegration -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore -I. -I/usr/include/c++/13 -I/usr/include/x86_64-linux-gnu/c++/13 -I/usr/include/c++/13/backward -I/usr/lib/gcc/x86_64-linux-gnu/13/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include ../../hexapodvisualization.h -o moc_hexapodvisualization.cpp
+
+moc_hexapodcontext.cpp: ../../hexapodcontext.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/QObject \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qobject.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qobjectdefs.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qnamespace.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qglobal.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qtversionchecks.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qtconfiginclude.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qconfig.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qtcore-config.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qtconfigmacros.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qtdeprecationdefinitions.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qtcoreexports.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qcompilerdetection.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qprocessordetection.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qsystemdetection.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qtdeprecationmarkers.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qtclasshelpermacros.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qtpreprocessorsupport.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qassert.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qtnoop.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qtypes.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qtversion.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qtypeinfo.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qcontainerfwd.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qsysinfo.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qlogging.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qflags.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qcompare_impl.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qatomic.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qbasicatomic.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qatomic_cxx11.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qgenericatomic.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qyieldcpu.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qconstructormacros.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qdarwinhelpers.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qexceptionhandling.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qforeach.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qttypetraits.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qfunctionpointer.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qglobalstatic.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qmalloc.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qminmax.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qnumeric.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qoverload.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qswap.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qtenvironmentvariables.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qtresource.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qttranslation.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qversiontagging.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qcompare.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qcomparehelpers.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/q20type_traits.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qtmetamacros.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qobjectdefs_impl.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qfunctionaltools_impl.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qstring.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qchar.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qstringview.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qbytearray.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qrefcount.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qarraydata.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qpair.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qarraydatapointer.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qarraydataops.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qcontainertools_impl.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qxptype_traits.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/q20functional.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/q20memory.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qbytearrayalgorithms.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qbytearrayview.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qstringfwd.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qstringliteral.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qstringalgorithms.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qlatin1stringview.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qanystringview.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qutf8stringview.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qstringtokenizer.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qstringbuilder.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qstringconverter.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qstringconverter_base.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qlist.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qhashfunctions.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qiterator.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qbytearraylist.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qstringlist.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qalgorithms.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qstringmatcher.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qcoreevent.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qscopedpointer.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qmetatype.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qdatastream.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qiodevicebase.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qfloat16.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qmath.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qiterable.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qmetacontainer.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qcontainerinfo.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qtaggedpointer.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qscopeguard.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qobject_impl.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qbindingstorage.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/QTimer \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qtimer.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qbasictimer.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/QJsonObject \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qjsonobject.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qjsonvalue.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qcborvalue.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qcborcommon.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qdebug.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qtextstream.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qcontiguouscache.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qsharedpointer.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qshareddata.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qsharedpointer_impl.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qmap.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qshareddata_impl.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qset.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qhash.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qvarlengtharray.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qdatetime.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qcalendar.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qlocale.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qvariant.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/q23utility.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qregularexpression.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qurl.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/quuid.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qendian.h \
+		../../hexapodconnection.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtNetwork/QTcpSocket \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtNetwork/qtcpsocket.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtNetwork/qtnetworkglobal.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtNetwork/qtnetwork-config.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtNetwork/qtnetworkexports.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtNetwork/qabstractsocket.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtNetwork/qhostaddress.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qiodevice.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/QJsonDocument \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qjsondocument.h \
+		../../hexapodprotocol.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/QJsonArray \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qjsonarray.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/QDateTime \
+		moc_predefs.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/libexec/moc
+	/home/strongfood/Qt/6.8.2/gcc_64/libexec/moc $(DEFINES) --include /home/strongfood/Projects/reinforcement-automative-hexapod/hexapodQt/build/Desktop_Qt_6_8_2-Debug/moc_predefs.h -I/home/strongfood/Qt/6.8.2/gcc_64/mkspecs/linux-g++ -I/home/strongfood/Projects/reinforcement-automative-hexapod/hexapodQt -I/home/strongfood/Qt/6.8.2/gcc_64/include -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtWidgets -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtQuickControls2 -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtQuick -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtOpenGL -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtQmlMeta -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtQmlModels -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtQmlWorkerScript -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtQml -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtNetwork -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtQmlIntegration -I/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore -I. -I/usr/include/c++/13 -I/usr/include/x86_64-linux-gnu/c++/13 -I/usr/include/c++/13/backward -I/usr/lib/gcc/x86_64-linux-gnu/13/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include ../../hexapodcontext.h -o moc_hexapodcontext.cpp
 
 compiler_moc_objc_header_make_all:
 compiler_moc_objc_header_clean:
@@ -1903,7 +2094,12 @@ main.o: ../../main.cpp /home/strongfood/Qt/6.8.2/gcc_64/include/QtWidgets/QAppli
 		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qregularexpression.h \
 		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/quuid.h \
 		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/QJsonDocument \
-		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qjsondocument.h
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qjsondocument.h \
+		../../hexapodcontext.h \
+		../../hexapodprotocol.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/QJsonArray \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qjsonarray.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/QDateTime
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o ../../main.cpp
 
 mainwindow.o: ../../mainwindow.cpp /home/strongfood/Qt/6.8.2/gcc_64/include/QtWidgets/QMessageBox \
@@ -2151,6 +2347,7 @@ mainwindow.o: ../../mainwindow.cpp /home/strongfood/Qt/6.8.2/gcc_64/include/QtWi
 		/home/strongfood/Qt/6.8.2/gcc_64/include/QtNetwork/qhostaddress.h \
 		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/QJsonDocument \
 		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qjsondocument.h \
+		../../hexapodcontext.h \
 		ui_mainwindow.h \
 		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/QVariant \
 		/home/strongfood/Qt/6.8.2/gcc_64/include/QtWidgets/QApplication \
@@ -2690,8 +2887,234 @@ hexapodvisualization.o: ../../hexapodvisualization.cpp /home/strongfood/Qt/6.8.2
 		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/QDateTime
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o hexapodvisualization.o ../../hexapodvisualization.cpp
 
-qrc_resources.o: qrc_resources.cpp 
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o qrc_resources.o qrc_resources.cpp
+hexapodcontext.o: ../../hexapodcontext.cpp /home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/QDateTime \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qdatetime.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qcalendar.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qglobal.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qtversionchecks.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qtconfiginclude.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qconfig.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qtcore-config.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qtconfigmacros.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qtdeprecationdefinitions.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qtcoreexports.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qcompilerdetection.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qprocessordetection.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qsystemdetection.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qtdeprecationmarkers.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qtclasshelpermacros.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qtpreprocessorsupport.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qassert.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qtnoop.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qtypes.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qtversion.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qtypeinfo.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qcontainerfwd.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qsysinfo.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qlogging.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qflags.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qcompare_impl.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qatomic.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qbasicatomic.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qatomic_cxx11.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qgenericatomic.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qyieldcpu.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qconstructormacros.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qdarwinhelpers.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qexceptionhandling.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qforeach.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qttypetraits.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qfunctionpointer.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qglobalstatic.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qmalloc.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qminmax.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qnumeric.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qoverload.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qswap.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qtenvironmentvariables.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qtresource.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qttranslation.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qversiontagging.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qlocale.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qvariant.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qcompare.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qcomparehelpers.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/q20type_traits.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qmetatype.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qbytearray.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qrefcount.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qnamespace.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qtmetamacros.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qarraydata.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qpair.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qarraydatapointer.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qarraydataops.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qcontainertools_impl.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qxptype_traits.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/q20functional.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/q20memory.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qbytearrayalgorithms.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qbytearrayview.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qstringfwd.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qdatastream.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qscopedpointer.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qiodevicebase.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qfloat16.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qhashfunctions.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qstring.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qchar.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qstringview.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qstringliteral.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qstringalgorithms.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qlatin1stringview.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qanystringview.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qutf8stringview.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qstringtokenizer.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qstringbuilder.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qstringconverter.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qstringconverter_base.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qmath.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qalgorithms.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qiterable.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qmetacontainer.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qcontainerinfo.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qtaggedpointer.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qobjectdefs.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qobjectdefs_impl.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qfunctionaltools_impl.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qscopeguard.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qdebug.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qtextstream.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qcontiguouscache.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qsharedpointer.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qshareddata.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qsharedpointer_impl.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qlist.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qiterator.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qbytearraylist.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qstringlist.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qstringmatcher.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qmap.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qshareddata_impl.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qset.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qhash.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qvarlengtharray.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/q23utility.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qobject.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qcoreevent.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qobject_impl.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qbindingstorage.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/QJsonObject \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qjsonobject.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qjsonvalue.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qcborvalue.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qcborcommon.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qregularexpression.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qurl.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/quuid.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qendian.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/QDebug \
+		../../hexapodcontext.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/QObject \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/QTimer \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qtimer.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qbasictimer.h \
+		../../hexapodconnection.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtNetwork/QTcpSocket \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtNetwork/qtcpsocket.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtNetwork/qtnetworkglobal.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtNetwork/qtnetwork-config.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtNetwork/qtnetworkexports.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtNetwork/qabstractsocket.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtNetwork/qhostaddress.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qiodevice.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/QJsonDocument \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qjsondocument.h \
+		../../hexapodprotocol.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/QJsonArray \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qjsonarray.h \
+		../../hexapodvisualization.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtWidgets/QWidget \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtWidgets/qwidget.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtWidgets/qtwidgetsglobal.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui/qtguiglobal.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui/qtgui-config.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui/qtguiexports.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtWidgets/qtwidgets-config.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtWidgets/qtwidgetsexports.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui/qwindowdefs.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qmargins.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui/qaction.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui/qkeysequence.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui/qicon.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qsize.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui/qpixmap.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui/qpaintdevice.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qrect.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qpoint.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui/qcolor.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui/qrgb.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui/qrgba64.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui/qimage.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui/qpixelformat.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui/qtransform.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui/qpolygon.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui/qregion.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qspan.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/q20iterator.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qline.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui/qpalette.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui/qbrush.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui/qfont.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui/qfontmetrics.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui/qfontinfo.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtWidgets/qsizepolicy.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui/qcursor.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui/qbitmap.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui/qevent.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui/qeventpoint.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui/qvector2d.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui/qvectornd.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui/qpointingdevice.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui/qinputdevice.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui/qscreen.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/QList \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/QRect \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/QSize \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/QSizeF \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui/QTransform \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qnativeinterface.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui/qscreen_platform.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui/qguiapplication.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qcoreapplication.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qdeadlinetimer.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qelapsedtimer.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qeventloop.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qcoreapplication_platform.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qfuture.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qfutureinterface.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qmutex.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qtsan_impl.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qresultstore.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qfuture_impl.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qthreadpool.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qthread.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qrunnable.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qexception.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtCore/qpromise.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui/qinputmethod.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui/qguiapplication_platform.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui/QPainter \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui/qpainter.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui/qtextoption.h \
+		/home/strongfood/Qt/6.8.2/gcc_64/include/QtGui/qpen.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o hexapodcontext.o ../../hexapodcontext.cpp
+
+qrc_res.o: qrc_res.cpp 
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o qrc_res.o qrc_res.cpp
+
+qrc_qml.o: qrc_qml.cpp 
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o qrc_qml.o qrc_qml.cpp
 
 moc_mainwindow.o: moc_mainwindow.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_mainwindow.o moc_mainwindow.cpp
@@ -2701,6 +3124,9 @@ moc_hexapodconnection.o: moc_hexapodconnection.cpp
 
 moc_hexapodvisualization.o: moc_hexapodvisualization.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_hexapodvisualization.o moc_hexapodvisualization.cpp
+
+moc_hexapodcontext.o: moc_hexapodcontext.cpp 
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_hexapodcontext.o moc_hexapodcontext.cpp
 
 ####### Install
 

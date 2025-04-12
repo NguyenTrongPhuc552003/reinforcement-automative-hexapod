@@ -266,310 +266,270 @@ class HexapodServer:
         
         # Movement state tracking
         self._current_movement = {'type': 'stop'}
-        self._balance_enabled = Falseenabled = False
+        self._balance_enabled = False
         self._current_tilt = {'pitch': 0.0, 'roll': 0.0}
-        # Try to initialize hardware interface
-        # Try to initialize hardware interface
-        simulation = not os.path.exists(lib_path)if simulation:
-        if simulation:rning(f"Library {lib_path} not found. Running in simulation mode.")
+        
+        # Check if we need to run in simulation mode
+        simulation = not os.path.exists(lib_path)
+        if simulation:
             logger.warning(f"Library {lib_path} not found. Running in simulation mode.")
-        ulation)
+        
         self.hardware = HexapodHardware(lib_path, simulation)
         
-        # Report mode    if self.hardware.simulation:
-        if self.hardware.simulation:nfo("Running in SIMULATION mode")
+        # Report mode
+        if self.hardware.simulation:
             logger.info("Running in SIMULATION mode")
-        else:nning in HARDWARE mode")
+        else:
             logger.info("Running in HARDWARE mode")
     
-    def start(self):"""Start the server"""
+    def start(self):
         """Start the server"""
-        self.running = True(socket.AF_INET, socket.SOCK_STREAM)
-        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.running = True
+        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        king
-        # Set socket timeout to make accept() non-blockingocket.settimeout(1.0)
+        
+        # Set socket timeout to make accept() non-blocking
         self.server_socket.settimeout(1.0)
-        ified port or find an alternative
-        # Try to bind to the specified port or find an alternative_try = [self.port] + DEFAULT_ALT_PORTS
+        
+        # Try to bind to the specified port or find an alternative
         ports_to_try = [self.port] + DEFAULT_ALT_PORTS
         bound = False
         
         for port in ports_to_try:
-            try:.")
-                logger.info(f"Attempting to bind to {self.host}:{port}...")server_socket.bind((self.host, port))
-                self.server_socket.bind((self.host, port))t
+            try:
+                logger.info(f"Attempting to bind to {self.host}:{port}...")
+                self.server_socket.bind((self.host, port))
                 self.final_port = port
                 bound = True
                 logger.info(f"Successfully bound to {self.host}:{port}")
                 break
-            except socket.error as e:o == errno.EADDRINUSE:
-                if e.errno == errno.EADDRINUSE:ogger.warning(f"Port {port} is already in use, trying next port")
+            except socket.error as e:
+                if e.errno == errno.EADDRINUSE:
                     logger.warning(f"Port {port} is already in use, trying next port")
-                elif e.errno == errno.EACCES:a port > 1024.")
+                elif e.errno == errno.EACCES:
                     logger.error(f"Permission denied binding to port {port}. Try using a port > 1024.")
                     break
-                else:            logger.error(f"Socket error binding to {self.host}:{port}: {e}")
-                    logger.error(f"Socket error binding to {self.host}:{port}: {e}")f port == self.port:  # Only continue if this was our first choice
+                else:
+                    logger.error(f"Socket error binding to {self.host}:{port}: {e}")
                     if port == self.port:  # Only continue if this was our first choice
-                        continueak
+                        continue
                     break
+        
         if not bound:
-        if not bound:logger.error("Failed to bind to any port. Check network configuration.")
             logger.error("Failed to bind to any port. Check network configuration.")
             self.stop()
             return
         
-        try:listen(5)
-            self.server_socket.listen(5)nfo(f"Server started on {self.host}:{self.final_port}")
+        try:
+            self.server_socket.listen(5)
             logger.info(f"Server started on {self.host}:{self.final_port}")
             
-            # Accept clients in a looplf.running:
+            # Accept clients in a loop
             while self.running:
-                try:elf.server_socket.accept()
-                    client_socket, client_address = self.server_socket.accept()rom {client_address[0]}:{client_address[1]}")
+                try:
+                    client_socket, client_address = self.server_socket.accept()
                     logger.info(f"New connection from {client_address[0]}:{client_address[1]}")
-                     Start a new thread to handle this client
-                    # Start a new thread to handle this clienthread(
-                    client_thread = threading.Thread(e_client,
+                    
+                    # Start a new thread to handle this client
+                    client_thread = threading.Thread(
                         target=self.handle_client,
-                        args=(client_socket, client_address))
-                    )on = True
+                        args=(client_socket, client_address)
+                    )
                     client_thread.daemon = True
-                    client_thread.start()ents.append((client_socket, client_thread))
+                    client_thread.start()
                     self.clients.append((client_socket, client_thread))
-                    t:
                 except socket.timeout:
                     # This is expected due to the timeout we set
-                    continueception as e:
-                except Exception as e:unning:
-                    if self.running:    logger.error(f"Error accepting client: {e}")
-                        logger.error(f"Error accepting client: {e}")t break, try to accept again
+                    continue
+                except Exception as e:
+                    if self.running:
+                        logger.error(f"Error accepting client: {e}")
                         # Don't break, try to accept again
-                    else:        break
+                    else:
                         break
-                        except Exception as e:
-        except Exception as e:error(f"Server error: {e}", exc_info=True)
+        except Exception as e:
             logger.error(f"Server error: {e}", exc_info=True)
         finally:
             self.stop()
-        def stop(self):
-    def stop(self):nd clean up resources"""
+    
+    def stop(self):
         """Stop the server and clean up resources"""
-        if not self.running:    return  # Already stopped
+        if not self.running:
             return  # Already stopped
 
-        self.running = Falsenfo("Shutting down server...")
+        self.running = False
         logger.info("Shutting down server...")
-        ions
+        
         # Close all client connections
-        for client_socket, _ in self.clients:    try:
-            try:.close()
-                client_socket.close()s e:
-            except Exception as e:logger.debug(f"Error closing client socket: {e}")
+        for client_socket, _ in self.clients:
+            try:
+                client_socket.close()
+            except Exception as e:
                 logger.debug(f"Error closing client socket: {e}")
         
         # Close server socket
-        if self.server_socket:    try:
-            try:ose()
-                self.server_socket.close()ion as e:
-            except Exception as e:r closing server socket: {e}")
+        if self.server_socket:
+            try:
+                self.server_socket.close()
+            except Exception as e:
                 logger.debug(f"Error closing server socket: {e}")
         
-        # Clean up hardware resources    if self.hardware:
+        # Clean up hardware resources
         if self.hardware:
             self.hardware.cleanup()
-        "Server stopped")
+        
         logger.info("Server stopped")
-     client_socket, client_address):
-    def handle_client(self, client_socket, client_address):e communication with a connected client"""
+    
+    def handle_client(self, client_socket, client_address):
         """Handle communication with a connected client"""
         buffer = b''
         
         while self.running:
-            try:# Read data from client
+            try:
                 # Read data from client
                 data = client_socket.recv(1024)
-                if not data:    break
+                if not data:
                     break
-                ocess complete messages
+                
                 # Add to buffer and process complete messages
                 buffer += data
-                ge (terminated by newline)
-                # Process each complete message (terminated by newline)e b'\n' in buffer:
-                while b'\n' in buffer:n')
+                
+                # Process each complete message (terminated by newline)
+                while b'\n' in buffer:
                     pos = buffer.find(b'\n')
-                    message = buffer[:pos].decode('utf-8')buffer = buffer[pos + 1:]
+                    message = buffer[:pos].decode('utf-8')
                     buffer = buffer[pos + 1:]
                     
-                    # Process the message    response = self.process_message(message)
+                    # Process the message
                     response = self.process_message(message)
                     
-                    # Send response back to clientlient_socket.sendall((json.dumps(response) + '\n').encode('utf-8'))
+                    # Send response back to client
                     client_socket.sendall((json.dumps(response) + '\n').encode('utf-8'))
                 
-            except ConnectionResetError:r.info(f"Client {client_address[0]}:{client_address[1]} disconnected")
-                logger.info(f"Client {client_address[0]}:{client_address[1]} disconnected")        break
-                breaks e:
-            except Exception as e:    logger.error(f"Error handling client {client_address[0]}:{client_address[1]}: {e}")
+            except ConnectionResetError:
+                logger.info(f"Client {client_address[0]}:{client_address[1]} disconnected")
+                break
+            except Exception as e:
                 logger.error(f"Error handling client {client_address[0]}:{client_address[1]}: {e}")
                 break
-        the connection
-        # Close the connectiontry:
+        
+        # Close the connection
         try:
-            client_socket.close()    except:
+            client_socket.close()
         except:
             pass
-        er.info(f"Connection closed for {client_address[0]}:{client_address[1]}")
+        
         logger.info(f"Connection closed for {client_address[0]}:{client_address[1]}")
-    :
-    def process_message(self, message):rocess a message from a client"""
+    
+    def process_message(self, message):
         """Process a message from a client"""
         try:
             # Parse JSON message
             data = json.loads(message)
-            ommand
+            
             # Check if it's a valid command
-            if 'command' not in data:    return {'status': 'error', 'message': 'Invalid command format'}
+            if 'command' not in data:
                 return {'status': 'error', 'message': 'Invalid command format'}
-            nd']
-            command = data['command'](f"Processing command: {command}")
+            
+            command = data['command']
             logger.debug(f"Processing command: {command}")
-             types
+            
             # Process different command types
             if command == 'ping':
-                return {   'status': 'success', 
-                    'status': 'success',     'message': 'pong', 
-                    'message': 'pong', .time() * 1000),
-                    'timestamp': int(time.time() * 1000),ion
+                return {
+                    'status': 'success', 
+                    'message': 'pong', 
+                    'timestamp': int(time.time() * 1000),
                     'simulation': self.hardware.simulation
                 }
                 
-            elif command == 'getImuData':_data()
-                imu_data = self.hardware.get_imu_data()ss', 'imu_data': imu_data}
+            elif command == 'getImuData':
+                imu_data = self.hardware.get_imu_data()
                 return {'status': 'success', 'imu_data': imu_data}
-                :
-            elif command == 'setLegPosition':leg_num = data.get('leg_num', 0)
-                leg_num = data.get('leg_num', 0) 0)
+                
+            elif command == 'setLegPosition':
+                leg_num = data.get('leg_num', 0)
                 hip = data.get('hip', 0)
                 knee = data.get('knee', 0)
                 ankle = data.get('ankle', 0)
                 
-                # Validate parametersif not isinstance(leg_num, int) or leg_num < 0 or leg_num >= 6:
-                if not isinstance(leg_num, int) or leg_num < 0 or leg_num >= 6: {'status': 'error', 'message': 'Invalid leg number'}
+                # Validate parameters
+                if not isinstance(leg_num, int) or leg_num < 0 or leg_num >= 6:
                     return {'status': 'error', 'message': 'Invalid leg number'}
-                t = self.hardware.set_leg_position(leg_num, hip, knee, ankle)
+                
                 result = self.hardware.set_leg_position(leg_num, hip, knee, ankle)
                 if result:
-                if result:uccess'}
                     return {'status': 'success'}
-                else:    return {'status': 'error', 'message': 'Failed to set leg position'}
+                else:
                     return {'status': 'error', 'message': 'Failed to set leg position'}
                 
-            elif command == 'centerAll':t = self.hardware.center_all()
+            elif command == 'centerAll':
                 result = self.hardware.center_all()
                 if result:
-                if result:s', 'message': 'All legs centered'}
                     return {'status': 'success', 'message': 'All legs centered'}
-                else:e': 'Failed to center all legs'}
+                else:
                     return {'status': 'error', 'message': 'Failed to center all legs'}
                 
-            elif command == 'setCalibration':leg_num = data.get('leg_num', 0)
-                leg_num = data.get('leg_num', 0)('hip_offset', 0)
+            elif command == 'setCalibration':
+                leg_num = data.get('leg_num', 0)
                 hip_offset = data.get('hip_offset', 0)
                 knee_offset = data.get('knee_offset', 0)
                 ankle_offset = data.get('ankle_offset', 0)
                 
-                # Validate parameterseg_num >= 6:
-                if not isinstance(leg_num, int) or leg_num < 0 or leg_num >= 6:    return {'status': 'error', 'message': 'Invalid leg number'}
+                # Validate parameters
+                if not isinstance(leg_num, int) or leg_num < 0 or leg_num >= 6:
                     return {'status': 'error', 'message': 'Invalid leg number'}
-                ration(
-                result = self.hardware.set_calibration(eg_num, hip_offset, knee_offset, ankle_offset)
-                    leg_num, hip_offset, knee_offset, ankle_offset)
-                if result:
-                if result:setTilt':status': 'success'} additional commands used by hexapodQt
-                    return {'status': 'success'}
-                else:    roll = data.get('roll', 0.0)    # Left/right tilt        return {'status': 'error', 'message': 'Failed to set calibration'}    direction = data.get('direction', 0.0)  # Direction in degrees
-                    return {'status': 'error', 'message': 'Failed to set calibration'}1.0)
                 
-            # Unknown commandage': f'Unknown command: {command}'}Movement command: direction={direction}, speed={speed}")
-            return {'status': 'error', 'message': f'Unknown command: {command}'}
-            
-        except json.JSONDecodeError:                    self._current_tilt = {'pitch': pitch, 'roll': roll}            return {'status': 'error', 'message': 'Invalid JSON format'}                    # In simulation mode, just acknowledge
-            return {'status': 'error', 'message': 'Invalid JSON format'}                    return {'status': 'success'}        except Exception as e:                    self._current_movement = {'type': 'movement', 'direction': direction, 'speed': speed}
-        except Exception as e:lse:r.error(f"Error processing message: {e}")   return {'status': 'success'}
-            logger.error(f"Error processing message: {e}"), would adjust leg positions to create tilt 'message': f'Internal server error: {str(e)}'}
-            return {'status': 'error', 'message': f'Internal server error: {str(e)}'}
-
-
-def parse_args():
-    """Parse command line arguments"""
-    parser = argparse.ArgumentParser(description="Hexapod Remote Control Server")'error', 'message': f'Unknown command: {command}'}t", default=DEFAULT_HOST, help="Host to listen on")
-    parser.add_argument("--host", default=DEFAULT_HOST, help="Host to listen on")                parser.add_argument("--port", type=int, default=DEFAULT_PORT, help="Port to listen on")            elif command == 'setRotation':
-    parser.add_argument("--port", type=int, default=DEFAULT_PORT, help="Port to listen on")        except json.JSONDecodeError:    parser.add_argument("--lib-path", default=DEFAULT_LIB_PATH, help="Path to hexapod library")                direction = data.get('direction', 0.0)  # -1.0=left, 1.0=right
-    parser.add_argument("--lib-path", default=DEFAULT_LIB_PATH, help="Path to hexapod library") return {'status': 'error', 'message': 'Invalid JSON format'}add_argument("--debug", action="store_true", help="Enable debug logging")     speed = data.get('speed', 0.5)          # Speed factor (0.0-1.0)
-    parser.add_argument("--debug", action="store_true", help="Enable debug logging")s e:gs()
-    return parser.parse_args()r(f"Error processing message: {e}"): direction={direction}, speed={speed}")
-        return {'status': 'error', 'message': f'Internal server error: {str(e)}'}        
-
-def main():ulation mode, just acknowledge
-    """Main entry point"""
-    args = parse_args()"""Parse command line arguments"""                return {'status': 'success'}
-    
-    # Set log level based on argumentslp="Host to listen on")
-    if args.debug:parser.add_argument("--port", type=int, default=DEFAULT_PORT, help="Port to listen on")    logging.getLogger().setLevel(logging.DEBUG)                self._current_movement = {'type': 'rotation', 'direction': direction, 'speed': speed}
-        logging.getLogger().setLevel(logging.DEBUG)er.add_argument("--lib-path", default=DEFAULT_LIB_PATH, help="Path to hexapod library")        return {'status': 'success'}
-    , action="store_true", help="Enable debug logging")d Remote Control Server on {args.host}:{args.port}")
-    logger.info(f"Starting Hexapod Remote Control Server on {args.host}:{args.port}")
-    logger.info(f"Using hexapod library: {args.lib_path}")er.info("Stop command received")
-    
-    try:
-        # Create and start server
-        server = HexapodServer(args.host, args.port, args.lib_path) {'type': 'stop'}
-        downurn {'status': 'success', 'message': 'Movement stopped'}
-        # Handle signals for graceful shutdownt log level based on argumentsdef signal_handler(sig, frame):        else:
-        def signal_handler(sig, frame):hutting down server...")mode, center all legs for stability
-            logger.info(f"Received signal {sig}, shutting down server...")gger().setLevel(logging.DEBUG)op()esult = self.hardware.center_all()
-            server.stop()
-            sys.exit(0)ver on {args.host}:{args.port}")
-        er.info(f"Using hexapod library: {args.lib_path}")# Register signal handlers            if result:
-        # Register signal handlers'message': 'Movement stopped'}
-        import signal signal_handler)se:
-        signal.signal(signal.SIGINT, signal_handler)rverSIGTERM, signal_handler)n {'status': 'error', 'message': 'Failed to stop movement'}
-        signal.signal(signal.SIGTERM, signal_handler)args.port, args.lib_path)
-        ed':
-        # Start the server
-        server.start()handler(sig, frame):Interrupt:
-    except KeyboardInterrupt:            logger.info(f"Received signal {sig}, shutting down server...")        logger.info("Interrupted by user")                logger.info(f"Balance mode {'enabled' if enabled else 'disabled'}")
-        logger.info("Interrupted by user")            server.stop()    except Exception as e:                
-    except Exception as e:led exception: {e}", exc_info=True)lance status (would be used for IMU-based adjustments)
-        logger.error(f"Unhandled exception: {e}", exc_info=True)exit(1)      self._balance_enabled = enabled
-
-
-
-
-
-    main()if __name__ == "__main__":        sys.exit(1)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    main()if __name__ == "__main__":        sys.exit(1)        logger.error(f"Unhandled exception: {e}", exc_info=True)    except Exception as e:        logger.info("Interrupted by user")    except KeyboardInterrupt:        server.start()        # Start the server                signal.signal(signal.SIGTERM, signal_handler)        signal.signal(signal.SIGINT, signal_handler)        import signal        # Register signal handlers
-
-
-
-    main()if __name__ == "__main__":                return {'status': 'success'}
+                result = self.hardware.set_calibration(
+                    leg_num, hip_offset, knee_offset, ankle_offset
+                )
+                if result:
+                    return {'status': 'success'}
+                else:
+                    return {'status': 'error', 'message': 'Failed to set calibration'}
+                
+            elif command == 'setTilt':
+                pitch = data.get('pitch', 0.0)  # Forward/backward tilt
+                roll = data.get('roll', 0.0)    # Left/right tilt
+                
+                self._current_tilt = {'pitch': pitch, 'roll': roll}
+                
+                # In simulation mode, just acknowledge
+                if self.hardware.simulation:
+                    return {'status': 'success'}
+                
+                # In hardware mode, would adjust leg positions to create tilt
+                return {'status': 'success'}
+                
+            elif command == 'setRotation':
+                direction = data.get('direction', 0.0)  # -1.0=left, 1.0=right
+                speed = data.get('speed', 0.5)          # Speed factor (0.0-1.0)
+                
+                logger.debug(f"Movement command: direction={direction}, speed={speed}")
+                
+                self._current_movement = {'type': 'rotation', 'direction': direction, 'speed': speed}
+                return {'status': 'success'}
+                
+            elif command == 'stop':
+                logger.info("Stop command received")
+                self._current_movement = {'type': 'stop'}
+                
+                # In simulation mode, just acknowledge
+                if self.hardware.simulation:
+                    return {'status': 'success', 'message': 'Movement stopped'}
+                
+                # In hardware mode, center all legs for stability
+                result = self.hardware.center_all()
+                if result:
+                    return {'status': 'success', 'message': 'Movement stopped'}
+                else:
+                    return {'status': 'error', 'message': 'Failed to stop movement'}
+                
+            elif command == 'setBalance':
+                enabled = data.get('enabled', False)
+                self._balance_enabled = enabled
+                logger.info(f"Balance mode {'enabled' if enabled else 'disabled'}")
+                return {'status': 'success'}
                 
             # Unknown command
             return {'status': 'error', 'message': f'Unknown command: {command}'}
@@ -579,6 +539,7 @@ def main():ulation mode, just acknowledge
         except Exception as e:
             logger.error(f"Error processing message: {e}")
             return {'status': 'error', 'message': f'Internal server error: {str(e)}'}
+
 
 def parse_args():
     """Parse command line arguments"""
