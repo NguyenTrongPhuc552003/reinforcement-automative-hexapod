@@ -120,6 +120,6 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Default command for kernel module build
 COPY . /build/module
-CMD cd /build/module && make
+CMD ["make", "-C", "/build/module"]
 
 ENTRYPOINT ["entrypoint.sh"]
