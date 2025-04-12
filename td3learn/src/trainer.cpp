@@ -1,10 +1,8 @@
 #include <filesystem>
 #include <fstream>
 #include <algorithm>
-
 #include "td3learn/trainer.hpp"
 #include "td3learn/utils.hpp"
-#include "td3learn/tidl.hpp"
 
 namespace td3learn
 {

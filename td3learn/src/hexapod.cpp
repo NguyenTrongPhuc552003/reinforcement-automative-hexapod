@@ -7,15 +7,11 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
-
 #include "td3learn/hexapod.hpp"
 #include "td3learn/utils.hpp"
 
-// Include robot-specific driver interface with correct path
-extern "C"
-{
-#include "hexapod.h" // Kernel driver interface from driver/inc
-}
+// Include the user space hexapod interface
+#include "hexapod.hpp"
 
 namespace td3learn
 {
@@ -26,11 +22,12 @@ namespace td3learn
     public:
         HexapodEnvironmentImpl(const HexapodEnvironmentConfig &config)
             : config(config),
-              device_fd(-1),
               simulation_mode(config.type == "simulation"),
               last_action(config.action_dim),
               step_counter(0)
         {
+            // Create hexapod instance
+            hexapod = std::make_unique<hexapod::Hexapod>();
 
             // Initialize state and action dimensions based on robot configuration
             state_dim = 0;
@@ -44,11 +41,11 @@ namespace td3learn
             // Leg positions: 6 legs x 3 joints = 18 values
             if (config.use_leg_positions)
             {
-                state_dim += NUM_LEGS * 3;
+                state_dim += hexapod::Config::NUM_LEGS * 3;
             }
 
             // Action dimension - one value per joint
-            action_dim = NUM_LEGS * 3; // 6 legs x 3 joints
+            action_dim = hexapod::Config::NUM_LEGS * 3; // 6 legs x 3 joints
 
             utils::Logger::info("Created HexapodEnvironment with state_dim=" +
                                 std::to_string(state_dim) + ", action_dim=" +
@@ -57,70 +54,60 @@ namespace td3learn
 
         ~HexapodEnvironmentImpl()
         {
-            if (device_fd >= 0)
+            // Clean up hexapod resources if initialized
+            if (hexapod && initialized)
             {
-                close(device_fd);
-                utils::Logger::info("Closed hexapod device");
+                hexapod->cleanup();
             }
         }
 
         Result init()
         {
-            if (!simulation_mode)
+            try
             {
-                // Open device file
-                device_fd = open("/dev/hexapod", O_RDWR);
-                if (device_fd < 0)
+                // Initialize hexapod
+                if (!hexapod->init())
                 {
-                    utils::Logger::error("Failed to open hexapod device: " + std::string(strerror(errno)));
+                    utils::Logger::error("Failed to initialize hexapod: " +
+                                         hexapod->getLastErrorMessage());
                     return Result::ERROR_HARDWARE;
                 }
 
-                // Center all legs at startup for safety
-                if (ioctl(device_fd, HEXAPOD_IOCTL_CENTER_ALL) < 0)
-                {
-                    utils::Logger::error("Failed to center legs: " + std::string(strerror(errno)));
-                    close(device_fd);
-                    device_fd = -1;
-                    return Result::ERROR_HARDWARE;
-                }
+                utils::Logger::info(simulation_mode ? "Connected to hexapod simulation" : "Connected to hexapod hardware");
 
-                utils::Logger::info("Connected to hexapod hardware");
+                // Initialize state vector
+                current_state.resize(state_dim);
+                std::fill(current_state.begin(), current_state.end(), 0.0f);
+
+                // Set action limits
+                action_low.resize(action_dim);
+                action_high.resize(action_dim);
+                std::fill(action_low.begin(), action_low.end(), -1.0f); // Normalized to [-1, 1]
+                std::fill(action_high.begin(), action_high.end(), 1.0f);
+
+                last_action.resize(action_dim);
+                std::fill(last_action.begin(), last_action.end(), 0.0f);
+
+                step_counter = 0;
+                initialized = true;
+                return Result::SUCCESS;
             }
-            else
+            catch (const std::exception &e)
             {
-                utils::Logger::info("Using hexapod simulation mode");
-                initSimulation();
+                utils::Logger::error("Exception initializing hexapod: " + std::string(e.what()));
+                return Result::ERROR_INITIALIZATION;
             }
-
-            // Initialize state vector
-            current_state.resize(state_dim);
-            std::fill(current_state.begin(), current_state.end(), 0.0f);
-
-            // Set action limits
-            action_low.resize(action_dim);
-            action_high.resize(action_dim);
-            std::fill(action_low.begin(), action_low.end(), -1.0f); // Normalized to [-1, 1]
-            std::fill(action_high.begin(), action_high.end(), 1.0f);
-
-            last_action.resize(action_dim);
-            std::fill(last_action.begin(), last_action.end(), 0.0f);
-
-            step_counter = 0;
-            return Result::SUCCESS;
         }
 
         State reset()
         {
             step_counter = 0;
 
-            if (!simulation_mode && device_fd >= 0)
+            // Center all legs
+            if (!hexapod->centerAll())
             {
-                // Center all legs
-                if (ioctl(device_fd, HEXAPOD_IOCTL_CENTER_ALL) < 0)
-                {
-                    utils::Logger::warning("Failed to center legs on reset: " + std::string(strerror(errno)));
-                }
+                utils::Logger::warning("Failed to center legs on reset: " +
+                                       hexapod->getLastErrorMessage());
             }
 
             // Re-initialize state vector
@@ -192,27 +179,9 @@ namespace td3learn
                 return Result::SUCCESS; // No change needed
             }
 
-            if (simulation)
-            {
-                // Switching from hardware to simulation
-                if (device_fd >= 0)
-                {
-                    close(device_fd);
-                    device_fd = -1;
-                }
-                initSimulation();
-            }
-            else
-            {
-                // Switching from simulation to hardware
-                device_fd = open("/dev/hexapod", O_RDWR);
-                if (device_fd < 0)
-                {
-                    utils::Logger::error("Failed to open hexapod device: " + std::string(strerror(errno)));
-                    return Result::ERROR_HARDWARE;
-                }
-            }
-
+            // Would need to reinitialize hexapod with different mode
+            // This is a simplification - in real implementation, we would
+            // recreate the hexapod with the new mode
             simulation_mode = simulation;
             return Result::SUCCESS;
         }
@@ -225,9 +194,10 @@ namespace td3learn
     private:
         // Configuration
         HexapodEnvironmentConfig config;
+        bool initialized = false;
 
-        // Device file descriptor for hardware control
-        int device_fd;
+        // Hexapod interface
+        std::unique_ptr<hexapod::Hexapod> hexapod;
 
         // Simulation flag
         bool simulation_mode;
@@ -240,35 +210,8 @@ namespace td3learn
         Action action_high;
         Action last_action;
 
-        // Simulation state variables
-        struct
-        {
-            struct hexapod_leg_position legs[NUM_LEGS];
-            struct hexapod_imu_data imu;
-        } sim_state;
-
         // Episode tracking
         int step_counter;
-
-        // Initialize simulation state
-        void initSimulation()
-        {
-            // Set default leg positions
-            for (int i = A; i < NUM_LEGS; i++)
-            {
-                sim_state.legs[i].hip = 0;
-                sim_state.legs[i].knee = 0;
-                sim_state.legs[i].ankle = 0;
-            }
-
-            // Set default IMU values
-            sim_state.imu.accel_x = 0;
-            sim_state.imu.accel_y = 0;
-            sim_state.imu.accel_z = 16384; // 1g in the z direction
-            sim_state.imu.gyro_x = 0;
-            sim_state.imu.gyro_y = 0;
-            sim_state.imu.gyro_z = 0;
-        }
 
         // Update the state vector from sensor data
         void updateStateVector()
@@ -278,60 +221,49 @@ namespace td3learn
             if (config.use_imu)
             {
                 // Get IMU data
-                struct hexapod_imu_data imu_data;
+                hexapod::ImuData imu_data;
 
-                if (!simulation_mode && device_fd >= 0)
+                if (!hexapod->getImuData(imu_data))
                 {
-                    if (ioctl(device_fd, HEXAPOD_IOCTL_GET_IMU, &imu_data) < 0)
-                    {
-                        utils::Logger::warning("Failed to read IMU data: " + std::string(strerror(errno)));
-                        // Use previous data
-                        imu_data = sim_state.imu;
-                    }
-                }
-                else
-                {
-                    imu_data = sim_state.imu;
+                    utils::Logger::warning("Failed to read IMU data: " +
+                                           hexapod->getLastErrorMessage());
+                    // Use zeros for IMU data
+                    imu_data = hexapod::ImuData();
                 }
 
                 // Normalize IMU data into state vector
                 // Acceleration: ±2g range -> ±1.0 value
-                current_state[idx++] = imu_data.accel_x / 16384.0f;
-                current_state[idx++] = imu_data.accel_y / 16384.0f;
-                current_state[idx++] = imu_data.accel_z / 16384.0f;
+                current_state[idx++] = imu_data.getAccelX() / 2.0f;
+                current_state[idx++] = imu_data.getAccelY() / 2.0f;
+                current_state[idx++] = imu_data.getAccelZ() / 2.0f;
 
                 // Gyroscope: ±250°/s range -> ±1.0 value
-                current_state[idx++] = imu_data.gyro_x / 131.0f;
-                current_state[idx++] = imu_data.gyro_y / 131.0f;
-                current_state[idx++] = imu_data.gyro_z / 131.0f;
-
-                // Store data in simulation state
-                sim_state.imu = imu_data;
+                current_state[idx++] = imu_data.getGyroX() / 250.0f;
+                current_state[idx++] = imu_data.getGyroY() / 250.0f;
+                current_state[idx++] = imu_data.getGyroZ() / 250.0f;
             }
 
             if (config.use_leg_positions)
             {
                 // Get leg positions
-                for (int leg = 0; leg < NUM_LEGS; leg++)
+                for (int leg = 0; leg < hexapod::Config::NUM_LEGS; leg++)
                 {
-                    struct hexapod_leg_position leg_pos;
+                    hexapod::LegPosition leg_pos;
 
-                    if (!simulation_mode && device_fd >= 0)
+                    if (!hexapod->getLegPosition(leg, leg_pos))
                     {
-                        // In real hardware, we're accessing the cached positions inside the driver
-                        // This would need to match with a driver-side implementation to get current leg positions
-                        leg_pos = sim_state.legs[leg];
-                    }
-                    else
-                    {
-                        leg_pos = sim_state.legs[leg];
+                        utils::Logger::warning("Failed to get position for leg " +
+                                               std::to_string(leg) + ": " +
+                                               hexapod->getLastErrorMessage());
+                        // Use zeros for leg position
+                        leg_pos = hexapod::LegPosition();
                     }
 
                     // Normalize joint angles to [-1, 1] range
                     // Assuming 90 degrees is the max angle in each direction
-                    current_state[idx++] = leg_pos.hip / 90.0f;
-                    current_state[idx++] = leg_pos.knee / 90.0f;
-                    current_state[idx++] = leg_pos.ankle / 90.0f;
+                    current_state[idx++] = leg_pos.getHip() / 90.0f;
+                    current_state[idx++] = leg_pos.getKnee() / 90.0f;
+                    current_state[idx++] = leg_pos.getAnkle() / 90.0f;
                 }
             }
         }
@@ -346,33 +278,24 @@ namespace td3learn
             }
 
             // Apply actions to each leg
-            for (int leg = 0; leg < NUM_LEGS; leg++)
+            for (int leg = 0; leg < hexapod::Config::NUM_LEGS; leg++)
             {
                 // Get joint angles from action vector
                 // Convert normalized [-1, 1] to servo angles [-90, 90]
-                struct hexapod_leg_position leg_pos;
+                hexapod::LegPosition leg_pos;
+                leg_pos.leg_num = leg;
 
                 int base_idx = leg * 3;
-                leg_pos.hip = static_cast<int16_t>(action[base_idx] * 90.0f);
-                leg_pos.knee = static_cast<int16_t>(action[base_idx + 1] * 90.0f);
-                leg_pos.ankle = static_cast<int16_t>(action[base_idx + 2] * 90.0f);
+                leg_pos.setHip(static_cast<int16_t>(action[base_idx] * 90.0f));
+                leg_pos.setKnee(static_cast<int16_t>(action[base_idx + 1] * 90.0f));
+                leg_pos.setAnkle(static_cast<int16_t>(action[base_idx + 2] * 90.0f));
 
-                // Apply to hardware or simulation
-                if (!simulation_mode && device_fd >= 0)
+                // Apply to hardware
+                if (!hexapod->setLegPosition(leg, leg_pos))
                 {
-                    struct hexapod_leg_cmd cmd;
-                    cmd.leg_num = leg;
-                    cmd.position = leg_pos;
-
-                    if (ioctl(device_fd, HEXAPOD_IOCTL_SET_LEG, &cmd) < 0)
-                    {
-                        utils::Logger::warning("Failed to set leg " + std::to_string(leg) +
-                                               " position: " + std::string(strerror(errno)));
-                    }
+                    utils::Logger::warning("Failed to set leg " + std::to_string(leg) +
+                                           " position: " + hexapod->getLastErrorMessage());
                 }
-
-                // Save to simulation state
-                sim_state.legs[leg] = leg_pos;
             }
 
             return Result::SUCCESS;
@@ -386,11 +309,11 @@ namespace td3learn
             // Forward velocity reward component - would come from IMU or external measurement
             // This is a simplification - in a real system, we'd need actual velocity feedback
             Scalar velocity_reward = 0.0f;
-            if (config.use_imu && simulation_mode)
+            if (config.use_imu)
             {
-                // In simulation, we can derive a simple velocity reward
-                // Assume the robot is moving in the direction of its body orientation
-                velocity_reward = 1.0f; // Placeholder
+                // In a real system, we would calculate velocity from IMU data
+                // This is a placeholder
+                velocity_reward = 1.0f;
             }
 
             // Energy efficiency reward component - penalize large/wasteful movements
@@ -406,22 +329,13 @@ namespace td3learn
             Scalar stability_reward = 0.0f;
             if (config.use_imu)
             {
-                // Reward level orientation (accel_z close to 1g, others close to 0)
-                // and minimal rotational velocity
-                if (!simulation_mode && device_fd >= 0)
-                {
-                    // We'd use real IMU data here
-                    stability_reward = 1.0f; // Placeholder
-                }
-                else
-                {
-                    stability_reward = 1.0f; // Placeholder for simulation
-                }
+                // In a real system, would calculate based on actual IMU readings
+                stability_reward = 1.0f; // Placeholder
             }
 
             // Smoothness reward - penalize sudden changes in action
             Scalar smoothness_reward = 0.0f;
-            if (!last_action.empty())
+            if (last_action.size() > 0) // Replace last_action.empty() with size check
             {
                 Scalar action_diff = 0.0f;
                 for (size_t i = 0; i < action.size(); i++)

@@ -12,10 +12,10 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Include directories
+# Include directories - make sure all needed paths are included
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/inc
-    /build/driver/inc # Updated path for Docker environment
+    ${CMAKE_CURRENT_SOURCE_DIR}/../app/inc # Add path to app/inc for user-space driver headers
 )
 
 # Find dependencies
@@ -25,14 +25,22 @@ find_package(Threads REQUIRED)
 if(ENABLE_TIDL)
     # Find TIDL package or set include paths manually based on SDK location
     add_definitions(-DENABLE_TIDL)
-    include_directories(/usr/share/ti/tidl/tidl_api/include)
+
+    # Use the TIDL API in the local environment
+    include_directories(
+        ${CMAKE_CURRENT_SOURCE_DIR}/../tidl/api/tidl_api/inc
+    )
 endif()
 
 # OpenCL support
 if(ENABLE_OPENCL)
-    find_package(OpenCL REQUIRED)
+    # Add compile definition
     add_definitions(-DENABLE_OPENCL)
-    include_directories(${OpenCl_INCLUDE_DIRS})
+
+    # Use the OpenCL API in the local environment
+    include_directories(
+        ${CMAKE_CURRENT_SOURCE_DIR}/../opencl/api/builtins/include
+    )
 endif()
 
 # Source files
@@ -48,7 +56,7 @@ target_link_libraries(td3learn PRIVATE
 )
 
 if(ENABLE_TIDL)
-    target_link_libraries(td3learn PRIVATE tidl)
+    target_link_libraries(td3learn PRIVATE tidl_api)
 endif()
 
 if(ENABLE_OPENCL)

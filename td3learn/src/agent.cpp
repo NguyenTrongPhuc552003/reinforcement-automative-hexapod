@@ -2,7 +2,6 @@
 #include <algorithm>
 #include <cmath>
 #include <fstream>
-
 #include "td3learn/agent.hpp"
 #include "td3learn/utils.hpp"
 

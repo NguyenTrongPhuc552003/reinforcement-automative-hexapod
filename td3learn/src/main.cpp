@@ -2,7 +2,6 @@
 #include <cstdlib>
 #include <string>
 #include <memory>
-
 #include "td3learn/config.hpp"
 #include "td3learn/agent.hpp"
 #include "td3learn/environment.hpp"

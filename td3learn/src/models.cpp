@@ -3,10 +3,8 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
-
 #include "td3learn/models.hpp"
 #include "td3learn/utils.hpp"
-#include "td3learn/tidl.hpp"
 
 namespace td3learn
 {

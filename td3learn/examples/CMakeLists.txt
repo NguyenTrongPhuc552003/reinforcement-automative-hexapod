@@ -1,8 +1,8 @@
 # Examples CMakeLists.txt
 
-add_executable(td3_simple td3_simple.cpp)
-target_link_libraries(td3_simple PRIVATE td3learn)
+add_executable(demo demo.cpp)
+target_link_libraries(demo PRIVATE td3learn)
 
-install(TARGETS td3_simple
+install(TARGETS demo
     RUNTIME DESTINATION bin
 )
