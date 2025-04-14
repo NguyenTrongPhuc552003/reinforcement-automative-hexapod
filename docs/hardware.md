@@ -6,6 +6,8 @@ This document describes the hardware components of the hexapod robot and provide
 
 ![Hexapod Hardware Overview](../resource/overview.jpg)
 
+For detailed visual representation of hardware organization, see the [Component Diagram](diagrams/out/component.png) and [Deployment Diagram](diagrams/out/deployment.png).
+
 ## Robot Specifications
 
 | Parameter             | Value                                      |
@@ -93,9 +95,9 @@ The I2C bus 2 on BeagleBone is used for connecting sensors and actuators:
 
 | Device            | I2C Address | Bus | Description                          |
 |-------------------|-------------|-----|--------------------------------------|
-| MPU6050           | 0x68        | 2   | 6-axis IMU sensor                    |
-| PCA9685 Primary   | 0x40        | 2   | 16-channel PWM controller            |
-| PCA9685 Secondary | 0x70        | 2   | 16-channel PWM controller (optional) |
+| MPU6050           | 0x68        | 3   | 6-axis IMU sensor                    |
+| PCA9685 Primary   | 0x40        | 3   | 16-channel PWM controller            |
+| PCA9685 Secondary | 0x70        | 3   | 16-channel PWM controller (optional) |
 
 ### BeagleBone Pin Configuration
 
