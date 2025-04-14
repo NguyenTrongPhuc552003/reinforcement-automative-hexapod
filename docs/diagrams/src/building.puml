@@ -1,4 +1,4 @@
-@startuml Hexapod Build and Deployment Process
+@startuml building
 
 ' Apply a clear, readable visual theme
 !theme plain

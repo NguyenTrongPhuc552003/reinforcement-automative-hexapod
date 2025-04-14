@@ -1,4 +1,4 @@
-@startuml Hexapod Component Diagram - Hardware Focus
+@startuml component
 
 !theme plain
 skinparam {
