@@ -3,7 +3,6 @@
 ' Apply a clear, readable visual theme
 !theme plain
 skinparam {
-    BackgroundColor transparent
     ArrowColor #333333
     FontName Arial
     
