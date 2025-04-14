@@ -30,13 +30,15 @@ usage() {
     echo "  (no argument)     Build all components"
     echo "  -m, module        Build kernel modules"
     echo "  -u, user          Build user space programs"
+    echo "  -d, td3learn      Build TD3Learn reinforcement learning module"
+    echo "  -l, uml           Build UML diagrams (no Docker required)"
+    echo "  -t, utility       Create utility scripts (no Docker required)"
     echo "  -c, clean         Clean build artifacts"
-    echo "  -t, utility       Create utility scripts (install.sh, monitor.sh)"
     echo "  -n, --no-cache    Build all without cache"
     echo "  -h, --help        Show this help message"
-    echo "  -d, td3learn      Build TD3Learn reinforcement learning module"
     echo ""
     echo "Options can be combined, e.g., -mt to build modules & utility scripts"
+    echo "Note: UML diagrams (-l) and utility scripts (-t) can be built without Docker"
     echo ""
     exit 1
 }
@@ -127,21 +129,6 @@ build_user_space() {
     }
 }
 
-# Function to create utility scripts
-build_utility_scripts() {
-    log "${YELLOW}" "Copying utility scripts..."
-    
-    # Copy installation script
-    cp "${UTILS_DIR}/install.sh" "${DEPLOY_DIR}/"
-    chmod +x "${DEPLOY_DIR}/install.sh"
-    
-    # Copy monitoring script
-    cp "${UTILS_DIR}/monitor.sh" "${DEPLOY_DIR}/"
-    chmod +x "${DEPLOY_DIR}/monitor.sh"
-    
-    log "${GREEN}" "Utility scripts prepared successfully"
-}
-
 # Function to build TD3Learn module
 build_td3learn() {
     log "${YELLOW}" "Building TD3Learn module..."
@@ -171,21 +158,83 @@ build_td3learn() {
     fi
 }
 
+# Function to build UML diagrams using export.sh script (no Docker required)
+build_uml_diagrams() {
+    log "${YELLOW}" "Building UML diagrams..."
+    
+    # Check if export.sh exists
+    if [ ! -f "${PROJECT_ROOT}/scripts/export.sh" ]; then
+        log "${RED}" "export.sh not found in scripts directory!"
+        exit 1
+    fi
+    
+    # Run export.sh script directly (no Docker needed)
+    bash "${PROJECT_ROOT}/scripts/export.sh"
+}
+
+# Function to create utility scripts (no Docker required)
+build_utility_scripts() {
+    log "${YELLOW}" "Copying utility scripts..."
+    
+    # Create deploy directory if it doesn't exist
+    if [ ! -d "${DEPLOY_DIR}" ]; then
+        mkdir -p "${DEPLOY_DIR}"
+    fi
+    
+    # Copy installation script
+    if [ -f "${UTILS_DIR}/install.sh" ]; then
+        cp "${UTILS_DIR}/install.sh" "${DEPLOY_DIR}/"
+        chmod +x "${DEPLOY_DIR}/install.sh"
+        log "${GREEN}" "Copied install.sh to deploy directory"
+    else
+        log "${RED}" "install.sh not found in utils directory!"
+    fi
+    
+    # Copy monitoring script
+    if [ -f "${UTILS_DIR}/monitor.sh" ]; then
+        cp "${UTILS_DIR}/monitor.sh" "${DEPLOY_DIR}/"
+        chmod +x "${DEPLOY_DIR}/monitor.sh"
+        log "${GREEN}" "Copied monitor.sh to deploy directory"
+    else
+        log "${RED}" "monitor.sh not found in utils directory!"
+    fi
+    
+    log "${GREEN}" "Utility scripts prepared successfully"
+}
+
+# Function to clean UML diagrams (no Docker required)
+clean_uml_diagrams() {
+    log "${YELLOW}" "Cleaning UML diagram files..."
+    
+    # Check if export.sh exists
+    if [ ! -f "${PROJECT_ROOT}/scripts/export.sh" ]; then
+        log "${RED}" "export.sh not found in scripts directory!"
+        return 1
+    fi
+    
+    # Run export.sh script with clean option
+    bash "${PROJECT_ROOT}/scripts/export.sh" -c    
+}
+
 # Initialize option flags
 DO_CLEAN=0
 DO_MODULE=0
 DO_USER=0
 DO_UTILITY=0
+DO_UML=0
 DO_NO_CACHE=0
-DO_TD3LEARN=0  # Add this after DO_UTILITY=0
+DO_TD3LEARN=0
+DO_DOCKER_REQUIRED=0
 
 # Parse command-line arguments
 if [ $# -eq 0 ]; then
     # Default: build everything
     DO_MODULE=1
     DO_UTILITY=1
+    DO_UML=1
     DO_USER=1
     DO_TD3LEARN=1
+    DO_DOCKER_REQUIRED=1
 else
     for arg in "$@"; do
         if [[ "$arg" == "--no-cache" ]]; then
@@ -196,12 +245,17 @@ else
             DO_CLEAN=1
         elif [[ "$arg" == "module" || "$arg" == "-m"  ]]; then
             DO_MODULE=1
+            DO_DOCKER_REQUIRED=1
         elif [[ "$arg" == "user" || "$arg" == "-u"  ]]; then
             DO_USER=1
+            DO_DOCKER_REQUIRED=1
         elif [[ "$arg" == "utility" || "$arg" == "-t"  ]]; then
             DO_UTILITY=1
         elif [[ "$arg" == "td3learn" || "$arg" == "-d" ]]; then
             DO_TD3LEARN=1
+            DO_DOCKER_REQUIRED=1
+        elif [[ "$arg" == "uml" || "$arg" == "-l" ]]; then
+            DO_UML=1
         elif [[ "$arg" == -* && "$arg" != "--"* ]]; then
             # Process combined short options like -imu
             flags=${arg#-}
@@ -209,10 +263,11 @@ else
                 flag=${flags:$i:1}
                 case "$flag" in
                     c) DO_CLEAN=1 ;;
-                    m) DO_MODULE=1 ;;
-                    u) DO_USER=1 ;;
+                    m) DO_MODULE=1; DO_DOCKER_REQUIRED=1 ;;
+                    u) DO_USER=1; DO_DOCKER_REQUIRED=1 ;;
                     t) DO_UTILITY=1 ;;
-                    d) DO_TD3LEARN=1 ;;
+                    d) DO_TD3LEARN=1; DO_DOCKER_REQUIRED=1 ;;
+                    l) DO_UML=1 ;;
                     n) DO_NO_CACHE=1 ;;
                     h) usage ;;
                     *) 
@@ -232,25 +287,7 @@ fi
 if [ $DO_CLEAN -eq 1 ]; then
     log "${YELLOW}" "Cleaning build artifacts..."
     
-    # Check if Docker image exists before cleaning
-    if ! docker images | grep -q hexapod-builder; then
-        log "${YELLOW}" "Docker image doesn't exist, build first!"
-        exit 0
-    fi
-    
-    # Clean kernel driver and user space using Docker
-    docker run --rm \
-        -v "${KERNEL_MODULE_DIR}:/build/module" \
-        -v "${USER_SPACE_DIR}:/build/user" \
-        hexapod-builder clean || {
-        # If Docker image doesn't exist, that's fine - continue cleaning
-        if [ $? -ne 125 ]; then
-            log "${RED}" "Docker clean failed!"
-            exit 1
-        fi
-    }
-    
-    # Clean deploy directory with sudo if needed
+    # Clean deploy directory utility scripts (no Docker required)
     if [ -d "${DEPLOY_DIR}" ]; then
         log "${YELLOW}" "Cleaning deploy directory..."
         if ! rm -rf "${DEPLOY_DIR}" 2>/dev/null; then
@@ -259,64 +296,97 @@ if [ $DO_CLEAN -eq 1 ]; then
         fi
     fi
     
-    # Clean user space binaries with sudo if needed
-    if [ -d "${USER_SPACE_DIR}/bin" ]; then
-        log "${GREEN}" "Cleaning user space binaries..."
-        if ! rm -rf "${USER_SPACE_DIR}/bin" 2>/dev/null; then
-            log "${YELLOW}" "Using sudo to clean user space binaries..."
-            sudo rm -rf "${USER_SPACE_DIR}/bin"
+    # Docker-based cleaning (only if Docker is available)
+    if command -v docker &> /dev/null && docker images | grep -q hexapod-builder; then
+        log "${YELLOW}" "Cleaning Docker-based components..."
+        # Clean kernel driver and user space using Docker
+        docker run --rm \
+            -v "${KERNEL_MODULE_DIR}:/build/module" \
+            -v "${USER_SPACE_DIR}:/build/user" \
+            hexapod-builder clean || {
+            # If Docker run failed for a reason other than missing image
+            if [ $? -ne 125 ]; then
+                log "${RED}" "Docker clean failed!"
+                exit 1
+            fi
+        }
+        
+        # Clean user space binaries with sudo if needed
+        if [ -d "${USER_SPACE_DIR}/bin" ]; then
+            log "${GREEN}" "Cleaning user space binaries..."
+            if ! rm -rf "${USER_SPACE_DIR}/bin" 2>/dev/null; then
+                log "${YELLOW}" "Using sudo to clean user space binaries..."
+                sudo rm -rf "${USER_SPACE_DIR}/bin"
+            fi
         fi
+
+        # Clean TD3Learn build directory with sudo if needed
+        if [ -d "${TD3_LEARN_DIR}/build" ]; then
+            log "${GREEN}" "Cleaning TD3Learn build directory..."
+            if ! rm -rf "${TD3_LEARN_DIR}/build" 2>/dev/null; then
+                log "${YELLOW}" "Using sudo to clean TD3Learn build directory..."
+                sudo rm -rf "${TD3_LEARN_DIR}/build"
+            fi
+        fi
+    else
+        log "${YELLOW}" "Docker not available or image doesn't exist, skipping Docker-based cleaning"
     fi
 
-    # Clean TD3Learn build directory with sudo if needed
-    if [ -d "${TD3_LEARN_DIR}/build" ]; then
-        log "${GREEN}" "Cleaning TD3Learn build directory..."
-        if ! rm -rf "${TD3_LEARN_DIR}/build" 2>/dev/null; then
-            log "${YELLOW}" "Using sudo to clean TD3Learn build directory..."
-            sudo rm -rf "${TD3_LEARN_DIR}/build"
-        fi
-    fi
+    # Clean UML diagrams without requiring Docker
+    clean_uml_diagrams
     
     log "${GREEN}" "Clean completed successfully!"
     exit 0
 fi
 
-# Handle Docker image building with or without cache
-if [ $DO_NO_CACHE -eq 1 ]; then
-    # Remove Docker image if it exists
-    if docker images | grep -q hexapod-builder; then
-        log "${GREEN}" "Removing Docker image..."
-        docker rmi hexapod-builder || true
-    fi
-    build_docker_image "--no-cache"
-else
-    build_docker_image ""
-fi
-
-# Build requested components
+# Components that don't require Docker can be built first
 COMPONENTS_BUILT=0
 
-if [ $DO_MODULE -eq 1 ]; then
-    build_kernel_module
-    log "${GREEN}" "Kernel modules build completed successfully!"
-    COMPONENTS_BUILT=1
-fi
-
+# Build utility scripts (no Docker required)
 if [ $DO_UTILITY -eq 1 ]; then
     build_utility_scripts
     log "${GREEN}" "Utility scripts created successfully!"
     COMPONENTS_BUILT=1
 fi
 
-if [ $DO_USER -eq 1 ]; then
-    build_user_space
-    log "${GREEN}" "User space programs build completed successfully!"
-    COMPONENTS_BUILT=1
+# Build UML diagrams (no Docker required)
+if [ $DO_UML -eq 1 ]; then
+    build_uml_diagrams
+    # COMPONENTS_BUILT=1
 fi
 
-# Build TD3Learn if requested
-if [ $DO_TD3LEARN -eq 1 ]; then
-    build_td3learn || EXIT_CODE=1
+# Only prepare Docker if needed for other components
+if [ $DO_DOCKER_REQUIRED -eq 1 ]; then
+    # Handle Docker image building with or without cache
+    if [ $DO_NO_CACHE -eq 1 ]; then
+        # Remove Docker image if it exists
+        if docker images | grep -q hexapod-builder; then
+            log "${GREEN}" "Removing Docker image..."
+            docker rmi hexapod-builder || true
+        fi
+        build_docker_image "--no-cache"
+    else
+        build_docker_image ""
+    fi
+
+    # Build Docker-dependent components
+    if [ $DO_MODULE -eq 1 ]; then
+        build_kernel_module
+        log "${GREEN}" "Kernel modules build completed successfully!"
+        COMPONENTS_BUILT=1
+    fi
+
+    if [ $DO_USER -eq 1 ]; then
+        build_user_space
+        log "${GREEN}" "User space programs build completed successfully!"
+        COMPONENTS_BUILT=1
+    fi
+
+    # Build TD3Learn if requested
+    if [ $DO_TD3LEARN -eq 1 ]; then
+        build_td3learn || EXIT_CODE=1
+        COMPONENTS_BUILT=1
+    fi
 fi
 
 # Print overall success message if anything was built

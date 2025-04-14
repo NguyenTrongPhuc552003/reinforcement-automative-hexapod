@@ -13,18 +13,16 @@ skinparam ArrowColor #A80036
 node "BeagleBone AI" as sbc {
   frame "User Space" {
     artifact "Applications" as app {
-      artifact "hexapod_app" #ADD8E6
+      artifact "hexapod_controller" #ADD8E6
       artifact "test_servo"
       artifact "test_movement"
       artifact "test_balance"
       artifact "test_calibration"
-      artifact "td3learn_app" #ADD8E6
+      artifact "test_mpu6050"
+      artifact "td3learn_deploy" #ADD8E6
     }
     
-    artifact "Libraries" as lib {
-      artifact "libhexapod.so" #ADD8E6
-      artifact "libtd3learn.a" #ADD8E6
-    }
+    ' Direct connection from applications to device nodes without middleware libraries
   }
   
   frame "Kernel Space" {
@@ -32,6 +30,7 @@ node "BeagleBone AI" as sbc {
       artifact "hexapod_driver.ko" #ADD8E6
       artifact "pca9685.ko" #ADD8E6
       artifact "mpu6050.ko" #ADD8E6
+      artifact "servo.ko" #ADD8E6
     }
     
     artifact "Device Nodes" as device {
@@ -68,8 +67,7 @@ artifact "Servo Motors (18x)" as servos {
 }
 
 ' Connections based on actual system architecture
-app --> lib : <<uses>>
-lib --> device : <<reads/writes>>
+app --> device : <<reads/writes>>
 device --> driver : <<managed by>>
 driver --> pca9685 : <<I2C@0x40,0x41>>
 driver --> mpu6050 : <<I2C@0x68>>
@@ -82,14 +80,6 @@ note right of app
   - Autonomous movement
   - Calibration utilities 
   - TD3 reinforcement learning
-end note
-
-note right of lib
-  Provides C++ API for:
-  - Hardware abstraction
-  - Kinematics calculations
-  - Gait generation
-  - Calibration management
 end note
 
 note right of driver

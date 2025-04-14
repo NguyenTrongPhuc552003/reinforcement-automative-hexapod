@@ -1,4 +1,4 @@
-@startuml Hexapod Component Diagram
+@startuml Hexapod Component Diagram - Hardware Focus
 
 !theme plain
 skinparam {
@@ -15,92 +15,129 @@ skinparam {
     shadowing false
 }
 
-' Package definitions
-package "User Interface Layer" {
+' Package definitions for other layers (simplified)
+package "User Interface Layer" #EEEEFF {
     [Hexapod User Interface] as UI
-    interface "User Input" as UserInput
 }
 
-package "Application Layer" {
+package "Application Layer" #EEEEFF {
     [Application Controller] as App
     [Hexapod Controller] as Controller
 }
 
-package "Motion Control Layer" {
+package "Motion Control Layer" #EEEEFF {
     [Gait Generator] as Gait
     [Kinematics Engine] as Kinematics
     [Calibration Manager] as Calibration
-    database "Calibration Files" as CalibrationFiles
 }
 
-package "Hardware Layer" {
-    [Hexapod Hardware Interface] as HexapodIF
-    [Kernel Driver] as Driver
-    interface "Hardware Control" as HardwareControl
-    interface "Device IO" as DeviceIO
-    interface "/dev/hexapod" as DevNode
+' Hardware Layer - Enhanced and improved
+package "Hardware Layer" #E8F8E8 {
+    ' Software components
+    package "Software Interface" #FFFFFF {
+        [Hexapod Hardware Interface] as HexapodIF
+        interface "/dev/hexapod" as DevNode
+    }
+    
+    ' Kernel driver subsystem
+    package "Kernel Drivers" #FFFAF0 {
+        [hexapod_driver.ko] as MainDriver
+        [pca9685.ko] as PWMDriver
+        [mpu6050.ko] as IMUDriver
+        [servo.ko] as ServoDriver
+    }
+    
+    ' Physical hardware components
+    package "Physical Hardware" #F0FFF0 {
+        ' Controllers
+        package "Controllers" #FFFFFF {
+            [PCA9685 Primary (0x40)] as PWM1
+            [PCA9685 Secondary (0x41)] as PWM2
+            [MPU6050 IMU (0x68)] as IMU
+        }
+        
+        ' Servo motors organized by leg
+        package "Servo Motors" #FFFFFF {
+            package "Left Side" {
+                [Front Left Servos (3x)] as FL
+                [Middle Left Servos (3x)] as ML
+                [Rear Left Servos (3x)] as RL
+            }
+            package "Right Side" {
+                [Front Right Servos (3x)] as FR
+                [Middle Right Servos (3x)] as MR
+                [Rear Right Servos (3x)] as RR
+            }
+        }
+    }
+    
+    ' I2C Bus interface
+    interface "I2C Bus" as I2CBus
 }
 
-' Relationships
-UI - UserInput
-UserInput - App
+' Connections between hardware components
+' Application to driver interface
+Controller --> HexapodIF
+HexapodIF --> DevNode : uses
+DevNode --> MainDriver : provides
 
-App -> Controller
-Controller --> Gait : commands
-Controller --> HexapodIF : direct control
-Gait --> Kinematics : calculates
-Gait --> HexapodIF : positions
-Kinematics --> HexapodIF : joint angles
-Calibration --> HexapodIF : offsets
+' Driver hierarchy
+MainDriver --> PWMDriver : loads
+MainDriver --> IMUDriver : loads
+MainDriver --> ServoDriver : loads
 
-HexapodIF - HardwareControl
-HardwareControl - Driver
-Driver - DeviceIO
-DeviceIO - DevNode
+' I2C communications
+PWMDriver --> I2CBus : writes
+IMUDriver --> I2CBus : reads/writes
 
-Calibration ..> CalibrationFiles : reads/writes
+' Hardware connections
+I2CBus --> PWM1 : 0x40
+I2CBus --> PWM2 : 0x41
+I2CBus --> IMU : 0x68
 
-' Notes
+' PWM Controllers to servos
+PWM1 --> FL : "PWM Channels 0-2"
+PWM1 --> ML : "PWM Channels 3-5"
+PWM1 --> RL : "PWM Channels 6-8"
+PWM2 --> FR : "PWM Channels 0-2"
+PWM2 --> MR : "PWM Channels 3-5"
+PWM2 --> RR : "PWM Channels 6-8"
+
+' Notes for clarity
 note right of HexapodIF
-  Provides unified interface to hardware
-  through kernel driver
+  C++ class that abstracts
+  the hardware details
+  from higher-level code
 end note
 
-note right of Gait
-  Implements different walking patterns:
-  - Tripod gait
-  - Wave gait
-  - Ripple gait
+note bottom of MainDriver
+  Core kernel module that
+  coordinates all hardware
+  communication
 end note
 
-note right of Kinematics
-  Performs forward and inverse
-  kinematics calculations
+note right of I2CBus
+  I2C Bus 3 on BeagleBone
+  SCL: P9_19, SDA: P9_20
 end note
 
-note left of Driver
-  Kernel module that handles:
-  - Servo control via I2C
-  - IMU data via I2C
-  - Error handling & recovery
-end note
-
-note bottom of App
-  Manages application lifecycle,
-  user input, and coordinates 
-  system components
-end note
-
-note right of Calibration
-  Manages servo calibration offsets
-  to compensate for mechanical variations
+note bottom of PWM2
+  Each controller provides
+  16 PWM channels at 50Hz
+  with 12-bit resolution
 end note
 
 ' Legend
 legend right
-  Hexapod Control System - Component Architecture
+  Hexapod Hardware Architecture
   --
-  Shows primary components and their relationships
+  Color coding:
+  ■ Software Interface
+  ■ Kernel Drivers
+  ■ Physical Hardware  
+  
+  Each leg has 3 servos: 
+  hip, knee, and ankle joints
 endlegend
 
 @enduml
