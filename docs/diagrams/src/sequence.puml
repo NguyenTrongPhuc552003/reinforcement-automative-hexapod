@@ -1,194 +1,241 @@
-@startuml Hexapod Sequence Diagram
+@startuml Hexapod Operation Sequence with Enhanced Hardware Visibility
 
+' Custom styling for better readability
 !theme plain
 skinparam {
-    SequenceArrowThickness 1
-    SequenceGroupBodyBackgroundColor #FEFECE
-    SequenceGroupBorderColor #A80036
-    SequenceLifeLineBorderColor #A80036
-    SequenceLifeLineBackgroundColor #FEFECE
-    ParticipantBorderColor #A80036
+    SequenceArrowThickness 1.5
+    SequenceGroupBodyBackgroundColor #F5F5F5
+    SequenceGroupBorderColor #888888
+    SequenceLifeLineBorderColor #666666
+    SequenceLifeLineBackgroundColor #FEFEFE
+    ParticipantBorderColor #666666
     ParticipantBackgroundColor #FEFECE
-    ActorBorderColor #A80036
+    ActorBorderColor #666666
     ActorBackgroundColor #FEFECE
     defaultFontName Arial
-    NoteBorderColor #A80036
-    NoteBackgroundColor #FDFDFD
+    NoteBorderColor #888888
+    NoteBackgroundColor #FFFFDD
+    SequenceGroupFontStyle bold
+    SequenceGroupFontSize 14
+    SequenceBoxBackgroundColor #E0EFEF
 }
 
-' Participants
+' Participants with more meaningful names and grouping
 actor "User" as User
-participant "App" as App
-participant "Controller" as Controller
-participant "Gait" as Gait
-participant "Kinematics" as Kinematics
-participant "Hexapod" as Hexapod
-participant "Driver" as Driver
-participant "Hardware" as Hardware
+box "Software Layer" #EEEEFF
+    participant "Application" as App
+    participant "Controller" as Controller
+    participant "Gait Generator" as Gait
+    participant "Kinematics Engine" as Kinematics
+    participant "Hardware Interface" as Hexapod
+endbox
 
-' Title
-title Hexapod Operation Sequence
+box "Hardware Layer" #FFE8E8
+    participant "Kernel Driver" as Driver
+    participant "Physical Hardware" as Hardware
+endbox
 
-' Startup sequence
-group Startup Sequence
-    User -> App: launch()
+' Title with better description
+title Hexapod Robot System - Operation Sequence with Hardware Focus
+
+' Startup sequence with clearer hardware interactions
+group "System Initialization"
+    User -> App: launch application
     activate App
     
-    App -> Hexapod: initialize()
+    App -> Hexapod: initialize hardware interface
     activate Hexapod
     
-    Hexapod -> Driver: open("/dev/hexapod")
+    note right of Hexapod: Hardware interface opens communication\nwith the kernel driver
+    Hexapod -> Driver: open device ("/dev/hexapod")
     activate Driver
     
-    Driver -> Hardware: initialize hardware
+    Driver -> Hardware: initialize hardware components
     activate Hardware
-    Hardware --> Driver: initialized
+    note right of Hardware: Powers up servos and sensors
+    note right of Hardware: Sets PWM controllers to 50Hz
+    note right of Hardware: Configures I2C communication
+    Hardware --> Driver: initialization complete
     deactivate Hardware
     
-    Driver --> Hexapod: file descriptor
+    Driver --> Hexapod: file descriptor for I/O operations
     deactivate Driver
     
-    Hexapod -> Hexapod: configDefaults()
-    Hexapod --> App: ready
+    Hexapod --> App: hardware interface ready
     deactivate Hexapod
     
-    App -> Controller: initialize()
+    App -> Controller: initialize motion controller
     activate Controller
-    Controller -> Gait: initialize()
+    Controller -> Gait: initialize gait patterns
     activate Gait
-    Gait --> Controller: ready
+    Gait --> Controller: gait patterns ready
     deactivate Gait
-    Controller --> App: ready
+    Controller --> App: controller ready
     deactivate Controller
     
-    App -> Hexapod: centerAll()
+    ' Center legs at startup - important hardware interaction
+    App -> Hexapod: position legs in centered pose
     activate Hexapod
     Hexapod -> Driver: ioctl(HEXAPOD_IOCTL_CENTER_ALL)
     activate Driver
-    Driver -> Hardware: center servos
+    
+    note right of Driver: Driver processes center-all command\nand translates to hardware signals
+    
+    Driver -> Hardware: send PWM signals to center all servos
     activate Hardware
-    Hardware --> Driver: done
+    note right of Hardware: All 18 servos receive 1.5ms pulses\n(neutral position at 0 degrees)
+    Hardware --> Driver: servos positioned
     deactivate Hardware
-    Driver --> Hexapod: success
+    
+    Driver --> Hexapod: operation complete
     deactivate Driver
-    Hexapod --> App: ready
+    
+    Hexapod --> App: legs centered
     deactivate Hexapod
     
-    App --> User: system ready
+    App --> User: system ready for operation
 end
 
-' Main loop
-group Main Loop
-    loop while running
-        User -> App: processInput()
+' Main operation loop with enhanced hardware details
+group "Operation Cycle"
+    loop while system is running
+        User -> App: input command (key press)
         activate App
         
         App -> Controller: update(input, deltaTime)
         activate Controller
         
-        alt walking mode
+        alt Walking Mode
             Controller -> Gait: update(direction, speed)
             activate Gait
             
-            loop for each leg
-                Gait -> Gait: calculateLegPhase()
-                Gait -> Gait: computeLegTrajectory()
-                
-                Gait -> Kinematics: inverseKinematics(position)
+            loop for each leg (6 legs)
+                Gait -> Gait: calculate leg trajectory
+                Gait -> Kinematics: calculate joint angles
                 activate Kinematics
-                Kinematics --> Gait: joint angles
+                Kinematics --> Gait: joint angles for leg
                 deactivate Kinematics
                 
+                ' Hardware interaction for leg movement
                 Gait -> Hexapod: setLegPosition(leg, angles)
                 activate Hexapod
-                Hexapod -> Driver: ioctl(HEXAPOD_IOCTL_SET_LEG)
+                
+                Hexapod -> Driver: ioctl(HEXAPOD_IOCTL_SET_LEG, leg_cmd)
                 activate Driver
-                Driver -> Hardware: set servo positions
+                note right of Driver: Driver converts angular positions\nto PWM timing values
+                
+                Driver -> Hardware: set PWM signals for leg servos
                 activate Hardware
-                Hardware --> Driver: servos updated
+                note right of Hardware: Three servo signals updated per leg:\n- Hip servo: horizontal movement\n- Knee servo: vertical bend\n- Ankle servo: foot angle
+                Hardware --> Driver: PWM signals updated
                 deactivate Hardware
-                Driver --> Hexapod: success
+                
+                Driver --> Hexapod: leg position updated
                 deactivate Driver
                 Hexapod --> Gait: position set
                 deactivate Hexapod
             end
             
-            Gait --> Controller: update complete
+            Gait --> Controller: gait cycle updated
             deactivate Gait
             
-        else balance mode
-            Controller -> Hexapod: getImuData()
+        else Balance Mode
+            ' IMU sensor reading - important hardware interaction
+            Controller -> Hexapod: read orientation sensors
             activate Hexapod
+            
             Hexapod -> Driver: ioctl(HEXAPOD_IOCTL_GET_IMU)
             activate Driver
-            Driver -> Hardware: read IMU
+            
+            note right of Driver: Driver reads data from MPU6050 IMU sensor\nvia I2C bus (address 0x68)
+            
+            Driver -> Hardware: read acceleration and gyroscope data
             activate Hardware
-            Hardware --> Driver: IMU data
+            note right of Hardware: I2C read registers 0x3B-0x48:\n- 3 acceleration axes (X,Y,Z)\n- 3 rotation rate axes (X,Y,Z)
+            Hardware --> Driver: raw sensor values
             deactivate Hardware
-            Driver --> Hexapod: IMU data
+            
+            Driver --> Hexapod: IMU data structure
             deactivate Driver
-            Hexapod --> Controller: IMU data
+            
+            Hexapod --> Controller: orientation data
             deactivate Hexapod
             
-            Controller -> Controller: calculateTilt()
-            Controller -> Controller: applyBalanceAdjustments()
+            Controller -> Controller: calculate tilt compensation
             
+            ' Apply balance adjustments to legs
             loop for each leg
-                Controller -> Kinematics: inverseKinematics(position)
+                Controller -> Kinematics: calculate compensated joint angles
                 activate Kinematics
-                Kinematics --> Controller: joint angles
+                Kinematics --> Controller: adjusted angles
                 deactivate Kinematics
                 
-                Controller -> Hexapod: setLegPosition(leg, angles)
+                Controller -> Hexapod: setLegPosition with balance adjustment
                 activate Hexapod
+                
                 Hexapod -> Driver: ioctl(HEXAPOD_IOCTL_SET_LEG)
                 activate Driver
-                Driver -> Hardware: set servo positions
+                Driver -> Hardware: update servo positions
                 activate Hardware
-                Hardware --> Driver: servos updated
+                Hardware --> Driver: servo positions updated
                 deactivate Hardware
-                Driver --> Hexapod: success
+                Driver --> Hexapod: leg adjusted
                 deactivate Driver
-                Hexapod --> Controller: position set
+                
+                Hexapod --> Controller: adjustment applied
                 deactivate Hexapod
             end
         end
         
-        Controller --> App: update complete
+        Controller --> App: control cycle complete
         deactivate Controller
         
-        App -> App: processInput() (non-blocking)
-        App -> App: sleep to maintain frame rate
-        App --> User: display telemetry (if enabled)
+        App -> App: update telemetry display
+        
+        ' Maintain timing with sleep
+        App -> App: sleep to maintain target frame rate
+        
+        App --> User: updated robot state
         deactivate App
     end
 end
 
-' Shutdown sequence
-group Shutdown Sequence
-    User -> App: processKey('q')
+' Shutdown sequence with hardware details
+group "System Shutdown"
+    User -> App: terminate application (quit command)
     activate App
-    App -> App: running = false
     
-    App -> Hexapod: centerAll()
+    ' Safe shutdown - center legs
+    App -> Hexapod: center all legs for safe shutdown
     activate Hexapod
+    
     Hexapod -> Driver: ioctl(HEXAPOD_IOCTL_CENTER_ALL)
     activate Driver
-    Driver -> Hardware: center all servos
+    
+    note right of Driver: Driver prepares for safe shutdown\nby positioning all legs in neutral stance
+    
+    Driver -> Hardware: set all servos to center position
     activate Hardware
+    note right of Hardware: All servos return to 1.5ms pulse width\n(neutral position)
     Hardware --> Driver: servos centered
     deactivate Hardware
-    Driver --> Hexapod: success
+    
+    Driver --> Hexapod: centering complete
     deactivate Driver
-    Hexapod --> App: all legs centered
+    
+    Hexapod --> App: robot in safe position
     deactivate Hexapod
     
-    App -> Hexapod: cleanup()
+    ' Release hardware resources
+    App -> Hexapod: release hardware resources
     activate Hexapod
+    
     Hexapod -> Driver: close(fd)
     activate Driver
-    Driver --> Hexapod: closed
+    note right of Driver: Driver performs cleanup:\n- Disables PWM outputs\n- Puts IMU in sleep mode\n- Releases I2C bus
+    Driver --> Hexapod: resources released
     deactivate Driver
+    
     Hexapod --> App: cleanup complete
     deactivate Hexapod
     
@@ -199,9 +246,13 @@ end
 
 ' Footer
 legend right
-  Hexapod System - Operation Sequence
+  <b>Hexapod Robot System Operation</b>
   --
-  Shows startup, operation, and shutdown sequence
+  Hardware Layer Details:
+  • 18 Servos (3 per leg) via PCA9685 PWM controllers
+  • MPU6050 IMU for orientation sensing
+  • I2C bus communication (address 0x40, 0x41, 0x68)
+  • 50Hz PWM signal for servo control (1-2ms pulse width)
 endlegend
 
 @enduml

@@ -1,0 +1,209 @@
+@startuml Hexapod Build and Deployment Process
+
+' Apply a clear, readable visual theme
+!theme plain
+skinparam {
+    BackgroundColor transparent
+    ArrowColor #333333
+    FontName Arial
+    
+    rectangleBackgroundColor<<source>> #E1F5FE
+    rectangleBorderColor<<source>> #0288D1
+    
+    rectangleBackgroundColor<<build>> #FFF3E0
+    rectangleBorderColor<<build>> #FF9800
+    
+    rectangleBackgroundColor<<target>> #E8F5E9
+    rectangleBorderColor<<target>> #4CAF50
+    
+    componentBackgroundColor #FFFFFF
+    componentBorderColor #666666
+    
+    fileBackgroundColor #FFFDE7
+    fileBorderColor #FBC02D
+    
+    noteBackgroundColor #FAFAFA
+    noteBorderColor #BDBDBD
+    
+    activityBackgroundColor #FFFFFF
+    activityBorderColor #666666
+    
+    legendBackgroundColor #FAFAFA
+    legendBorderColor #BDBDBD
+}
+
+' Title
+title <font size=20><b>Hexapod Robot Build and Deployment Process</b></font>
+
+' ARCHITECTURE OVERVIEW
+' =============================================================================
+
+' Development host environment
+rectangle "Development Host" as dev_host <<source>> {
+    rectangle "Source Code Repository" as src {
+        component "Kernel Modules\n(/driver)" as kernel_src
+        component "User Applications\n(/app)" as app_src
+        component "Machine Learning\n(/td3learn)" as ml_src
+        component "Utilities\n(/utils)" as util_src
+        component "Build Scripts\n(/scripts)" as build_scripts
+    }
+}
+
+' Build environment
+rectangle "Build Environment (Docker)" as build_env <<build>> {
+    rectangle "Cross-Compilation Tools" as tools {
+        component "ARM Cross-Compiler" as cross
+        component "BeagleBone Kernel Headers" as kernel_headers
+        component "Build System" as build_system
+    }
+    
+    rectangle "Build Outputs" as build_out {
+        file "hexapod_driver.ko" as driver_ko
+        file "pca9685.ko" as pca_ko
+        file "mpu6050.ko" as mpu_ko
+        file "servo.ko" as servo_ko
+        file "hexapod_controller" as controller_bin
+        file "td3learn_deploy" as td3_bin
+        file "install.sh" as install_sh
+    }
+}
+
+' Target device
+rectangle "BeagleBone AI (Target)" as target <<target>> {
+    rectangle "Kernel Space" as kernel_space {
+        component "Loaded Kernel Modules" as loaded_modules
+        file "/dev/hexapod" as dev_hexapod
+        file "/dev/i2c-3" as dev_i2c
+    }
+    
+    rectangle "User Space" as user_space {
+        component "Running Applications" as apps
+    }
+    
+    rectangle "Hardware" as hardware {
+        component "PCA9685 PWM Controllers" as pwm_controllers
+        component "MPU6050 IMU" as imu
+        component "18× Servo Motors" as servos
+    }
+}
+
+' BUILD PROCESS
+' =============================================================================
+
+' Steps in the build process with numbered connections
+dev_host --> build_env: <b>1.</b> Start Docker build container
+build_scripts --> tools: <b>2.</b> Configure build environment
+kernel_src --> driver_ko: <b>3a.</b> Compile kernel modules
+app_src --> controller_bin: <b>3b.</b> Compile user applications
+ml_src --> td3_bin: <b>3c.</b> Compile ML components
+util_src --> install_sh: <b>3d.</b> Copy installation utilities
+
+' Group build outputs into a deploy package
+rectangle "Deployment Package" as deploy <<build>> {
+    file "/deploy/*.*" as deploy_files
+}
+
+build_out --> deploy: <b>4.</b> Package artifacts
+deploy --> target: <b>5.</b> SCP transfer to target
+
+' DEPLOYMENT PROCESS
+' =============================================================================
+
+' Show deployment steps on target
+deploy --> loaded_modules: <b>6.</b> insmod via install.sh
+loaded_modules --> dev_hexapod: <b>7.</b> Create device nodes
+loaded_modules --> dev_i2c: <b>8.</b> Configure I2C bus
+dev_hexapod --> apps: <b>9.</b> User applications access device
+apps --> hardware: <b>10.</b> Control hardware
+
+' Hardware connections
+loaded_modules -[#0000FF]-> pwm_controllers: I2C communication
+loaded_modules -[#0000FF]-> imu: I2C communication
+pwm_controllers -[#008800]-> servos: PWM signals
+
+' EXPLANATORY NOTES
+' =============================================================================
+
+note right of src
+  <b>Project Structure:</b>
+  • driver/ - Kernel modules source
+  • app/ - C++ application source
+  • td3learn/ - ML reinforcement learning
+  • utils/ - Installation utilities
+  • scripts/ - Build automation
+end note
+
+note right of tools
+  <b>Docker-based Build Environment:</b>
+  • ARM GCC 8+ cross-compiler
+  • BeagleBone kernel headers
+  • Host: x86_64 Linux
+  • Target: ARM Cortex-A15
+end note
+
+note right of deploy
+  <b>Deployment Package:</b>
+  • Kernel modules (.ko files)
+  • User applications (binaries)
+  • Installation scripts
+  • Configuration files
+end note
+
+note right of hardware
+  <b>Hardware Components:</b>
+  • 2× PCA9685 PWM controllers (I2C)
+  • MPU6050 IMU sensor (I2C)
+  • 18 servo motors (3 per leg × 6 legs)
+  • BeagleBone AI processor
+end note
+
+' Build pipeline activity diagram
+rectangle "Build Pipeline Workflow" as build_pipeline {
+    card "Docker build" as docker_build #FFFFFF
+    card "Module build" as module_build #FFFFFF
+    card "User app build" as user_build #FFFFFF
+    card "ML build" as ml_build #FFFFFF
+    card "Packaging" as packaging #FFFFFF
+    card "Deploy" as deploy_step #FFFFFF
+    card "Install" as install #FFFFFF
+
+    docker_build -down-> module_build
+    docker_build -down-> user_build
+    docker_build -down-> ml_build
+    
+    module_build -down-> packaging
+    user_build -down-> packaging
+    ml_build -down-> packaging
+    
+    packaging -down-> deploy_step
+    deploy_step -down-> install
+}
+
+' LEGEND
+' =============================================================================
+
+legend right
+  <b>Hexapod Cross-Compilation & Deployment</b>
+  --
+  <b>Color Legend:</b>
+  <back:#E1F5FE>■</back> Development Environment
+  <back:#FFF3E0>■</back> Build Environment
+  <back:#E8F5E9>■</back> Target Hardware
+  
+  <b>Arrow Types:</b>
+  ───► : Build/Deploy Flow
+  <color #0000FF>───►</color> : I2C Communication
+  <color #008800>───►</color> : PWM Control Signals
+  
+  <b>Build Environment:</b>
+  • Debian-based Docker container
+  • ARM cross-compiler toolchain (GCC 8+)
+  • BeagleBone AI kernel headers
+  
+  <b>Target Hardware:</b>
+  • BeagleBone AI (ARM Cortex-A15)
+  • I2C-connected peripherals
+  • 18 PWM-controlled servos
+endlegend
+
+@enduml

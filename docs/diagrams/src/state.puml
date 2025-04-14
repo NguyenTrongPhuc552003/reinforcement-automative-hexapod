@@ -1,93 +1,170 @@
-@startuml Hexapod Controller State Diagram
+@startuml Hexapod Hardware State Diagram
 
 !theme plain
-skinparam stateBackgroundColor #FEFECE
-skinparam stateBorderColor #A80036
-skinparam stateArrowColor #A80036
-skinparam stateFontStyle bold
-
-' Main states based on ControllerState enum
-state IDLE {
-  state "Standing Position" as standing
-  standing: All legs in neutral position
-  standing: Ready to receive commands
+' Use better color scheme for hardware states
+skinparam {
+    stateBackgroundColor #E2F0FF
+    stateBorderColor #3C7FC0
+    stateArrowColor #3C7FC0
+    stateFontStyle bold
+    
+    stateAttributeFontColor #1A4473
+    stateAttributeFontStyle italic
+    
+    legendBackgroundColor #FAFAFA
+    legendBorderColor #D0D0D0
+    
+    stateStartColor #28A745
+    stateEndColor #DC3545
+    
+    noteBorderColor #FFB266
+    noteBackgroundColor #FFEED9
+    noteFontColor #663500
 }
 
-state WALKING {
-  state "Forward/Backward Movement" as walking
-  walking: Direction: 0° to 359° 
-  walking: Primary directions:
-  walking: - 0° (forward)
-  walking: - 180° (backward)
-  walking: Speed: 0.0-1.0
+' Title
+title Hexapod Robot - Hardware Component States
+
+' Overall hardware system state
+state "Hardware System" as SystemState {
+
+    ' PWM Controller states
+    state "PWM Controllers (PCA9685)" as PWMState {
+        state "Hardware Reset" as PWM_RESET
+        state "Sleep Mode" as PWM_SLEEP
+        state "Active Mode" as PWM_ACTIVE
+        state "All Outputs On" as PWM_ALL_ON
+        state "All Outputs Off" as PWM_ALL_OFF
+        
+        ' Transitions
+        [*] --> PWM_RESET : pca9685_init() [resets both controllers]
+        PWM_RESET --> PWM_SLEEP : Reset complete [MODE1 | SLEEP bit = 1]
+        PWM_SLEEP --> PWM_SLEEP : Set frequency [update prescale register]
+        PWM_SLEEP --> PWM_ACTIVE : Enable auto-increment [MODE1 | AI bit = 1]
+        PWM_ACTIVE --> PWM_ALL_OFF : Disable outputs
+        PWM_ACTIVE --> PWM_ALL_ON : Enable outputs
+        PWM_ALL_OFF --> PWM_ACTIVE : Resume normal operation
+        PWM_ALL_ON --> PWM_ACTIVE : Resume normal operation
+        PWM_ACTIVE --> PWM_SLEEP : Prepare for shutdown
+    }
+    
+    ' IMU Sensor states
+    state "IMU Sensor (MPU6050)" as IMUState {
+        state "Power Down" as IMU_OFF
+        state "Power Reset" as IMU_RESET
+        state "Sleep Mode" as IMU_SLEEP
+        state "Active Mode" as IMU_ACTIVE
+        
+        ' Transitions
+        [*] --> IMU_OFF : Before initialization
+        IMU_OFF --> IMU_RESET : mpu6050_init() [reset bit = 1]
+        IMU_RESET --> IMU_SLEEP : Reset complete [delay 100ms]
+        IMU_SLEEP --> IMU_ACTIVE : Wake up [PWR_MGMT_1 = CLOCK_PLL]
+        IMU_ACTIVE --> IMU_SLEEP : Enter sleep [PWR_MGMT_1 | SLEEP_BIT]
+        IMU_ACTIVE --> IMU_ACTIVE : Read sensors [read registers 0x3B-0x48]
+    }
+    
+    ' Servo Motors states
+    state "Servo Motors (18x)" as ServoState {
+        state "Unpowered" as SERVO_OFF
+        state "Centered Position" as SERVO_CENTER
+        state "Active Movement" as SERVO_ACTIVE
+        state "Calibrated Position" as SERVO_CALIBRATED
+        
+        ' Transitions
+        [*] --> SERVO_OFF : Before initialization
+        SERVO_OFF --> SERVO_CENTER : servo_init() [center all servos]
+        SERVO_CENTER --> SERVO_ACTIVE : servo_set_angle() [move to position]
+        SERVO_ACTIVE --> SERVO_CALIBRATED : servo_set_calibration() [apply offsets]
+        SERVO_CALIBRATED --> SERVO_ACTIVE : Continuous movement
+        SERVO_ACTIVE --> SERVO_CENTER : servo_center_all() [safety position]
+    }
+    
+    ' Detailed notes for hardware states
+    note bottom of PWMState
+      50Hz PWM frequency for servo control
+      Each controller: 16 channels, 12-bit resolution
+      Primary controller (0x40): legs 0,1,2
+      Secondary controller (0x41): legs 3,4,5
+    end note
+    
+    note bottom of IMUState
+      MPU6050 at I2C address 0x68
+      Sample rate: 200Hz (1kHz/(1+4))
+      Digital low-pass filter: 10Hz cutoff
+      16-bit ADC for all measurements
+    end note
+    
+    note bottom of ServoState
+      Pulse width: 1000μs - 2000μs
+      1500μs = neutral (0°)
+      ±500μs = ±90° range
+      
+      Per-leg calibration offsets stored
+      in non-volatile memory
+    end note
 }
 
-state ROTATING {
-  state "Turning Movement" as rotating
-  rotating: Direction: clockwise/counter-clockwise
-  rotating: Speed: 0.0-1.0
+' I2C Bus states
+state "I2C Bus" as I2CBus {
+    state "Idle" as I2C_IDLE
+    state "Write Transmission" as I2C_WRITE
+    state "Read Transmission" as I2C_READ
+    state "Error Recovery" as I2C_ERROR
+    
+    ' Transitions
+    [*] --> I2C_IDLE
+    I2C_IDLE --> I2C_WRITE : pca9685_write_reg()
+    I2C_IDLE --> I2C_READ : mpu6050_read_block()
+    I2C_WRITE --> I2C_IDLE : transmission complete
+    I2C_READ --> I2C_IDLE : data received
+    I2C_WRITE --> I2C_ERROR : I/O error
+    I2C_READ --> I2C_ERROR : I/O error
+    I2C_ERROR --> I2C_IDLE : reset/retry
 }
 
-state TILTING {
-  state "Body Orientation" as tilting
-  tilting: Pitch: tiltX adjustment
-  tilting: Roll: tiltY adjustment
-  tilting: Height: vertical adjustment
+' Global transitions between major components
+PWMState -[#336600,dashed]-> ServoState : PWM signals
+IMUState -[#0066CC,dashed]-> SystemState : Orientation data
+SystemState -[#993399,dashed]-> ServoState : Leg position commands
+
+' Main system states
+state "System States" as MainSystemState {
+    state "Uninitialized" as SYS_UNINIT
+    state "Initialization" as SYS_INIT
+    state "Ready" as SYS_READY
+    state "Active Operation" as SYS_ACTIVE
+    state "Error" as SYS_ERROR
+    state "Shutdown" as SYS_SHUTDOWN
+    
+    ' Main system transitions
+    [*] --> SYS_UNINIT
+    SYS_UNINIT --> SYS_INIT : hexapod_init()
+    SYS_INIT --> SYS_READY : all subsystems initialized
+    SYS_READY --> SYS_ACTIVE : first command received
+    SYS_ACTIVE --> SYS_ERROR : hardware error detected
+    SYS_ERROR --> SYS_READY : error recovery
+    SYS_ACTIVE --> SYS_READY : operation complete
+    SYS_READY --> SYS_SHUTDOWN : hexapod_cleanup()
+    SYS_SHUTDOWN --> [*]
 }
 
-' Additional balance mode (from controller.hpp)
-state "BALANCE MODE" as BALANCE_MODE <<choice>>
-
-' Transitions from the code behaviors
-[*] --> IDLE : init()
-
-IDLE --> WALKING : w (forward)\ns (backward)
-IDLE --> ROTATING : a (left)\nd (right)
-IDLE --> TILTING : j/l (tilt left/right)\ni/k (tilt forward/back)\nu/o (height adjust)
-
-WALKING --> IDLE : space (stop) or key release
-ROTATING --> IDLE : space (stop) or key release
-TILTING --> IDLE : space (stop) or key release
-
-' Balance mode transitions (from processKey() handling)
-IDLE --> BALANCE_MODE : b (toggle balance)
-WALKING --> BALANCE_MODE : b (toggle balance)
-ROTATING --> BALANCE_MODE : b (toggle balance)
-TILTING --> BALANCE_MODE : b (toggle balance)
-
-BALANCE_MODE --> IDLE : [balance disabled]
-BALANCE_MODE --> WALKING : [balance enabled and walking]
-BALANCE_MODE --> ROTATING : [balance enabled and rotating]
-BALANCE_MODE --> TILTING : [balance enabled and tilting]
-
-' Notes based on code documentation
-note right of WALKING
-  Movement direction and speed controlled via:
-  - setDirection() 
-  - setSpeed()
-  Updates leg positions using gait patterns
-end note
-
-note right of BALANCE_MODE
-  Automatically compensates for tilt using IMU data
-  Balance parameters:
-  - response_factor: How quickly to respond (0.0-1.0)
-  - deadzone: Minimum tilt before responding (degrees)
-  - max_tilt_adjustment: Maximum correction angle
-end note
-
-note bottom of TILTING
-  Body orientation controlled via:
-  - setTilt(tiltX, tiltY)
-  - setHeight(height)
-  Uses inverse kinematics calculations
-end note
-
-' Footer legend
+' Comprehensive legend with hardware info
 legend right
-  Hexapod Controller States
+  <b>Hexapod Hardware State Diagram</b>
   --
-  Based on controller.hpp implementation
+  <b>Hardware Components:</b>
+  • 2× PCA9685 PWM Controllers (I2C addresses 0x40, 0x41)
+  • 1× MPU6050 IMU Sensor (I2C address 0x68)
+  • 18× Servo Motors (3 per leg × 6 legs)
+  
+  <b>I2C Communication:</b>
+  • Bus 3 on BeagleBone AI (SCL: P9_19, SDA: P9_20)
+  • 100kHz I2C clock frequency
+  
+  <b>Signal Legend:</b>
+  ——> : State transition
+  - - -> : Data/signal flow
 endlegend
 
 @enduml
