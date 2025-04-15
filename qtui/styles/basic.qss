@@ -1,0 +1,123 @@
+/* Basic fallback stylesheet for Hexapod Remote Control Application */
+
+QMainWindow {
+    background-color: #f5f5f5;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+QPushButton {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+}
+
+QPushButton:hover {
+    background-color: #2980b9;
+}
+
+QPushButton:pressed {
+    background-color: #1f6aa5;
+}
+
+QPushButton:disabled {
+    background-color: #bdc3c7;
+    color: #7f8c8d;
+}
+
+QPushButton#stopButton {
+    background-color: #e74c3c;
+}
+
+QPushButton#stopButton:hover {
+    background-color: #c0392b;
+}
+
+QPushButton#stopButton:pressed {
+    background-color: #a33025;
+}
+
+QPushButton#connectButton {
+    background-color: #2ecc71;
+}
+
+QPushButton#connectButton:hover {
+    background-color: #27ae60;
+}
+
+QPushButton#connectButton:pressed {
+    background-color: #1e8449;
+}
+
+QSlider::groove:horizontal {
+    border: 1px solid #bdc3c7;
+    height: 8px;
+    background: #e0e0e0;
+    margin: 2px 0;
+    border-radius: 4px;
+}
+
+QSlider::handle:horizontal {
+    background: #3498db;
+    border: 1px solid #2980b9;
+    width: 18px;
+    height: 18px;
+    margin: -6px 0;
+    border-radius: 9px;
+}
+
+QLineEdit, QSpinBox {
+    padding: 6px;
+    border: 1px solid #bdc3c7;
+    border-radius: 4px;
+}
+
+QGroupBox {
+    border: 1px solid #bdc3c7;
+    border-radius: 4px;
+    margin-top: 1.2em;
+    font-weight: bold;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    left: 10px;
+    padding: 0 5px;
+}
+
+QTextEdit {
+    border: 1px solid #bdc3c7;
+    border-radius: 4px;
+    background-color: #ffffff;
+}
+
+QCheckBox {
+    spacing: 5px;
+}
+
+QCheckBox::indicator {
+    width: 18px;
+    height: 18px;
+}
+
+QCheckBox::indicator:unchecked {
+    border: 1px solid #bdc3c7;
+    background-color: white;
+    border-radius: 3px;
+}
+
+QCheckBox::indicator:checked {
+    border: 1px solid #3498db;
+    background-color: #3498db;
+    border-radius: 3px;
+    image: url(:/icons/check.png);
+}
+
+/* Custom styles for Hexapod-specific widgets */
+.hexapodVisualization {
+    background-color: #ecf0f1;
+    border: 1px solid #bdc3c7;
+    border-radius: 4px;
+}

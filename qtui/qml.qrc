@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RCC version="1.0">
+    <qresource prefix="/">
+        <file>components/main.qml</file>
+        <file>components/Dashboard.qml</file>
+        <file>components/ControlPanel.qml</file>
+        <file>components/StatusBar.qml</file>
+        <file>components/ConnectionPanel.qml</file>
+        <file>components/VisualizationView.qml</file>
+        <file>components/JoystickControl.qml</file>
+    </qresource>
+</RCC>
