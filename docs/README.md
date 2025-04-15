@@ -1,12 +1,12 @@
 # Hexapod Documentation
 
-This directory contains comprehensive documentation for the hexapod robot project.
+This directory contains comprehensive documentation for the hexapod robot project, including architecture diagrams, API references, and hardware specifications.
 
 ## Directory Structure
 
 ```
 docs/
-├── hardware/           # Hardware documentation
+├── hardware/          # Hardware documentation
 │   ├── schematics/    # Circuit diagrams and PCB layouts
 │   └── assembly/      # Assembly instructions and photos
 ├── software/          # Software documentation

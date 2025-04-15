@@ -1,4 +1,4 @@
-@startuml Hexapod Class Diagram
+@startuml class
 
 ' Style and theme settings - enhanced for readability
 !theme plain

@@ -1,4 +1,4 @@
-@startuml Hexapod Deployment Diagram
+@startuml deployment
 
 !theme plain
 skinparam nodeBackgroundColor #FEFECE

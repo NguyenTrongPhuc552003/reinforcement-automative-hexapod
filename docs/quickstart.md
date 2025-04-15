@@ -1,105 +1,174 @@
-# Hexapod Quick-Start Guide
+# Hexapod Quick Start Guide
 
-This guide helps you get your hexapod robot up and running quickly.
+This guide provides step-by-step instructions to quickly get your hexapod robot up and running.
 
 ## Prerequisites
 
-- BeagleBone AI/Black with Debian installed
+- BeagleBone AI or Black (with Debian/Ubuntu Linux)
 - I2C enabled on bus 3
-- 18 servos connected to PCA9685 controllers
-- Power supply connected
+- Hardware components assembled:
+  - 18× MG996R servo motors
+  - 2× PCA9685 PWM controllers
+  - 1× MPU6050 IMU sensor
+  - Power supply (6V for servos, 5V logic)
+- Host computer with:
+  - Docker installed
+  - SSH client
 
-## Initial Setup
+## 1. Build the Project
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/NguyenTrongPhuc552003/reinforcement-automative-hexapod.git
-   cd reinforcement-automative-hexapod
-   ```
+The easiest way to build all components is using our Docker-based build environment.
 
-2. **Build all components**
-   ```bash
-   ./scripts/build.sh
-   ```
-   This builds both kernel and user-space components and prepares the deployment package.
+### Using the Docker Build Environment
 
-3. **Install the drivers on BeagleBone**
-   ```bash
-   cd hexapod_driver
-   ./install.sh
-   ```
-   
-   Verify the driver is loaded:
-   ```bash
-   lsmod | grep hexapod_driver
-   ```
-
-4. **Initialize calibration**
-   ```bash
-   sudo ./test_calibration reset
-   ```
-   This creates a default calibration file with all offsets set to zero.
-
-## First Movement Test
-
-1. **Center all servos**
-   ```bash
-   sudo ./test_servo
-   ```
-   This will center all servos one by one.
-
-2. **Test individual leg movement**
-   ```bash
-   sudo ./test_movement leg
-   ```
-   Each leg will move through its range of motion.
-
-3. **Try walking with tripod gait**
-   ```bash
-   sudo ./test_movement tripod
-   ```
-   The robot will walk forward for 15 seconds using the tripod gait pattern.
-
-## Testing Components
-
-### Test IMU Sensor
-```bash
-sudo ./test_mpu6050
-```
-
-This will continuously read and display data from the MPU6050 sensor. The sensor will automatically wake from sleep mode as needed, so you can run this test immediately after other tests without needing to reload the driver.
-
-### Test Servo Motion
-```bash
-sudo ./test_servo
-```
-
-## Monitoring and Debugging
-
-The hexapod comes with a comprehensive monitoring script for debugging:
+From the project root directory:
 
 ```bash
-# Basic system monitoring
-sudo ./monitor.sh
+# Build all components (kernel modules, user applications, TD3Learn)
+./scripts/build.sh
 
-# Focus on IMU sensor monitoring
-sudo ./monitor.sh --mode imu
-
-# Monitor IOCTL calls in real-time
-sudo ./monitor.sh --mode live
-
-# Check for a specific issue with a specific process
-sudo ./monitor.sh --mode ioctl --pid $(pgrep test_mpu6050)
+# Or build specific components:
+./scripts/build.sh -m    # Build only kernel modules
+./scripts/build.sh -u    # Build only user applications
+./scripts/build.sh -d    # Build only TD3Learn components
 ```
 
-The monitor script can help you diagnose:
-- Driver loading issues
-- MPU6050 sleep/wake cycle problems
-- Communication errors
-- Resource usage
+The build outputs will be placed in the `deploy` directory.
 
-## Next Steps
+## 2. Deploy to BeagleBone
 
-- Customize the gait parameters in `app/src/gait.cpp`
-- Create a custom control program based on `app/src/main.cpp`
-- Fine-tune the servo calibration with `test_calibration apply`
+After building, deploy to your BeagleBone:
+
+```bash
+# Make sure your BeagleBone is reachable first
+ping beaglebone.local
+
+# Deploy all components
+./scripts/deploy.sh
+```
+
+This will copy the built binaries to your BeagleBone and run the installation script.
+
+## 3. Install Kernel Modules
+
+If you haven't used the deploy script or need to manually install:
+
+```bash
+# SSH into your BeagleBone
+ssh debian@beaglebone.local
+
+# Navigate to the installation directory
+cd ~/hexapod_driver
+
+# Install kernel modules
+sudo ./install.sh
+```
+
+Verify the installation:
+```bash
+# Check if device node exists
+ls -l /dev/hexapod
+
+# Check kernel log for driver messages
+dmesg | grep hexapod
+```
+
+## 4. Run the Controller Application
+
+To start the interactive controller:
+
+```bash
+# With normal output
+./hexapod_controller
+
+# With debug output
+./hexapod_controller -d
+```
+
+### Controller Commands
+
+Once the controller is running, use these keyboard commands:
+
+- **Movement Controls**:
+  - `W`/`S`: Move forward/backward
+  - `A`/`D`: Rotate left/right
+  - `I`/`K`: Raise/lower body
+  - `J`/`L`: Tilt left/right
+
+- **Gait Controls**:
+  - `1`: Tripod gait
+  - `2`: Wave gait
+  - `3`: Ripple gait
+
+- **System Controls**:
+  - `Space`: Stop and center legs
+  - `+`/`-`: Increase/decrease speed
+  - `T`: Toggle telemetry display
+  - `B`: Toggle balance mode
+  - `C`: Center all legs
+  - `Q`: Quit application
+
+## 5. Run TD3 Reinforcement Learning
+
+To deploy a trained TD3 model:
+
+```bash
+# Deploy a pre-trained model
+./td3learn_deploy --model models/trained_model.bin
+
+# Train a new model (requires simulation)
+./td3learn_train --config configs/default.yaml
+```
+
+## 6. Visualizing Diagrams
+
+To understand the system architecture, review the UML diagrams in `docs/diagrams/out/`:
+
+- **Component Diagram**: Hardware component relationships
+- **Deployment Diagram**: System deployment overview
+- **Sequence Diagram**: Runtime interaction flows
+
+To rebuild diagrams on your host computer:
+```bash
+# Build and generate the PNG diagrams from PUML files
+./scripts/build.sh -l
+```
+
+## 7. Testing
+
+Run individual tests to verify hardware components:
+
+```bash
+# Test servo motors
+./test_servo
+
+# Test IMU sensor
+./test_mpu6050
+
+# Test movement patterns
+./test_movement
+```
+
+## 8. Calibration
+
+Calibrate your servos for precise positioning:
+
+```bash
+# Run calibration utility
+./test_calibration
+
+# Apply saved calibration
+./test_calibration --apply
+```
+
+## Troubleshooting
+
+If you encounter issues:
+
+1. Verify I2C connections with `i2cdetect -y -r 3`
+2. Check servo power supply with a multimeter
+3. Verify kernel module is loaded with `lsmod | grep hexapod`
+4. Check permissions on `/dev/hexapod`
+5. Review logs with `dmesg | tail -30`
+
+For detailed troubleshooting, refer to the [Hardware Documentation](hardware.md).

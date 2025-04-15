@@ -1,9 +1,8 @@
-@startuml Hexapod Build and Deployment Process
+@startuml building
 
 ' Apply a clear, readable visual theme
 !theme plain
 skinparam {
-    BackgroundColor transparent
     ArrowColor #333333
     FontName Arial
     

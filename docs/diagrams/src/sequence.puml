@@ -1,4 +1,4 @@
-@startuml Hexapod Operation Sequence with Enhanced Hardware Visibility
+@startuml sequence
 
 ' Custom styling for better readability
 !theme plain

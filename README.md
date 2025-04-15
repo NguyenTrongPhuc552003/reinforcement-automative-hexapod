@@ -1,6 +1,6 @@
 # Hexapod Robot Control System
 
-A comprehensive control system for a six-legged robot (hexapod) using BeagleBone AI (or Black), featuring both kernel-space drivers and user-space applications.
+A comprehensive control system for a six-legged robot (hexapod) using BeagleBone AI (or Black), featuring both kernel-space drivers and user-space applications with reinforcement learning capabilities.
 
 ![Hexapod Robot](resource/overview.jpg)
 
@@ -19,7 +19,22 @@ This project implements a complete software stack for controlling a 6-legged rob
   - Calibration system for mechanical offset compensation
   - Interactive control interface
 
+- **Reinforcement Learning**:
+  - TD3 (Twin Delayed Deep Deterministic Policy Gradient) implementation
+  - Hardware acceleration via TIDL and OpenCL
+  - Simulation-to-real transfer capabilities
+  - On-robot inference engine
+
 ## System Architecture
+
+The system follows a layered architecture with hardware abstraction. For visual reference, see the architecture diagrams in the `/docs/diagrams/out` directory:
+
+- [Deployment Diagram](docs/diagrams/out/deployment.png): Hardware and software deployment
+- [Component Diagram](docs/diagrams/out/component.png): Hardware component interactions
+- [Sequence Diagram](docs/diagrams/out/sequence.png): Runtime interactions
+- [State Diagram](docs/diagrams/out/state.png): Hardware state transitions
+- [Class Diagram](docs/diagrams/out/class.png): Software class structure
+- [Building Process](docs/diagrams/out/building.png): Build and deployment process
 
 ```
 .
@@ -81,15 +96,16 @@ See individual README files in subdirectories for detailed development guides:
 
 Run the test suite:
 ```bash
-cd app/test
-make test
+cd app
+make
 ```
 
 Individual tests:
 ```bash
-./test_servo     # Test servo control
-./test_mpu6050   # Test IMU sensor
-./test_movement  # Test movements like tripod, ripple, ...
+./test_servo       # Test servo control
+./test_mpu6050     # Test IMU sensor
+./test_movement    # Test movements like tripod, ripple, ...
+./test_calibration # Test servos offset for each leg
 ```
 
 ## Troubleshooting
@@ -122,7 +138,7 @@ This project is licensed under the GPL License - see the [LICENSE](LICENSE) file
 
 ## Authors
 
-- [StrongFood]
+- StrongFood - I mean "TrongPhuc"
 
 ## Acknowledgments
 

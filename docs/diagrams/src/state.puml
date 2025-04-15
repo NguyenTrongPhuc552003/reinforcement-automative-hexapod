@@ -1,4 +1,4 @@
-@startuml Hexapod Hardware State Diagram
+@startuml state
 
 !theme plain
 ' Use better color scheme for hardware states
