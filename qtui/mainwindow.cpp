@@ -129,10 +129,10 @@ MainWindow::MainWindow(QWidget *parent)
     connect(m_connection, &HexapodConnection::discoveryProgress,
             this, &MainWindow::handleDiscoveryProgress);
     connect(m_connection, &HexapodConnection::connectionInProgress,
-            [this](bool connecting) {
+            [this](bool connecting)
+            {
                 ui->connectButton->setEnabled(!connecting);
-                ui->connectButton->setText(connecting ? "Connecting..." :
-                                          (m_connection->isConnected() ? "Disconnect" : "Connect"));
+                ui->connectButton->setText(connecting ? "Connecting..." : (m_connection->isConnected() ? "Disconnect" : "Connect"));
             });
 }
 
@@ -457,7 +457,7 @@ void MainWindow::on_connectButton_clicked()
         ui->rightButton->setEnabled(false);
         ui->stopButton->setEnabled(false);
         ui->balanceCheckbox->setEnabled(false);
-        
+
         // Update status indicator
         updateConnectionStatusIndicator();
     }
@@ -474,57 +474,63 @@ void MainWindow::showConnectionDialog()
     QDialog dialog(this);
     dialog.setWindowTitle("Connect to Hexapod Server");
     dialog.setMinimumWidth(400);
-    
+
     // Create dialog layout
     QVBoxLayout *layout = new QVBoxLayout(&dialog);
-    
+
     // Create form layout for connection settings
     QFormLayout *formLayout = new QFormLayout();
-    
+
     QComboBox *hostCombo = new QComboBox();
     hostCombo->setEditable(true);
     hostCombo->addItem("beaglebone.local");
     hostCombo->addItem("localhost");
     hostCombo->setCurrentText(ui->hostEdit->text());
-    
+
     // Add recent connections to combo box
-    for (const QString &recent : m_recentConnections) {
-        if (recent.contains(":")) {
+    for (const QString &recent : m_recentConnections)
+    {
+        if (recent.contains(":"))
+        {
             QString host = recent.section(":", 0, 0);
-            if (!hostCombo->findText(host)) {
+            if (!hostCombo->findText(host))
+            {
                 hostCombo->addItem(host);
             }
         }
     }
-    
+
     QSpinBox *portSpin = new QSpinBox();
     portSpin->setRange(1, 65535);
     portSpin->setValue(ui->portSpin->value());
-    
+
     formLayout->addRow("Hostname:", hostCombo);
     formLayout->addRow("Port:", portSpin);
-    
+
     layout->addLayout(formLayout);
-    
+
     // Add auto-discovery option
     QPushButton *discoverButton = new QPushButton("Auto-Discover Servers");
     layout->addWidget(discoverButton);
-    
+
     // Recent connections list
-    if (!m_recentConnections.isEmpty()) {
+    if (!m_recentConnections.isEmpty())
+    {
         QGroupBox *recentGroup = new QGroupBox("Recent Connections");
         QVBoxLayout *recentLayout = new QVBoxLayout(recentGroup);
-        
+
         QListWidget *recentList = new QListWidget();
-        for (const QString &recent : m_recentConnections) {
+        for (const QString &recent : m_recentConnections)
+        {
             recentList->addItem(recent);
         }
-        
+
         recentLayout->addWidget(recentList);
         layout->addWidget(recentGroup);
-        
+
         // Connect double-click to select a recent connection
-        connect(recentList, &QListWidget::itemDoubleClicked, [&](QListWidgetItem *item) {
+        connect(recentList, &QListWidget::itemDoubleClicked, [&](QListWidgetItem *item)
+                {
             QString text = item->text();
             if (text.contains(":")) {
                 QString host = text.section(":", 0, 0);
@@ -532,32 +538,33 @@ void MainWindow::showConnectionDialog()
                 
                 hostCombo->setCurrentText(host);
                 portSpin->setValue(port);
-            }
-        });
+            } });
     }
-    
+
     // Dialog buttons
     QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
     layout->addWidget(buttonBox);
-    
+
     // Connect signals
     connect(buttonBox, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
     connect(buttonBox, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
     connect(discoverButton, &QPushButton::clicked, this, &MainWindow::startServerDiscovery);
-    
+
     // Execute dialog
-    if (dialog.exec() == QDialog::Accepted) {
+    if (dialog.exec() == QDialog::Accepted)
+    {
         QString hostname = hostCombo->currentText();
         int port = portSpin->value();
-        
+
         // Update UI fields
         ui->hostEdit->setText(hostname);
         ui->portSpin->setValue(port);
-        
+
         // Try to connect
         logInfo(QString("Connecting to %1:%2...").arg(hostname).arg(port));
 
-        if (m_connection->connectToHost(hostname, port)) {
+        if (m_connection->connectToHost(hostname, port))
+        {
             ui->connectButton->setText("Connecting...");
             ui->connectButton->setEnabled(false);
 
@@ -565,10 +572,12 @@ void MainWindow::showConnectionDialog()
             ui->statusLabel->setText("Connecting...");
             ui->statusLabel->setProperty("status", "connecting");
             ui->statusLabel->update();
-            
+
             // Add to recent connections
             addRecentConnection(hostname, port);
-        } else {
+        }
+        else
+        {
             logError("Failed to initiate connection");
         }
     }
@@ -577,27 +586,27 @@ void MainWindow::showConnectionDialog()
 void MainWindow::startServerDiscovery()
 {
     // Show progress dialog
-    if (!m_discoveryDialog) {
+    if (!m_discoveryDialog)
+    {
         m_discoveryDialog = new QProgressDialog("Discovering hexapod servers...", "Cancel", 0, 100, this);
         m_discoveryDialog->setWindowModality(Qt::WindowModal);
         m_discoveryDialog->setAutoReset(false);
         m_discoveryDialog->setAutoClose(false);
         m_discoveryDialog->setMinimumDuration(0);
     }
-    
+
     // Reset dialog
     m_discoveryDialog->setRange(0, 100);
     m_discoveryDialog->setValue(0);
     m_discoveryDialog->show();
-    
+
     // Connect cancel button
-    connect(m_discoveryDialog, &QProgressDialog::canceled, [this]() {
-        m_connection->stopServerDiscovery();
-    });
-    
+    connect(m_discoveryDialog, &QProgressDialog::canceled, [this]()
+            { m_connection->stopServerDiscovery(); });
+
     // Start discovery
     m_connection->startServerDiscovery();
-    
+
     logInfo("Searching for hexapod servers...");
 }
 
@@ -605,24 +614,26 @@ void MainWindow::handleDiscoveredServer(const QString &hostname, int port, bool 
 {
     QString serverType = isSimulation ? "simulation" : "hardware";
     logSuccess(QString("Found %1 server at %2:%3").arg(serverType).arg(hostname).arg(port));
-    
+
     // Add to recent connections
     addRecentConnection(hostname, port);
-    
+
     // Ask if user wants to connect to this server
     QMessageBox::StandardButton reply = QMessageBox::question(
-        this, 
+        this,
         "Server Found",
         QString("Found %1 server at %2:%3.\n\nConnect to this server?")
-            .arg(serverType).arg(hostname).arg(port),
-        QMessageBox::Yes | QMessageBox::No
-    );
-    
-    if (reply == QMessageBox::Yes) {
+            .arg(serverType)
+            .arg(hostname)
+            .arg(port),
+        QMessageBox::Yes | QMessageBox::No);
+
+    if (reply == QMessageBox::Yes)
+    {
         // Update UI fields
         ui->hostEdit->setText(hostname);
         ui->portSpin->setValue(port);
-        
+
         // Try to connect
         m_connection->connectToHost(hostname, port);
     }
@@ -630,7 +641,8 @@ void MainWindow::handleDiscoveredServer(const QString &hostname, int port, bool 
 
 void MainWindow::handleDiscoveryProgress(int current, int total)
 {
-    if (m_discoveryDialog) {
+    if (m_discoveryDialog)
+    {
         m_discoveryDialog->setRange(0, total);
         m_discoveryDialog->setValue(current);
     }
@@ -639,8 +651,9 @@ void MainWindow::handleDiscoveryProgress(int current, int total)
 void MainWindow::handleDiscoveryComplete()
 {
     logInfo("Server discovery complete");
-    
-    if (m_discoveryDialog) {
+
+    if (m_discoveryDialog)
+    {
         m_discoveryDialog->hide();
     }
 }
@@ -648,18 +661,19 @@ void MainWindow::handleDiscoveryComplete()
 void MainWindow::addRecentConnection(const QString &hostname, int port)
 {
     QString connectionString = QString("%1:%2").arg(hostname).arg(port);
-    
+
     // Remove existing entry
     m_recentConnections.removeAll(connectionString);
-    
+
     // Add to front
     m_recentConnections.prepend(connectionString);
-    
+
     // Keep list to reasonable size
-    while (m_recentConnections.size() > 10) {
+    while (m_recentConnections.size() > 10)
+    {
         m_recentConnections.removeLast();
     }
-    
+
     // Save to settings
     saveRecentConnections();
 }
@@ -679,45 +693,50 @@ void MainWindow::updateConnectionStatusIndicator()
 {
     if (!m_connectionStatusIndicator)
         return;
-        
+
     bool isConnected = m_connection && m_connection->isConnected();
     bool isConnecting = false;
-    
-    if (m_connection) {
+
+    if (m_connection)
+    {
         isConnecting = !isConnected && m_connection->property("connecting").toBool();
     }
-    
+
     // Update status indicator color and text
     QString text, style;
-    if (isConnected) {
+    if (isConnected)
+    {
         text = "Connected";
         style = "QLabel { background-color: #4CAF50; color: white; padding: 3px; border-radius: 3px; }";
-        
+
         // Add server info if available
-        if (m_connection->isInSimulationMode()) {
+        if (m_connection->isInSimulationMode())
+        {
             text += " (Simulation)";
         }
         text += QString(" - %1:%2").arg(m_connection->getConnectedHost()).arg(m_connection->getConnectedPort());
-    } 
-    else if (isConnecting) {
+    }
+    else if (isConnecting)
+    {
         text = "Connecting...";
         style = "QLabel { background-color: #FFA500; color: white; padding: 3px; border-radius: 3px; }";
     }
-    else {
+    else
+    {
         text = "Disconnected";
         style = "QLabel { background-color: #FF3333; color: white; padding: 3px; border-radius: 3px; }";
     }
-    
+
     m_connectionStatusIndicator->setText(text);
     m_connectionStatusIndicator->setStyleSheet(style);
-    
+
     // Update UI controls based on connection state
     ui->connectButton->setText(isConnected ? "Disconnect" : "Connect");
     ui->hostEdit->setEnabled(!isConnected);
     ui->portSpin->setEnabled(!isConnected);
     ui->speedSlider->setEnabled(isConnected);
     ui->balanceCheckbox->setEnabled(isConnected);
-    
+
     // Update movement controls
     ui->forwardButton->setEnabled(isConnected);
     ui->backwardButton->setEnabled(isConnected);
@@ -845,18 +864,22 @@ void MainWindow::on_rollSlider_valueChanged(int value)
 
 void MainWindow::handleConnectionStatus(bool connected)
 {
-    if (connected) {
+    if (connected)
+    {
         logSuccess("Connected to server");
-        if (m_connection->isInSimulationMode()) {
+        if (m_connection->isInSimulationMode())
+        {
             logInfo("Running in SIMULATION mode");
         }
         // Start IMU updates
         m_imuUpdateTimer->start();
-    } else {
+    }
+    else
+    {
         logError("Disconnected from server");
         m_imuUpdateTimer->stop();
     }
-    
+
     // Update the connection status indicator
     updateConnectionStatusIndicator();
 }
