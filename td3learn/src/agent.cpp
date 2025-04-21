@@ -2,8 +2,10 @@
 #include <algorithm>
 #include <cmath>
 #include <fstream>
+#include <filesystem>
 #include "td3learn/agent.hpp"
 #include "td3learn/utils.hpp"
+#include "td3learn/tidlexport.hpp"
 
 namespace td3learn
 {
@@ -200,10 +202,53 @@ namespace td3learn
 
         Result exportTIDLModel(const std::string &path, const TIDLConfig &tidl_config)
         {
-            // This function would convert the actor model to TIDL format
-            // For now, it's simplified to just copy the model
-            utils::Logger::info("Exporting TIDL model to " + path);
-            return Result::SUCCESS;
+            try
+            {
+                utils::Logger::info("Exporting TIDL model to " + path);
+
+                // Create TIDL exporter
+                TIDLExporter exporter(tidl_config);
+
+                // Export actor model only (for inference)
+                Result result = exporter.exportModel(path, actor);
+                if (result != Result::SUCCESS)
+                {
+                    utils::Logger::error("Failed to export TIDL model");
+                    return result;
+                }
+
+                // Create run script for the model
+                std::string script_path = path + "/run_tidl.sh";
+                std::ofstream script_file(script_path);
+                if (script_file.is_open())
+                {
+                    script_file << "#!/bin/bash\n"
+                                << "# TIDL inference script\n\n"
+                                << "MODEL_DIR=\"$(dirname \"$0\")\"\n"
+                                << "export LD_LIBRARY_PATH=\"${LD_LIBRARY_PATH}:${MODEL_DIR}\"\n\n"
+                                << "# Run the model with TIDL acceleration\n"
+                                << "${MODEL_DIR}/td3learn_run \\\n"
+                                << "  --tidl \"${MODEL_DIR}\" \\\n"
+                                << "  \"$@\"\n";
+                    script_file.close();
+
+                    // Make script executable
+                    std::filesystem::permissions(
+                        script_path,
+                        std::filesystem::perms::owner_exec |
+                            std::filesystem::perms::group_exec |
+                            std::filesystem::perms::others_exec,
+                        std::filesystem::perm_options::add);
+                }
+
+                utils::Logger::info("TIDL model exported successfully");
+                return Result::SUCCESS;
+            }
+            catch (const std::exception &e)
+            {
+                utils::Logger::error("TIDL export exception: " + std::string(e.what()));
+                return Result::ERROR_EXECUTION;
+            }
         }
 
     private:

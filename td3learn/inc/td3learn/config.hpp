@@ -108,6 +108,13 @@ namespace td3learn
         bool optimize_memory = true;        // Optimize for memory usage
         bool enable_pre_processing = true;  // Enable pre-processing on DSP
         bool enable_post_processing = true; // Enable post-processing on DSP
+
+        // Additional parameters for hardware-specific configuration
+        int input_height = 1;    // Input height dimension
+        int input_width = 1;     // Input width dimension
+        int input_channels = 24; // Input channels (state dimension)
+        int preprocess_type = 0; // Preprocessing type (0 for RL models)
+        int batch_size = 1;      // Batch size for inference
     };
 
     /**
