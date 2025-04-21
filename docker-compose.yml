@@ -1,0 +1,44 @@
+version: '3'
+
+services:
+  # Service for training models on the host machine
+  train:
+    build:
+      context: .
+      dockerfile: docker/td3learn.Dockerfile
+    volumes:
+      - ./td3learn:/app/td3learn
+      - ./models:/app/models
+      - ./data:/app/data
+    environment:
+      - TIDL_PLATFORM=AM5729
+      - OCL_PLATFORM=0
+      - PYTHONPATH=/app
+    command: build
+
+  # Service for running trained models directly on BeagleBone AI
+  deploy:
+    build:
+      context: .
+      dockerfile: docker/td3learn.Dockerfile
+    volumes:
+      - ./td3learn:/app/td3learn
+      - ./models:/app/models
+      - ./configs:/app/configs
+    environment:
+      - TIDL_PLATFORM=AM5729
+      - OCL_PLATFORM=0
+    command: bash
+
+  # Development environment with hardware acceleration tools 
+  dev:
+    build:
+      context: .
+      dockerfile: docker/td3learn.Dockerfile
+    volumes:
+      - ./:/app
+    environment:
+      - TIDL_PLATFORM=AM5729
+      - OCL_PLATFORM=0
+      - PYTHONPATH=/app
+    command: bash
