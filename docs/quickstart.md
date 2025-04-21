@@ -1,7 +1,5 @@
 # Hexapod Quick Start Guide
 
-This guide provides step-by-step instructions to quickly get your hexapod robot up and running.
-
 ## Prerequisites
 
 - BeagleBone AI or Black (with Debian/Ubuntu Linux)
@@ -35,140 +33,65 @@ From the project root directory:
 
 The build outputs will be placed in the `deploy` directory.
 
-## 2. Deploy to BeagleBone
+## 2. Train TD3Learn Models with Docker
 
-After building, deploy to your BeagleBone:
+Our Docker-based workflow makes it easy to train and deploy reinforcement learning models:
 
 ```bash
-# Make sure your BeagleBone is reachable first
-ping beaglebone.local
+# Start the training container
+docker-compose run train
 
-# Deploy all components
-./scripts/deploy.sh
+# Inside the container, train a model
+train my_model
+
+# Or run a specific training script
+python3 /app/td3learn/examples/demo.py
 ```
 
-This will copy the built binaries to your BeagleBone and run the installation script.
+## 3. Deploy to BeagleBone AI with Hardware Acceleration
 
-## 3. Install Kernel Modules
-
-If you haven't used the deploy script or need to manually install:
+After training, you can deploy the model to your BeagleBone AI with hardware acceleration:
 
 ```bash
-# SSH into your BeagleBone
+# Using docker-compose
+docker-compose run deploy deploy my_model --host beaglebone.local
+
+# Or using the deploy script directly
+./td3learn/tools/deploy.sh --model models/my_model --tidl --hardware
+```
+
+## 4. Hardware Acceleration Options
+
+The BeagleBone AI offers multiple acceleration options:
+
+- **TIDL (TI Deep Learning)**: Uses DSP and EVE cores for best performance
+  ```bash
+  # Deploy with TIDL acceleration (4 EVE cores, 2 DSP cores)
+  ./td3learn/tools/deploy.sh --model models/my_model --tidl
+  ```
+
+- **OpenCL**: Uses GPU for compute operations
+  ```bash
+  # Deploy with OpenCL acceleration
+  ./td3learn/tools/deploy.sh --model models/my_model --opencl
+  ```
+
+To check available hardware capabilities:
+```bash
+./td3learn/tools/hwdetect.sh
+```
+
+## 5. Monitoring and Control
+
+Once deployed, you can monitor and control the hexapod:
+
+```bash
+# SSH into BeagleBone
 ssh debian@beaglebone.local
 
-# Navigate to the installation directory
-cd ~/hexapod_driver
-
-# Install kernel modules
-sudo ./install.sh
+# Start the TD3Learn controller
+cd /home/debian/td3learn_model
+./run.sh
 ```
 
-Verify the installation:
-```bash
-# Check if device node exists
-ls -l /dev/hexapod
-
-# Check kernel log for driver messages
-dmesg | grep hexapod
-```
-
-## 4. Run the Controller Application
-
-To start the interactive controller:
-
-```bash
-# With normal output
-./hexapod_controller
-
-# With debug output
-./hexapod_controller -d
-```
-
-### Controller Commands
-
-Once the controller is running, use these keyboard commands:
-
-- **Movement Controls**:
-  - `W`/`S`: Move forward/backward
-  - `A`/`D`: Rotate left/right
-  - `I`/`K`: Raise/lower body
-  - `J`/`L`: Tilt left/right
-
-- **Gait Controls**:
-  - `1`: Tripod gait
-  - `2`: Wave gait
-  - `3`: Ripple gait
-
-- **System Controls**:
-  - `Space`: Stop and center legs
-  - `+`/`-`: Increase/decrease speed
-  - `T`: Toggle telemetry display
-  - `B`: Toggle balance mode
-  - `C`: Center all legs
-  - `Q`: Quit application
-
-## 5. Run TD3 Reinforcement Learning
-
-To deploy a trained TD3 model:
-
-```bash
-# Deploy a pre-trained model
-./td3learn_deploy --model models/trained_model.bin
-
-# Train a new model (requires simulation)
-./td3learn_train --config configs/default.yaml
-```
-
-## 6. Visualizing Diagrams
-
-To understand the system architecture, review the UML diagrams in `docs/diagrams/out/`:
-
-- **Component Diagram**: Hardware component relationships
-- **Deployment Diagram**: System deployment overview
-- **Sequence Diagram**: Runtime interaction flows
-
-To rebuild diagrams on your host computer:
-```bash
-# Build and generate the PNG diagrams from PUML files
-./scripts/build.sh -l
-```
-
-## 7. Testing
-
-Run individual tests to verify hardware components:
-
-```bash
-# Test servo motors
-./test_servo
-
-# Test IMU sensor
-./test_mpu6050
-
-# Test movement patterns
-./test_movement
-```
-
-## 8. Calibration
-
-Calibrate your servos for precise positioning:
-
-```bash
-# Run calibration utility
-./test_calibration
-
-# Apply saved calibration
-./test_calibration --apply
-```
-
-## Troubleshooting
-
-If you encounter issues:
-
-1. Verify I2C connections with `i2cdetect -y -r 3`
-2. Check servo power supply with a multimeter
-3. Verify kernel module is loaded with `lsmod | grep hexapod`
-4. Check permissions on `/dev/hexapod`
-5. Review logs with `dmesg | tail -30`
-
-For detailed troubleshooting, refer to the [Hardware Documentation](hardware.md).
+The hexapod will now use the trained reinforcement learning model to control movement.

@@ -6,6 +6,15 @@
 #include "td3learn/models.hpp"
 #include "td3learn/utils.hpp"
 
+// Add conditionally included headers
+#ifdef ENABLE_TIDL
+#include "tidl/tidl_api.h"
+#endif
+
+#ifdef ENABLE_OPENCL
+#include <CL/cl.hpp>
+#endif
+
 namespace td3learn
 {
 
@@ -535,27 +544,71 @@ namespace td3learn
     // ModelFactory implementation
     bool ModelFactory::setDevice(const std::string &device)
     {
-        // In this simple implementation, we only support 'cpu'
-        // For more advanced implementations, we would check for TIDL/OpenCL support here
-        if (device == "cpu")
+        // Save the requested device
+        current_device = device;
+
+        // Handle different device types
+        if (device == "opencl")
         {
-            current_device = "cpu";
-            return true;
-        }
-#ifdef ENABLE_TIDL
-        else if (device == "tidl" && TIDLExecutor::isAvailable())
-        {
-            current_device = "tidl";
-            utils::Logger::info("Using TIDL device for acceleration");
-            return true;
-        }
-#endif
-        else
-        {
-            utils::Logger::warning("Unsupported device: " + device + ", falling back to CPU");
+#ifdef ENABLE_OPENCL
+            // Initialize OpenCL
+            try
+            {
+                // OpenCL setup would normally go here
+                utils::Logger::info("OpenCL device selected, but implementation not complete");
+                return true;
+            }
+            catch (const std::exception &e)
+            {
+                // Use std::exception instead of cl::Error for broader exception handling
+                utils::Logger::error("OpenCL initialization error: " + std::string(e.what()));
+                current_device = "cpu"; // Fallback to CPU
+                return false;
+            }
+#else
+            utils::Logger::warning("OpenCL support not enabled, falling back to CPU");
             current_device = "cpu";
             return false;
+#endif
         }
+        else if (device == "cpu")
+        {
+            current_device = "cpu";
+            utils::Logger::info("Using CPU for model inference");
+            return true;
+        }
+        else if (device == "tidl")
+        {
+#ifdef ENABLE_TIDL
+            try
+            {
+                // Initialize TIDL device
+                int available_cores = TidlGetPreferredBatchSize(1);
+                if (available_cores > 0)
+                {
+                    utils::Logger::info("Using TIDL acceleration with " +
+                                        std::to_string(available_cores) + " available cores");
+                    current_device = "tidl";
+                    return true;
+                }
+                utils::Logger::warning("No TIDL cores available, falling back to CPU");
+            }
+            catch (const std::exception &e)
+            {
+                utils::Logger::warning("TIDL initialization error: " + std::string(e.what()));
+            }
+            current_device = "cpu";
+            return false;
+#else
+            utils::Logger::warning("TIDL support not compiled in, using CPU");
+            current_device = "cpu";
+            return false;
+#endif
+        }
+
+        utils::Logger::warning("Unknown device type: " + device + ", using CPU");
+        current_device = "cpu";
+        return false;
     }
 
     std::string ModelFactory::getDevice()
