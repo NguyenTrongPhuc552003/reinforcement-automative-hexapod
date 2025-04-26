@@ -1,0 +1,40 @@
+/*
+ * Device Tree Source for BeagleBone AI with PCA9685 PWM driver
+ * This overlay configures the I2C bus and the PCA9685 PWM driver.
+ * It assumes the PCA9685 is connected to I2C3 and uses the default I2C address.
+ * Adjust the I2C address and GPIO pins as needed.
+ */
+
+/dts-v1/;
+/plugin/;
+
+/ {
+    compatible = "ti,beaglebone-ai";
+
+    fragment@0 {
+        target = <&i2c3>;
+        __overlay__ {
+            status = "okay";
+            clock-frequency = <400000>;
+        };
+    };
+
+    fragment@1 {
+        target = <&i2c3>;
+        __overlay__ {
+            pca9685_40: pca9685@40 {
+                compatible = "nxp,pca9685";
+                reg = <0x40>;
+                #pwm-cells = <2>;
+                status = "okay";
+            };
+
+            pca9685_41: pca9685@41 {
+                compatible = "nxp,pca9685";
+                reg = <0x41>;
+                #pwm-cells = <2>;
+                status = "okay";
+            };
+        };
+    };
+};
