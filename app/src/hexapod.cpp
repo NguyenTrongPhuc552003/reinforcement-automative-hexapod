@@ -535,31 +535,4 @@ namespace hexapod
         return ts.tv_sec + (ts.tv_nsec / 1.0e9);
     }
 
-    void Hexapod::cleanup()
-    {
-        // Parameter validation
-        if (!pImpl->initialized)
-        {
-            const_cast<HexapodImpl *>(pImpl.get())->setError(ErrorInfo::ErrorCode::NOT_INITIALIZED, ErrorCategory::PARAMETER, "Hexapod not initialized");
-            return;
-        }
-
-        if (pImpl->fd < 0)
-        {
-            const_cast<HexapodImpl *>(pImpl.get())->setError(ErrorInfo::ErrorCode::BAD_FILE, ErrorCategory::SYSTEM, "Invalid file descriptor");
-            return;
-        }
-
-        // Center all legs for safe shutdown
-        centerAll();
-
-        // Close device file descriptor
-        close(pImpl->fd);
-        pImpl->fd = -1;
-        pImpl->initialized = false;
-
-        // Log cleanup
-        const_cast<HexapodImpl *>(pImpl.get())->setError(ErrorInfo::ErrorCode::SUCCESS, ErrorCategory::NONE, "Hexapod cleaned up successfully");
-    }
-
 } // namespace hexapod
