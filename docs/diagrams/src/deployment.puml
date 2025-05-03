@@ -19,7 +19,7 @@ node "BeagleBone AI" as sbc {
       artifact "test_balance"
       artifact "test_calibration"
       artifact "test_mpu6050"
-      artifact "td3learn_deploy" #ADD8E6
+      artifact "pytd3_deploy" #ADD8E6
     }
     
     ' Direct connection from applications to device nodes without middleware libraries
