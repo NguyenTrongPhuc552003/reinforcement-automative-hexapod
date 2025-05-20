@@ -22,18 +22,18 @@ The easiest way to build all components is using our Docker-based build environm
 From the project root directory:
 
 ```bash
-# Build all components (kernel modules, user applications, TD3Learn)
+# Build all components (kernel modules, user applications, pytd3)
 ./scripts/build.sh
 
 # Or build specific components:
 ./scripts/build.sh -m    # Build only kernel modules
 ./scripts/build.sh -u    # Build only user applications
-./scripts/build.sh -d    # Build only TD3Learn components
+./scripts/build.sh -d    # Build only pytd3 components
 ```
 
 The build outputs will be placed in the `deploy` directory.
 
-## 2. Train TD3Learn Models with Docker
+## 2. Train pytd3 Models with Docker
 
 Our Docker-based workflow makes it easy to train and deploy reinforcement learning models:
 
@@ -45,7 +45,7 @@ docker-compose run train
 train my_model
 
 # Or run a specific training script
-python3 /app/td3learn/examples/demo.py
+python3 /app/pytd3/examples/demo.py
 ```
 
 ## 3. Deploy to BeagleBone AI with Hardware Acceleration
@@ -57,7 +57,7 @@ After training, you can deploy the model to your BeagleBone AI with hardware acc
 docker-compose run deploy deploy my_model --host beaglebone.local
 
 # Or using the deploy script directly
-./td3learn/tools/deploy.sh --model models/my_model --tidl --hardware
+./pytd3/tools/deploy.sh --model models/my_model --tidl --hardware
 ```
 
 ## 4. Hardware Acceleration Options
@@ -67,18 +67,18 @@ The BeagleBone AI offers multiple acceleration options:
 - **TIDL (TI Deep Learning)**: Uses DSP and EVE cores for best performance
   ```bash
   # Deploy with TIDL acceleration (4 EVE cores, 2 DSP cores)
-  ./td3learn/tools/deploy.sh --model models/my_model --tidl
+  ./pytd3/tools/deploy.sh --model models/my_model --tidl
   ```
 
 - **OpenCL**: Uses GPU for compute operations
   ```bash
   # Deploy with OpenCL acceleration
-  ./td3learn/tools/deploy.sh --model models/my_model --opencl
+  ./pytd3/tools/deploy.sh --model models/my_model --opencl
   ```
 
 To check available hardware capabilities:
 ```bash
-./td3learn/tools/hwdetect.sh
+./pytd3/tools/hwdetect.sh
 ```
 
 ## 5. Monitoring and Control
@@ -89,8 +89,8 @@ Once deployed, you can monitor and control the hexapod:
 # SSH into BeagleBone
 ssh debian@beaglebone.local
 
-# Start the TD3Learn controller
-cd /home/debian/td3learn_model
+# Start the pytd3 controller
+cd /home/debian/pytd3_model
 ./run.sh
 ```
 

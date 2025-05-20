@@ -42,7 +42,7 @@ rectangle "Development Host" as dev_host <<source>> {
     rectangle "Source Code Repository" as src {
         component "Kernel Modules\n(/driver)" as kernel_src
         component "User Applications\n(/app)" as app_src
-        component "Machine Learning\n(/td3learn)" as ml_src
+        component "Machine Learning\n(/pytd3)" as ml_src
         component "Utilities\n(/utils)" as util_src
         component "Build Scripts\n(/scripts)" as build_scripts
     }
@@ -62,7 +62,7 @@ rectangle "Build Environment (Docker)" as build_env <<build>> {
         file "mpu6050.ko" as mpu_ko
         file "servo.ko" as servo_ko
         file "hexapod_controller" as controller_bin
-        file "td3learn_deploy" as td3_bin
+        file "pytd3_deploy" as td3_bin
         file "install.sh" as install_sh
     }
 }
@@ -127,7 +127,7 @@ note right of src
   <b>Project Structure:</b>
   • driver/ - Kernel modules source
   • app/ - C++ application source
-  • td3learn/ - ML reinforcement learning
+  • pytd3/ - ML reinforcement learning
   • utils/ - Installation utilities
   • scripts/ - Build automation
 end note

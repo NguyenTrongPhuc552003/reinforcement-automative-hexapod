@@ -56,7 +56,7 @@ RUN mkdir -p \
     /build/module \
     /build/deploy \
     /build/user \
-    /build/td3learn
+    /build/pytd3
 
 # Download kernel headers for BeagleBone AI
 RUN wget https://rcn-ee.com/repos/debian/pool/main/l/linux-upstream/linux-headers-${KERNEL_VERSION}_1${DEBIAN_VERSION}_armhf.deb && \
@@ -72,22 +72,42 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # =============================================================================
-# TD3LEARN REINFORCEMENT LEARNING ENVIRONMENT
+# PYTHON AND PYTD3 REINFORCEMENT LEARNING ENVIRONMENT
 # =============================================================================
-# Install ML/AI dependencies
+# Install Python and ML/AI dependencies
 RUN apt-get update && apt-get install -y \
     python3 \
     python3-pip \
     python3-dev \
+    python3-venv \
     libopenblas-dev \
-    # Add more ML dependencies here
+    libblas-dev \
+    liblapack-dev \
+    libatlas-base-dev \
+    gfortran \
+    libhdf5-dev \
+    pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python packages for ML
-#RUN pip3 install --no-cache-dir \
-#    numpy \
-#    scipy \
-#    matplotlib
+# Install Python packages compatible with BeagleBone AI
+RUN pip3 install --no-cache-dir \
+    numpy==1.16.5 \
+    scipy==1.3.1 \
+    pyyaml==5.3
+
+# =============================================================================
+# OPENCL AND TIDL SUPPORT
+# =============================================================================
+# Create directories for OpenCL and TIDL support
+RUN mkdir -p \
+    /usr/include/CL/TI \
+    /usr/include/tidl \
+    /usr/lib/tidl
+
+# Symlink stubs for OpenCL and TIDL (actual libraries will be mounted as needed)
+RUN touch /usr/include/CL/TI/cl.h && \
+    touch /usr/include/CL/TI/cl_ext.h && \
+    touch /usr/include/tidl/tidl_api.h
 
 # =============================================================================
 # BUILD TOOLS SETUP

@@ -4,3 +4,6 @@
 [submodule "tidl/api"]
 	path = tidl/api
 	url = https://github.com/rcn-ee/tidl-api.git
+[submodule "tidl/utils"]
+	path = tidl/utils
+	url = git://git.ti.com/tidl/tidl-utils.git

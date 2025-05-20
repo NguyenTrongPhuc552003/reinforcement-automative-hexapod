@@ -1,0 +1,27 @@
+/*
+ * Device Tree Overlay for MPU6050 on BeagleBone AI
+ * This overlay configures the I2C bus and the MPU6050 sensor.
+ * It assumes the MPU6050 is connected to I2C3 and uses GPIO1 for interrupts.
+ * Adjust the GPIO pin and interrupt type as needed.
+ */
+
+/dts-v1/;
+/plugin/;
+
+/ {
+    compatible = "ti,beaglebone-ai";
+
+    fragment@0 {
+        target = <&i2c3>;
+        __overlay__ {
+            status = "okay";
+
+            mpu6050: mpu6050@68 {
+                compatible = "invensense,mpu6050";
+                reg = <0x68>;
+                interrupt-parent = <&gpio1>;
+                interrupts = <28 IRQ_TYPE_EDGE_RISING>; /* Adjust GPIO pin and type as needed */
+            };
+        };
+    };
+};
