@@ -14,6 +14,7 @@ PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 KERNEL_MODULE_DIR="${PROJECT_ROOT}/driver"
 USER_SPACE_DIR="${PROJECT_ROOT}/app"
 PYTD3_DIR="${PROJECT_ROOT}/pytd3"
+QTUI_DIR="${PROJECT_ROOT}/qtui"
 DEPLOY_DIR="${PROJECT_ROOT}/deploy"
 UTILS_DIR="${PROJECT_ROOT}/utils"
 
@@ -31,6 +32,7 @@ usage() {
     echo "  -m, module        Build kernel modules"
     echo "  -u, user          Build user space programs"
     echo "  -d, pytd3         Build PyTD3 reinforcement learning module"
+    echo "  -q, qtui          Build Qt Hexapod UI application"
     echo "  -s, setup         Setup Python virtual environment for PyTD3"
     echo "  -l, uml           Build UML diagrams (no Docker required)"
     echo "  -t, utility       Create utility scripts (no Docker required)"
@@ -62,14 +64,19 @@ build_docker_image() {
         exit 1
     fi
     
-    # Verify entrypoint.sh exists
-    if [ ! -f "${PROJECT_ROOT}/entrypoint.sh" ]; then
-        log "${RED}" "entrypoint.sh not found in project root!"
+    # Verify Docker directory and Dockerfile exist
+    if [ ! -d "${PROJECT_ROOT}/docker" ]; then
+        log "${RED}" "docker/ directory not found in project root!"
         exit 1
     fi
     
-    # Build the Docker image
-    docker build ${cache_flag} -t hexapod-builder "${PROJECT_ROOT}" || {
+    if [ ! -f "${PROJECT_ROOT}/docker/build.Dockerfile" ]; then
+        log "${RED}" "build.Dockerfile not found in docker/ directory!"
+        exit 1
+    fi
+    
+    # Build the Docker image using the correct Dockerfile location
+    docker build ${cache_flag} -t hexapod-builder -f "${PROJECT_ROOT}/docker/build.Dockerfile" "${PROJECT_ROOT}" || {
         log "${RED}" "Docker build failed!"
         exit 1
     }
@@ -180,6 +187,24 @@ build_pytd3() {
     fi
 }
 
+# Function to build Qt Hexapod UI application
+build_qtui() {
+    log "${YELLOW}" "Building Qt Hexapod UI application..."
+    
+    # Check if Qt build directory exists
+    if [ ! -d "${QTUI_DIR}/build" ]; then
+        mkdir -p "${QTUI_DIR}/build"
+    fi
+    
+    # Using make with "-C" option to specify the directory
+    make -C "${QTUI_DIR}"/build/Desktop_* || {
+        log "${RED}" "Qt Hexapod UI build failed!"
+        exit 1
+    }
+    
+    log "${GREEN}" "Qt Hexapod UI build successful!"
+}
+
 # Function to build UML diagrams using export.sh script (no Docker required)
 build_uml_diagrams() {
     log "${YELLOW}" "Building UML diagrams..."
@@ -224,20 +249,6 @@ build_utility_scripts() {
     log "${GREEN}" "Utility scripts prepared successfully"
 }
 
-# Function to clean UML diagrams (no Docker required)
-clean_uml_diagrams() {
-    log "${YELLOW}" "Cleaning UML diagram files..."
-    
-    # Check if export.sh exists
-    if [ ! -f "${PROJECT_ROOT}/scripts/export.sh" ]; then
-        log "${RED}" "export.sh not found in scripts directory!"
-        return 1
-    fi
-    
-    # Run export.sh script with clean option
-    bash "${PROJECT_ROOT}/scripts/export.sh" -c    
-}
-
 # Initialize option flags
 DO_CLEAN=0
 DO_MODULE=0
@@ -246,6 +257,7 @@ DO_UTILITY=0
 DO_UML=0
 DO_NO_CACHE=0
 DO_PYTD3=0
+DO_QTUI=0
 DO_SETUP_ENV=0
 DO_DOCKER_REQUIRED=0
 
@@ -256,7 +268,9 @@ if [ $# -eq 0 ]; then
     DO_UTILITY=1
     DO_UML=1
     DO_USER=1
+    DO_SETUP_ENV=1
     DO_PYTD3=1
+    DO_QTUI=1
     DO_DOCKER_REQUIRED=1
 else
     for arg in "$@"; do
@@ -274,6 +288,8 @@ else
             DO_DOCKER_REQUIRED=1
         elif [[ "$arg" == "utility" || "$arg" == "-t"  ]]; then
             DO_UTILITY=1
+        elif [[ "$arg" == "qtui" || "$arg" == "-q"  ]]; then
+            DO_QTUI=1
         elif [[ "$arg" == "pytd3" || "$arg" == "-d" ]]; then
             DO_PYTD3=1
             DO_DOCKER_REQUIRED=1
@@ -292,6 +308,7 @@ else
                     m) DO_MODULE=1; DO_DOCKER_REQUIRED=1 ;;
                     u) DO_USER=1; DO_DOCKER_REQUIRED=1 ;;
                     t) DO_UTILITY=1 ;;
+                    q) DO_QTUI=1 ;;
                     d) DO_PYTD3=1; DO_DOCKER_REQUIRED=1 ;;
                     s) DO_SETUP_ENV=1; DO_DOCKER_REQUIRED=1 ;;
                     l) DO_UML=1 ;;
@@ -359,8 +376,27 @@ if [ $DO_CLEAN -eq 1 ]; then
         log "${YELLOW}" "Docker not available or image doesn't exist, skipping Docker-based cleaning"
     fi
 
+    # Clean Qt Hexapod UI build directory
+    if [ -d "${QTUI_DIR}/build" ]; then
+        log "${GREEN}" "Cleaning Qt Hexapod UI build directory..."
+        make -C "${QTUI_DIR}"/build/Desktop_* clean || {
+            log "${RED}" "Qt Hexapod UI clean failed!"
+            exit 1
+        }
+        rm -f "${QTUI_DIR}/build/Desktop_"*/qtui
+    fi
+
     # Clean UML diagrams without requiring Docker
-    clean_uml_diagrams
+    log "${YELLOW}" "Cleaning UML diagram files..."
+    
+    # Check if export.sh exists
+    if [ ! -f "${PROJECT_ROOT}/scripts/export.sh" ]; then
+        log "${RED}" "export.sh not found in scripts directory!"
+        return 1
+    fi
+    
+    # Run export.sh script with clean option
+    bash "${PROJECT_ROOT}/scripts/export.sh" -c 
     
     log "${GREEN}" "Clean completed successfully!"
     exit 0
@@ -368,6 +404,13 @@ fi
 
 # Components that don't require Docker can be built first
 COMPONENTS_BUILT=0
+
+# Build Qt Hexapod UI application (no Docker required)
+if [ $DO_QTUI -eq 1 ]; then
+    build_qtui
+    log "${GREEN}" "Qt Hexapod UI build completed successfully!"
+    COMPONENTS_BUILT=1
+fi
 
 # Build utility scripts (no Docker required)
 if [ $DO_UTILITY -eq 1 ]; then

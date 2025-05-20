@@ -1,44 +1,108 @@
-version: '3'
+version: '3.8'
+
+# Define common settings to be reused across services
+x-common-settings: &common-settings
+  restart: "no"
+  environment: &common-env
+    TIDL_PLATFORM: AM5729
+    OCL_PLATFORM: 0
+    PYTHONPATH: /app
 
 services:
-  # Service for training models on the host machine
-  train:
+  # === BUILD ENVIRONMENT SERVICES ===
+
+  # Service for building kernel modules and driver components
+  build-driver:
     build:
       context: .
-      dockerfile: docker/td3learn.Dockerfile
+      dockerfile: docker/build.Dockerfile
     volumes:
-      - ./td3learn:/app/td3learn
+      - ./driver:/build/module
+      - ./deploy:/build/deploy
+    command: module
+    environment:
+      BUILD_TYPE: release
+
+  # Service for building userspace applications
+  build-app:
+    build:
+      context: .
+      dockerfile: docker/build.Dockerfile
+    volumes:
+      - ./app:/build/user
+      - ./deploy:/build/deploy
+    command: user
+    environment:
+      DEBUG: 0
+
+  # Service for building PyTD3 reinforcement learning module
+  build-pytd3:
+    build:
+      context: .
+      dockerfile: docker/build.Dockerfile
+    volumes:
+      - ./pytd3:/build/pytd3
+      - ./deploy:/build/deploy
+    command: pytd3
+
+  # === DEVELOPMENT SERVICES ===
+
+  # Development environment with full toolkit
+  dev:
+    <<: *common-settings
+    build:
+      context: .
+      dockerfile: docker/pytd3.Dockerfile
+    volumes:
+      - ./:/app
+    ports:
+      - "8888:8888" # For Jupyter notebooks
+    environment:
+      <<: *common-env
+      DEVELOPMENT: 1
+    command: bash
+
+  # === TRAINING SERVICES ===
+
+  # Service for training reinforcement learning models on host
+  train:
+    <<: *common-settings
+    build:
+      context: .
+      dockerfile: docker/pytd3.Dockerfile
+    volumes:
+      - ./pytd3:/app/pytd3
       - ./models:/app/models
       - ./data:/app/data
     environment:
-      - TIDL_PLATFORM=AM5729
-      - OCL_PLATFORM=0
-      - PYTHONPATH=/app
-    command: build
+      <<: *common-env
+      TRAINING_MODE: 1
+    command: python /app/pytd3/train.py
 
-  # Service for running trained models directly on BeagleBone AI
-  deploy:
+  # === DEPLOYMENT SERVICES ===
+
+  # Service for testing deployment on simulated environment
+  test-deploy:
+    <<: *common-settings
     build:
       context: .
-      dockerfile: docker/td3learn.Dockerfile
+      dockerfile: docker/pytd3.Dockerfile
     volumes:
-      - ./td3learn:/app/td3learn
+      - ./pytd3:/app/pytd3
       - ./models:/app/models
       - ./configs:/app/configs
+      - ./deploy:/app/deploy
     environment:
-      - TIDL_PLATFORM=AM5729
-      - OCL_PLATFORM=0
-    command: bash
+      <<: *common-env
+      DEPLOYMENT_MODE: test
+    command: python /app/pytd3/deploy.py --test
 
-  # Development environment with hardware acceleration tools 
-  dev:
+  # Service for final deployment packaging
+  package:
     build:
       context: .
-      dockerfile: docker/td3learn.Dockerfile
+      dockerfile: docker/pytd3.Dockerfile
     volumes:
-      - ./:/app
-    environment:
-      - TIDL_PLATFORM=AM5729
-      - OCL_PLATFORM=0
-      - PYTHONPATH=/app
-    command: bash
+      - ./deploy:/app/deploy
+      - ./models:/app/models
+    command: bash -c "tar -czvf /app/deploy/hexapod-package.tar.gz -C /app/deploy ."
