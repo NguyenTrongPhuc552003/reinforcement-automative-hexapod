@@ -1,8 +1,8 @@
 #include <linux/module.h>
 #include <linux/kernel.h>
-#include <linux/cdev.h>
-#include <linux/uaccess.h>
-#include <linux/miscdevice.h>
+#include <linux/cdev.h>       // For character device registration
+#include <linux/uaccess.h>    // For copy_to_user and copy_from_user
+#include <linux/miscdevice.h> // This is used to register the misc device
 #include "hexapod.h"
 #include "mpu6050.h"
 #include "pca9685.h"
