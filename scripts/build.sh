@@ -13,7 +13,7 @@ NC='\033[0m'
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 KERNEL_MODULE_DIR="${PROJECT_ROOT}/driver"
 USER_SPACE_DIR="${PROJECT_ROOT}/app"
-TD3_LEARN_DIR="${PROJECT_ROOT}/td3learn"
+PYTD3_DIR="${PROJECT_ROOT}/pytd3"
 DEPLOY_DIR="${PROJECT_ROOT}/deploy"
 UTILS_DIR="${PROJECT_ROOT}/utils"
 
@@ -30,7 +30,8 @@ usage() {
     echo "  (no argument)     Build all components"
     echo "  -m, module        Build kernel modules"
     echo "  -u, user          Build user space programs"
-    echo "  -d, td3learn      Build TD3Learn reinforcement learning module"
+    echo "  -d, pytd3         Build PyTD3 reinforcement learning module"
+    echo "  -s, setup         Setup Python virtual environment for PyTD3"
     echo "  -l, uml           Build UML diagrams (no Docker required)"
     echo "  -t, utility       Create utility scripts (no Docker required)"
     echo "  -c, clean         Clean build artifacts"
@@ -129,31 +130,52 @@ build_user_space() {
     }
 }
 
-# Function to build TD3Learn module
-build_td3learn() {
-    log "${YELLOW}" "Building TD3Learn module..."
+# Function to setup Python virtual environment for PyTD3
+setup_pytd3_env() {
+    log "${YELLOW}" "Setting up Python virtual environment for PyTD3..."
+    
+    # Run Docker with proper command format
+    docker run --rm \
+        -v "${PYTD3_DIR}:/build/pytd3" \
+        -v "${DEPLOY_DIR}:/build/deploy" \
+        hexapod-builder setup_env || {
+        log "${RED}" "PyTD3 environment setup failed!"
+        exit 1
+    }
+    
+    # Create default config directory if it doesn't exist
+    if [ ! -d "${PYTD3_DIR}/config" ]; then
+        mkdir -p "${PYTD3_DIR}/config"
+    fi
+    
+    log "${GREEN}" "PyTD3 environment setup successful!"
+}
+
+# Function to build PyTD3 module
+build_pytd3() {
+    log "${YELLOW}" "Building PyTD3 module..."
     
     # Create build directory if it doesn't exist
-    if [ ! -d "${PROJECT_ROOT}/td3learn/build" ]; then
-        mkdir -p "${PROJECT_ROOT}/td3learn/build"
+    if [ ! -d "${PYTD3_DIR}/build" ]; then
+        mkdir -p "${PYTD3_DIR}/build"
     fi
     
     # Run Docker with proper command format
     docker run --rm \
-        -v "${PROJECT_ROOT}/td3learn:/build/td3learn" \
-        -v "${PROJECT_ROOT}/app:/build/app" \
+        -v "${PYTD3_DIR}:/build/pytd3" \
+        -v "${USER_SPACE_DIR}:/build/app" \
         -v "${DEPLOY_DIR}:/build/deploy" \
-        hexapod-builder td3learn
+        hexapod-builder pytd3
     
     if [ $? -eq 0 ]; then
-        log "${GREEN}" "TD3Learn build successful!"
-        # Copy relevant files to deploy directory
-        mkdir -p "${DEPLOY_DIR}/td3learn"
-        cp -r "${PROJECT_ROOT}/td3learn/build/"*.a \
-            "${PROJECT_ROOT}/td3learn/build/td3learn_"* \
-            "${DEPLOY_DIR}/td3learn/" 2>/dev/null || true
+        log "${GREEN}" "PyTD3 build successful!"
+        # Copy relevant files to deploy directory (if needed)
+        mkdir -p "${DEPLOY_DIR}/pytd3"
+        cp -r "${PYTD3_DIR}/build/"*.so \
+            "${PYTD3_DIR}/build/pytd3_"* \
+            "${DEPLOY_DIR}/pytd3/" 2>/dev/null || true
     else
-        log "${RED}" "TD3Learn build failed!"
+        log "${RED}" "PyTD3 build failed!"
         return 1
     fi
 }
@@ -223,7 +245,8 @@ DO_USER=0
 DO_UTILITY=0
 DO_UML=0
 DO_NO_CACHE=0
-DO_TD3LEARN=0
+DO_PYTD3=0
+DO_SETUP_ENV=0
 DO_DOCKER_REQUIRED=0
 
 # Parse command-line arguments
@@ -233,7 +256,7 @@ if [ $# -eq 0 ]; then
     DO_UTILITY=1
     DO_UML=1
     DO_USER=1
-    DO_TD3LEARN=1
+    DO_PYTD3=1
     DO_DOCKER_REQUIRED=1
 else
     for arg in "$@"; do
@@ -251,8 +274,11 @@ else
             DO_DOCKER_REQUIRED=1
         elif [[ "$arg" == "utility" || "$arg" == "-t"  ]]; then
             DO_UTILITY=1
-        elif [[ "$arg" == "td3learn" || "$arg" == "-d" ]]; then
-            DO_TD3LEARN=1
+        elif [[ "$arg" == "pytd3" || "$arg" == "-d" ]]; then
+            DO_PYTD3=1
+            DO_DOCKER_REQUIRED=1
+        elif [[ "$arg" == "setup" || "$arg" == "-s" ]]; then
+            DO_SETUP_ENV=1
             DO_DOCKER_REQUIRED=1
         elif [[ "$arg" == "uml" || "$arg" == "-l" ]]; then
             DO_UML=1
@@ -266,7 +292,8 @@ else
                     m) DO_MODULE=1; DO_DOCKER_REQUIRED=1 ;;
                     u) DO_USER=1; DO_DOCKER_REQUIRED=1 ;;
                     t) DO_UTILITY=1 ;;
-                    d) DO_TD3LEARN=1; DO_DOCKER_REQUIRED=1 ;;
+                    d) DO_PYTD3=1; DO_DOCKER_REQUIRED=1 ;;
+                    s) DO_SETUP_ENV=1; DO_DOCKER_REQUIRED=1 ;;
                     l) DO_UML=1 ;;
                     n) DO_NO_CACHE=1 ;;
                     h) usage ;;
@@ -320,12 +347,12 @@ if [ $DO_CLEAN -eq 1 ]; then
             fi
         fi
 
-        # Clean TD3Learn build directory with sudo if needed
-        if [ -d "${TD3_LEARN_DIR}/build" ]; then
-            log "${GREEN}" "Cleaning TD3Learn build directory..."
-            if ! rm -rf "${TD3_LEARN_DIR}/build" 2>/dev/null; then
-                log "${YELLOW}" "Using sudo to clean TD3Learn build directory..."
-                sudo rm -rf "${TD3_LEARN_DIR}/build"
+        # Clean PyTD3 build directory and virtual environment with sudo if needed
+        if [ -d "${PYTD3_DIR}/build" ] || [ -d "${PYTD3_DIR}/venv" ]; then
+            log "${GREEN}" "Cleaning PyTD3 build and virtual environment..."
+            if ! rm -rf "${PYTD3_DIR}/build" "${PYTD3_DIR}/venv" 2>/dev/null; then
+                log "${YELLOW}" "Using sudo to clean PyTD3 directories..."
+                sudo rm -rf "${PYTD3_DIR}/build" "${PYTD3_DIR}/venv"
             fi
         fi
     else
@@ -369,6 +396,12 @@ if [ $DO_DOCKER_REQUIRED -eq 1 ]; then
         build_docker_image ""
     fi
 
+    # Setup Python virtual environment if requested (must be before building PyTD3)
+    if [ $DO_SETUP_ENV -eq 1 ]; then
+        setup_pytd3_env
+        COMPONENTS_BUILT=1
+    fi
+    
     # Build Docker-dependent components
     if [ $DO_MODULE -eq 1 ]; then
         build_kernel_module
@@ -382,9 +415,9 @@ if [ $DO_DOCKER_REQUIRED -eq 1 ]; then
         COMPONENTS_BUILT=1
     fi
 
-    # Build TD3Learn if requested
-    if [ $DO_TD3LEARN -eq 1 ]; then
-        build_td3learn || EXIT_CODE=1
+    # Build PyTD3 if requested
+    if [ $DO_PYTD3 -eq 1 ]; then
+        build_pytd3 || EXIT_CODE=1
         COMPONENTS_BUILT=1
     fi
 fi
