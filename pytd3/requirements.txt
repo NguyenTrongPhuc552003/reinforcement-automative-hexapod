@@ -1,0 +1,13 @@
+# Core dependencies
+numpy>=1.16.5
+PyYAML>=5.3
+pybind11>=2.6.0
+
+# Hardware interfaces
+pyserial>=3.4
+
+# Reinforcement learning
+gym>=0.17.3
+
+# For BeagleBone AI hardware interface
+Adafruit_BBIO>=1.2.0

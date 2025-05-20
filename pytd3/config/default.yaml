@@ -1,0 +1,41 @@
+# TD3 configuration for hexapod control
+
+agent:
+  hidden_dim: 256
+  discount: 0.99
+  tau: 0.005
+  policy_noise: 0.2
+  noise_clip: 0.5
+  policy_freq: 2
+  lr_actor: 0.0003
+  lr_critic: 0.0003
+
+environment:
+  use_hardware: false
+  action_dim: 18
+  state_dim: 24
+  max_episode_steps: 1000
+  time_step: 0.05
+  reward_weights:
+    stability: 1.0
+    energy: 0.5
+    progress: 0.8
+
+training:
+  max_timesteps: 1000000
+  start_timesteps: 25000
+  batch_size: 256
+  exploration_noise: 0.1
+  buffer_size: 1000000
+  eval_freq: 5000
+  save_freq: 10000
+
+bridge:
+  enabled: true
+  shared_memory_key: 1234
+  sampling_rate_hz: 20
+  timeout_ms: 100
+  
+model:
+  save_dir: "/app/models"
+  load_model: ""
