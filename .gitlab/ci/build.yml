@@ -1,0 +1,55 @@
+# Build jobs for different components
+
+build_driver:
+  stage: build
+  script:
+    - ./scripts/build.sh -m
+  artifacts:
+    paths:
+      - deploy/hexapod_driver.ko
+
+build_app:
+  stage: build
+  script:
+    - ./scripts/build.sh -u
+  artifacts:
+    paths:
+      - deploy/hexapod_controller
+      - deploy/test_mpu6050
+      - deploy/test_balance
+      - deploy/test_calibration
+      - deploy/test_servo
+      - deploy/test_movement
+
+build_pytd3:
+  stage: build
+  script:
+    - ./scripts/build.sh -d
+  artifacts:
+    paths:
+      - deploy/pytd3/
+
+build_qtui:
+  stage: build
+  script:
+    - ./scripts/build.sh -q
+  artifacts:
+    paths:
+      - deploy/qtui
+
+build_utilities:
+  stage: build
+  script:
+    - ./scripts/build.sh -t
+  artifacts:
+    paths:
+      - deploy/install.sh
+      - deploy/monitor.sh
+
+build_digram:
+  stage: build
+  script:
+    - ./scripts/build.sh -l
+  artifacts:
+    paths:
+      - docs/diagrams/out/*

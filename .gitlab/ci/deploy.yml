@@ -1,0 +1,20 @@
+# Deployment jobs
+
+deploy_staging:
+  stage: deploy
+  environment:
+    name: staging
+  script:
+    - ./scripts/deploy.sh --env staging
+  only:
+    - development
+
+deploy_production:
+  stage: deploy
+  environment:
+    name: production
+  script:
+    - ./scripts/deploy.sh --env production
+  only:
+    - main
+  when: manual
