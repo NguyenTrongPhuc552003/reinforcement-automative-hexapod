@@ -1,0 +1,16 @@
+pages:
+  stage: documentation
+  image: python:3.8-slim
+  script:
+    - apt-get update
+    - apt-get install -y make
+    - pip install sphinx sphinx_rtd_theme
+    - cd docs
+    - make html
+    - mkdir -p ../public
+    - cp -r _build/html/* ../public/
+  artifacts:
+    paths:
+      - public
+  only:
+    - main

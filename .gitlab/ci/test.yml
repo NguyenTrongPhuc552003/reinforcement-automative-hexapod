@@ -1,0 +1,31 @@
+# Testing jobs
+
+test_driver:
+  stage: test
+  dependencies:
+    - build_driver
+  script:
+    - ./scripts/test.sh test-driver
+
+test_app:
+  stage: test
+  dependencies:
+    - build_app
+  script:
+    - ./scripts/test.sh test-app
+
+test_pytd3:
+  stage: test
+  dependencies:
+    - build_pytd3
+  script:
+    - ./scripts/test.sh test-pytd3
+
+test_integration:
+  stage: test
+  dependencies:
+    - build_driver
+    - build_app
+    - build_pytd3
+  script:
+    - ./scripts/test.sh test-all

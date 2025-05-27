@@ -1,0 +1,12 @@
+# Docker image building jobs
+
+build_docker_images:
+  stage: build
+  services:
+    - docker:dind
+  script:
+    - ./scripts/build.sh -n # Build with no cache
+  only:
+    changes:
+      - docker/**/*
+      - scripts/build.sh

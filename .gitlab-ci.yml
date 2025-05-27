@@ -1,0 +1,20 @@
+stages:
+  - build
+  - test
+  - deploy
+  - pages
+  - docs
+
+include:
+  - local: ".gitlab/ci/build.yml"
+  - local: ".gitlab/ci/test.yml"
+  - local: ".gitlab/ci/deploy.yml"
+  - local: ".gitlab/ci/pages.yml"
+  - local: ".gitlab/ci/docker.yml"
+
+# Global default settings
+default:
+  image: debian:buster
+
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
