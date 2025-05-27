@@ -29,14 +29,14 @@ usage() {
     echo "Usage: $0 [OPTIONS]"
     echo "Options:"
     echo "  (no argument)     Build all components"
-    echo "  -m, module        Build kernel modules"
-    echo "  -u, user          Build user space programs"
-    echo "  -d, pytd3         Build PyTD3 reinforcement learning module"
-    echo "  -q, qtui          Build Qt Hexapod UI application"
-    echo "  -s, setup         Setup Python virtual environment for PyTD3"
-    echo "  -l, uml           Build UML diagrams (no Docker required)"
-    echo "  -t, utility       Create utility scripts (no Docker required)"
-    echo "  -c, clean         Clean build artifacts"
+    echo "  -m, --module      Build kernel modules"
+    echo "  -u, --user        Build user space programs"
+    echo "  -d, --pytd3       Build PyTD3 reinforcement learning module"
+    echo "  -q, --qtui        Build Qt Hexapod UI application"
+    echo "  -s, --setup       Setup Python virtual environment for PyTD3"
+    echo "  -l, --uml         Build UML diagrams (no Docker required)"
+    echo "  -t, --utility     Create utility scripts (no Docker required)"
+    echo "  -c, --clean       Clean build artifacts"
     echo "  -n, --no-cache    Build all without cache"
     echo "  -h, --help        Show this help message"
     echo ""
@@ -197,7 +197,7 @@ build_qtui() {
     fi
     
     # Using make with "-C" option to specify the directory
-    make -C "${QTUI_DIR}"/build/Desktop_* || {
+    make -C "${QTUI_DIR}"/build/Desktop_* -j$(nproc) || {
         log "${RED}" "Qt Hexapod UI build failed!"
         exit 1
     }
@@ -278,25 +278,25 @@ else
             DO_NO_CACHE=1
         elif [[ "$arg" == "--help" || "$arg" == "-h" ]]; then
             usage
-        elif [[ "$arg" == "clean" || "$arg" == "-c" ]]; then
+        elif [[ "$arg" == "--clean" || "$arg" == "-c" ]]; then
             DO_CLEAN=1
-        elif [[ "$arg" == "module" || "$arg" == "-m"  ]]; then
+        elif [[ "$arg" == "--module" || "$arg" == "-m"  ]]; then
             DO_MODULE=1
             DO_DOCKER_REQUIRED=1
-        elif [[ "$arg" == "user" || "$arg" == "-u"  ]]; then
+        elif [[ "$arg" == "--user" || "$arg" == "-u"  ]]; then
             DO_USER=1
             DO_DOCKER_REQUIRED=1
-        elif [[ "$arg" == "utility" || "$arg" == "-t"  ]]; then
+        elif [[ "$arg" == "--utility" || "$arg" == "-t"  ]]; then
             DO_UTILITY=1
-        elif [[ "$arg" == "qtui" || "$arg" == "-q"  ]]; then
+        elif [[ "$arg" == "--qtui" || "$arg" == "-q"  ]]; then
             DO_QTUI=1
-        elif [[ "$arg" == "pytd3" || "$arg" == "-d" ]]; then
+        elif [[ "$arg" == "--pytd3" || "$arg" == "-d" ]]; then
             DO_PYTD3=1
             DO_DOCKER_REQUIRED=1
-        elif [[ "$arg" == "setup" || "$arg" == "-s" ]]; then
+        elif [[ "$arg" == "--setup" || "$arg" == "-s" ]]; then
             DO_SETUP_ENV=1
             DO_DOCKER_REQUIRED=1
-        elif [[ "$arg" == "uml" || "$arg" == "-l" ]]; then
+        elif [[ "$arg" == "--uml" || "$arg" == "-l" ]]; then
             DO_UML=1
         elif [[ "$arg" == -* && "$arg" != "--"* ]]; then
             # Process combined short options like -imu
