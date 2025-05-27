@@ -7,3 +7,6 @@
 [submodule "tidl/utils"]
 	path = tidl/utils
 	url = git://git.ti.com/tidl/tidl-utils.git
+[submodule "qtui"]
+	path = qtui
+	url = git@github.com:NguyenTrongPhuc552003/qt-application-hexapod.git
