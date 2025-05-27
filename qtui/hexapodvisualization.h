@@ -43,7 +43,7 @@ private:
         int16_t knee;
         int16_t ankle;
         QPointF computedPosition; // 2D screen position
-        bool active;             // Whether leg is active/moving
+        bool active;              // Whether leg is active/moving
     };
 
     std::array<LegState, NUM_LEGS> m_legStates;
@@ -56,7 +56,8 @@ private:
     bool m_highlightActiveLeg;
 
     // Colors for different themes
-    struct ColorScheme {
+    struct ColorScheme
+    {
         QColor background;
         QColor bodyFill;
         QColor bodyOutline;
@@ -71,14 +72,14 @@ private:
 
     ColorScheme m_lightColors;
     ColorScheme m_darkColors;
-    
+
     // Helper drawing methods
     void drawHexapod(QPainter &painter);
     void drawLeg(QPainter &painter, int legIndex);
     void drawBody(QPainter &painter);
     void drawCoordinateSystem(QPainter &painter);
     void calculateLegPositions();
-    const ColorScheme& currentColorScheme() const;
+    const ColorScheme &currentColorScheme() const;
 };
 
 #endif // HEXAPODVISUALIZATION_H
