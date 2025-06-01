@@ -274,8 +274,9 @@ if [ $# -eq 0 ]; then
     DO_DOCKER_REQUIRED=1
 else
     for arg in "$@"; do
-        if [[ "$arg" == "--no-cache" ]]; then
+        if [[ "$arg" == "--no-cache" || "$arg" == "-n" ]]; then
             DO_NO_CACHE=1
+            DO_DOCKER_REQUIRED=1
         elif [[ "$arg" == "--help" || "$arg" == "-h" ]]; then
             usage
         elif [[ "$arg" == "--clean" || "$arg" == "-c" ]]; then
@@ -299,7 +300,7 @@ else
         elif [[ "$arg" == "--uml" || "$arg" == "-l" ]]; then
             DO_UML=1
         elif [[ "$arg" == -* && "$arg" != "--"* ]]; then
-            # Process combined short options like -imu
+            # Process combined short options like -tmu
             flags=${arg#-}
             for (( i=0; i<${#flags}; i++ )); do
                 flag=${flags:$i:1}
@@ -312,7 +313,7 @@ else
                     d) DO_PYTD3=1; DO_DOCKER_REQUIRED=1 ;;
                     s) DO_SETUP_ENV=1; DO_DOCKER_REQUIRED=1 ;;
                     l) DO_UML=1 ;;
-                    n) DO_NO_CACHE=1 ;;
+                    n) DO_NO_CACHE=1; DO_DOCKER_REQUIRED=1 ;;
                     h) usage ;;
                     *) 
                         log "${RED}" "Unknown option: -$flag"
@@ -429,6 +430,7 @@ fi
 if [ $DO_DOCKER_REQUIRED -eq 1 ]; then
     # Handle Docker image building with or without cache
     if [ $DO_NO_CACHE -eq 1 ]; then
+        echo "Hello"
         # Remove Docker image if it exists
         if docker images | grep -q hexapod-builder; then
             log "${GREEN}" "Removing Docker image..."
