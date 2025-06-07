@@ -29,14 +29,6 @@ build_pytd3:
     paths:
       - deploy/pytd3/
 
-build_qtui:
-  stage: build
-  script:
-    - ./scripts/build.sh -q
-  artifacts:
-    paths:
-      - deploy/qtui
-
 build_utilities:
   stage: build
   script:

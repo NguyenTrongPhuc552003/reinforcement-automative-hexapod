@@ -14,7 +14,6 @@ PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 KERNEL_MODULE_DIR="${PROJECT_ROOT}/driver"
 USER_SPACE_DIR="${PROJECT_ROOT}/app"
 PYTD3_DIR="${PROJECT_ROOT}/pytd3"
-QTUI_DIR="${PROJECT_ROOT}/qtui"
 DEPLOY_DIR="${PROJECT_ROOT}/deploy"
 UTILS_DIR="${PROJECT_ROOT}/utils"
 
@@ -32,7 +31,6 @@ usage() {
     echo "  -m, --module      Build kernel modules"
     echo "  -u, --user        Build user space programs"
     echo "  -d, --pytd3       Build PyTD3 reinforcement learning module"
-    echo "  -q, --qtui        Build Qt Hexapod UI application"
     echo "  -s, --setup       Setup Python virtual environment for PyTD3"
     echo "  -l, --uml         Build UML diagrams (no Docker required)"
     echo "  -t, --utility     Create utility scripts (no Docker required)"
@@ -170,7 +168,6 @@ build_pytd3() {
     # Run Docker with proper command format
     docker run --rm \
         -v "${PYTD3_DIR}:/build/pytd3" \
-        -v "${USER_SPACE_DIR}:/build/app" \
         -v "${DEPLOY_DIR}:/build/deploy" \
         hexapod-builder pytd3
     
@@ -185,24 +182,6 @@ build_pytd3() {
         log "${RED}" "PyTD3 build failed!"
         return 1
     fi
-}
-
-# Function to build Qt Hexapod UI application
-build_qtui() {
-    log "${YELLOW}" "Building Qt Hexapod UI application..."
-    
-    # Check if Qt build directory exists
-    if [ ! -d "${QTUI_DIR}/build" ]; then
-        mkdir -p "${QTUI_DIR}/build"
-    fi
-    
-    # Using make with "-C" option to specify the directory
-    make -C "${QTUI_DIR}"/build/Desktop_* -j$(nproc) || {
-        log "${RED}" "Qt Hexapod UI build failed!"
-        exit 1
-    }
-    
-    log "${GREEN}" "Qt Hexapod UI build successful!"
 }
 
 # Function to build UML diagrams using export.sh script (no Docker required)
@@ -257,7 +236,6 @@ DO_UTILITY=0
 DO_UML=0
 DO_NO_CACHE=0
 DO_PYTD3=0
-DO_QTUI=0
 DO_SETUP_ENV=0
 DO_DOCKER_REQUIRED=0
 
@@ -270,7 +248,6 @@ if [ $# -eq 0 ]; then
     DO_USER=1
     DO_SETUP_ENV=1
     DO_PYTD3=1
-    DO_QTUI=1
     DO_DOCKER_REQUIRED=1
 else
     for arg in "$@"; do
@@ -289,8 +266,6 @@ else
             DO_DOCKER_REQUIRED=1
         elif [[ "$arg" == "--utility" || "$arg" == "-t"  ]]; then
             DO_UTILITY=1
-        elif [[ "$arg" == "--qtui" || "$arg" == "-q"  ]]; then
-            DO_QTUI=1
         elif [[ "$arg" == "--pytd3" || "$arg" == "-d" ]]; then
             DO_PYTD3=1
             DO_DOCKER_REQUIRED=1
@@ -309,7 +284,6 @@ else
                     m) DO_MODULE=1; DO_DOCKER_REQUIRED=1 ;;
                     u) DO_USER=1; DO_DOCKER_REQUIRED=1 ;;
                     t) DO_UTILITY=1 ;;
-                    q) DO_QTUI=1 ;;
                     d) DO_PYTD3=1; DO_DOCKER_REQUIRED=1 ;;
                     s) DO_SETUP_ENV=1; DO_DOCKER_REQUIRED=1 ;;
                     l) DO_UML=1 ;;
@@ -377,16 +351,6 @@ if [ $DO_CLEAN -eq 1 ]; then
         log "${YELLOW}" "Docker not available or image doesn't exist, skipping Docker-based cleaning"
     fi
 
-    # Clean Qt Hexapod UI build directory
-    if [ -d "${QTUI_DIR}/build" ]; then
-        log "${GREEN}" "Cleaning Qt Hexapod UI build directory..."
-        make -C "${QTUI_DIR}"/build/Desktop_* clean || {
-            log "${RED}" "Qt Hexapod UI clean failed!"
-            exit 1
-        }
-        rm -f "${QTUI_DIR}/build/Desktop_"*/qtui
-    fi
-
     # Clean UML diagrams without requiring Docker
     log "${YELLOW}" "Cleaning UML diagram files..."
     
@@ -405,13 +369,6 @@ fi
 
 # Components that don't require Docker can be built first
 COMPONENTS_BUILT=0
-
-# Build Qt Hexapod UI application (no Docker required)
-if [ $DO_QTUI -eq 1 ]; then
-    build_qtui
-    log "${GREEN}" "Qt Hexapod UI build completed successfully!"
-    COMPONENTS_BUILT=1
-fi
 
 # Build utility scripts (no Docker required)
 if [ $DO_UTILITY -eq 1 ]; then
