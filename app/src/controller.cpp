@@ -9,6 +9,7 @@
 #include <time.h>
 #include <iostream>
 #include "controller.hpp"
+#include "ultrasonic.hpp"
 
 namespace controller
 {
@@ -34,9 +35,24 @@ namespace controller
               tiltY(0.0),
               gaitType(gait::GaitType::TRIPOD),
               state(ControllerState::IDLE),
-              terminalConfigured(false)
+              terminalConfigured(false),
+              m_ultrasonicEnabled(false)
         {
             clock_gettime(CLOCK_MONOTONIC, &lastUpdate);
+
+            // Initialize ultrasonic sensor with BeagleBone AI GPIO pins
+            ultrasonic::Ultrasonic::PinConfig config{
+                .trigger_pin = ultrasonic::DefaultPins::TRIGGER_PIN, // P9_12
+                .echo_pin = ultrasonic::DefaultPins::ECHO_PIN,       // P9_13
+            };
+            m_ultrasonic = std::make_unique<ultrasonic::Ultrasonic>(config);
+            m_ultrasonicEnabled = m_ultrasonic->init();
+            
+            if (!m_ultrasonicEnabled)
+            {
+                std::cerr << "Warning: Ultrasonic sensor initialization failed: "
+                          << m_ultrasonic->getLastError() << std::endl;
+            }
         }
 
         /**
@@ -200,6 +216,14 @@ namespace controller
                 state = ControllerState::IDLE;
                 return hexapod.centerAll();
 
+            // Ultrasonic sensor toggle
+            case 'u':
+                m_ultrasonicEnabled = !m_ultrasonicEnabled;
+                std::cout << "Ultrasonic sensing "
+                          << (m_ultrasonicEnabled ? "enabled" : "disabled")
+                          << std::endl;
+                return true;
+
             default:
                 // Unknown key - no action needed
                 return true;
@@ -263,6 +287,27 @@ namespace controller
                         result = applyTilt(); // Use applyTilt to apply height changes
                     }
                     break;
+                }
+            }
+
+            // Process ultrasonic data if enabled
+            if (m_ultrasonicEnabled && m_ultrasonic->isReady())
+            {
+                float distance = m_ultrasonic->getDistance();
+                if (distance > 0)
+                {
+                    // Adjust behavior based on distance
+                    if (distance < 20) // Within 20cm
+                    {
+                        // Stop and back up if too close
+                        state = ControllerState::IDLE;
+                        direction = 180.0; // Back up
+                    }
+                    else if (distance < 50) // Within 50cm
+                    {
+                        // Slow down and prepare to turn
+                        speed = std::min(speed, 0.3);
+                    }
                 }
             }
 
@@ -551,6 +596,10 @@ namespace controller
 
         // Balance settings
         BalanceConfig balanceConfig;
+
+        // Ultrasonic sensor
+        std::unique_ptr<ultrasonic::Ultrasonic> m_ultrasonic;
+        bool m_ultrasonicEnabled;
 
         /**
          * @brief Calculate tilt angles from accelerometer data
