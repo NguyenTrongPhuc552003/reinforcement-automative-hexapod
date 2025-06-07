@@ -44,4 +44,4 @@ build_digram:
     - ./scripts/build.sh -l
   artifacts:
     paths:
-      - docs/diagrams/out/*
+      - docs/diagrams/image/*

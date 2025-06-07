@@ -10,7 +10,8 @@ NC='\033[0m' # No Color
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 DIAGRAM_DIR="${SCRIPT_DIR}/../docs/diagrams"
 SRC_DIR="${DIAGRAM_DIR}/src"
-OUT_DIR="${DIAGRAM_DIR}/out"
+BUILD_DIR="${DIAGRAM_DIR}/build"
+IMAGE_DIR="${DIAGRAM_DIR}/image"
 
 # Output format - can be png, svg, pdf
 FORMAT="png"
@@ -36,11 +37,11 @@ fi
 if [ $CLEAN_MODE -eq 1 ]; then
     echo -e "${YELLOW}Cleaning generated diagram files...${NC}"
     
-    if [ -d "${OUT_DIR}" ]; then
-        rm -f "${OUT_DIR}"/*.${FORMAT} 2>/dev/null
-        echo -e "${GREEN}Removed all .${FORMAT} files from ${OUT_DIR}${NC}"
+    if [ -d "${BUILD_DIR}" ]; then
+        rm -f "${BUILD_DIR}"/*.${FORMAT} 2>/dev/null
+        echo -e "${GREEN}Removed all .${FORMAT} files from ${BUILD_DIR}${NC}"
     else
-        echo -e "${YELLOW}Output directory does not exist: ${OUT_DIR}${NC}"
+        echo -e "${YELLOW}Output directory does not exist: ${BUILD_DIR}${NC}"
     fi
     exit 0
 fi
@@ -52,10 +53,16 @@ if [ ! -f "${PLANTUML_JAR}" ]; then
     exit 1
 fi
 
+# Create build directory if it doesn't exist
+if [ ! -d "${BUILD_DIR}" ]; then
+    echo -e "${YELLOW}Build directory does not exist. Creating: ${BUILD_DIR}${NC}"
+    mkdir -p "${BUILD_DIR}"
+fi
+
 # Create output directory if it doesn't exist
-if [ ! -d "${OUT_DIR}" ]; then
-    echo -e "${YELLOW}Output directory does not exist. Creating: ${OUT_DIR}${NC}"
-    mkdir -p "${OUT_DIR}"
+if [ ! -d "${IMAGE_DIR}" ]; then
+    echo -e "${YELLOW}Output directory does not exist. Creating: ${IMAGE_DIR}${NC}"
+    mkdir -p "${IMAGE_DIR}"
 fi
 
 # Track counts
@@ -65,7 +72,7 @@ FAILED=0
 
 echo -e "${YELLOW}Starting PlantUML diagram generation...${NC}"
 echo "Source directory: ${SRC_DIR}"
-echo "Output directory: ${OUT_DIR}"
+echo "Build directory: ${BUILD_DIR}"
 echo "Format: ${FORMAT}"
 
 # Process each PUML file
@@ -73,23 +80,32 @@ for PUML_FILE in "${SRC_DIR}"/*.puml; do
     if [ -f "$PUML_FILE" ]; then
         TOTAL=$((TOTAL + 1))
         BASE_NAME=$(basename "$PUML_FILE" .puml)
-        OUTPUT_FILE="${OUT_DIR}/${BASE_NAME}.${FORMAT}"
+        BUILD_FILE="${BUILD_DIR}/${BASE_NAME}.${FORMAT}"
         
         echo -e "\nProcessing: ${YELLOW}${BASE_NAME}${NC}"
         
         # Run PlantUML with the specified format from the jar file
-        java -jar "${PLANTUML_JAR}" "${PUML_FILE}" -t${FORMAT} -o "${OUT_DIR}"
+        java -jar "${PLANTUML_JAR}" "${PUML_FILE}" -t${FORMAT} -o "${BUILD_DIR}"
         
         # Check if the command was successful and the output file was created
         if [ $? -eq 0 ]; then
             SUCCESS=$((SUCCESS + 1))
-            echo -e "  ${GREEN}✓ Successfully generated: ${OUTPUT_FILE}${NC}"
+            echo -e "  ${GREEN}✓ Successfully generated: ${BUILD_FILE}${NC}"
         else
             FAILED=$((FAILED + 1))
-            echo -e "  ${RED}✗ Failed to generate: ${OUTPUT_FILE}${NC}"
+            echo -e "  ${RED}✗ Failed to generate: ${BUILD_FILE}${NC}"
         fi
     fi
 done
+
+# Save generated files to image directory
+if [ $SUCCESS -gt 0 ]; then
+    echo -e "\n${YELLOW}Saving generated files to image directory...${NC}"
+    cp "${BUILD_DIR}"/*.${FORMAT} "${IMAGE_DIR}/" 2>/dev/null
+    echo -e "${GREEN}Saved ${SUCCESS} files to ${IMAGE_DIR}${NC}"
+else
+    echo -e "${RED}No diagrams were successfully generated. No files saved.${NC}"
+fi
 
 # Print summary
 echo -e "\n${YELLOW}Diagram Generation Summary:${NC}"
