@@ -85,6 +85,7 @@ Thumbs.db
 .ssh/
 .bash_history
 .python_history
+docs/diagrams/out/
 
 # Python
 __pycache__/
