@@ -207,6 +207,8 @@ namespace application
             // System controls
             registerKeyCommand(' ', [this]()
                                { return m_controller->processKey(' '); });
+            registerKeyCommand('u', [this]()
+                               { return m_controller->processKey('u'); });
             registerKeyCommand('q', [this]()
                                { 
             Application::m_running = false; 
@@ -300,6 +302,7 @@ namespace application
                       << "  3: Ripple Gait\n\n"
                       << "System Controls:\n"
                       << "  Space: Stop and center\n"
+                      << "  U: Toggle ultrasonic sensor\n"
                       << "  +/-: Increase/decrease speed\n"
                       << "  T: Toggle telemetry\n"
                       << "  P: Toggle performance monitoring\n"

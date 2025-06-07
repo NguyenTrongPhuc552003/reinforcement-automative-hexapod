@@ -27,14 +27,14 @@ This project implements a complete software stack for controlling a 6-legged rob
 
 ## System Architecture
 
-The system follows a layered architecture with hardware abstraction. For visual reference, see the architecture diagrams in the `/docs/diagrams/out` directory:
+The system follows a layered architecture with hardware abstraction. For visual reference, see the architecture diagrams in the `/docs/diagrams/image` directory:
 
-- [Deployment Diagram](docs/diagrams/out/deployment.png): Hardware and software deployment
-- [Component Diagram](docs/diagrams/out/component.png): Hardware component interactions
-- [Sequence Diagram](docs/diagrams/out/sequence.png): Runtime interactions
-- [State Diagram](docs/diagrams/out/state.png): Hardware state transitions
-- [Class Diagram](docs/diagrams/out/class.png): Software class structure
-- [Building Process](docs/diagrams/out/building.png): Build and deployment process
+- [Deployment Diagram](docs/diagrams/image/deployment.png): Hardware and software deployment
+- [Component Diagram](docs/diagrams/image/component.png): Hardware component interactions
+- [Sequence Diagram](docs/diagrams/image/sequence.png): Runtime interactions
+- [State Diagram](docs/diagrams/image/state.png): Hardware state transitions
+- [Class Diagram](docs/diagrams/image/class.png): Software class structure
+- [Building Process](docs/diagrams/image/building.png): Build and deployment process
 
 ```
 .
