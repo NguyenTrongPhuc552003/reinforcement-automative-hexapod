@@ -13,6 +13,10 @@ static volatile bool running = true;
 static struct termios orig_termios;
 static bool terminal_modified = false;
 
+// Add these global counters at the top of the file after includes
+static int read_count = 0;  // Track total number of readings attempted 
+static int error_count = 0; // Track number of failed/error readings
+
 // Signal handler for graceful termination
 static void handle_signal(int sig)
 {
@@ -125,10 +129,11 @@ int main(void)
               << std::endl;
 
     // Initialize sensor with BeagleBone AI GPIO pins
-    ultrasonic::Ultrasonic::PinConfig config{
-        .trigger_pin = ultrasonic::DefaultPins::TRIGGER_PIN, // P9_16
-        .echo_pin = ultrasonic::DefaultPins::ECHO_PIN,       // P9_41
-    };
+    ultrasonic::PinConfig config{
+        .trigger_chip = ultrasonic::DefaultPins::TRIGGER_CHIP,
+        .trigger_line = ultrasonic::DefaultPins::TRIGGER_LINE,
+        .echo_chip = ultrasonic::DefaultPins::ECHO_CHIP,
+        .echo_line = ultrasonic::DefaultPins::ECHO_LINE};
 
     ultrasonic::Ultrasonic sensor(config);
 
@@ -139,93 +144,76 @@ int main(void)
         return 1;
     }
 
+    // Initialize the hex  apod
     std::vector<float> readings;
-    readings.reserve(1000); // Pre-allocate space for efficiency
+    bool running = true;
 
-    int read_count = 0;
-    int error_count = 0;
-    auto last_stats_time = std::chrono::steady_clock::now();
+    // Configure terminal for immediate character reading
+    struct termios orig_termios;
+    tcgetattr(STDIN_FILENO, &orig_termios);
+    terminal_modified = true;
 
+    // Set non-blocking non-canonical mode
+    setup_terminal();
+
+    // Install signal handler
+    signal(SIGINT, handle_signal);
+
+    // Create ultrasonic sensor instance
+    ultrasonic::PinConfig config{
+        .trigger_chip = ultrasonic::DefaultPins::TRIGGER_CHIP,
+        .trigger_line = ultrasonic::DefaultPins::TRIGGER_LINE,
+        .echo_chip = ultrasonic::DefaultPins::ECHO_CHIP,
+        .echo_line = ultrasonic::DefaultPins::ECHO_LINE};
+
+    auto ultrasonic = std::make_unique<ultrasonic::Ultrasonic>(config);
+
+    if (!ultrasonic->init())
+    {
+        std::cerr << "Failed to initialize ultrasonic sensor: "
+                  << ultrasonic->getLastError() << std::endl;
+        restore_terminal();
+        return 1;
+    }
+
+    std::cout << "\nUltrasonic Distance Test\n"
+              << "Press Ctrl+C to end test\n"
+              << std::endl;
+
+    // Main test loop
     while (running)
     {
-        auto start = std::chrono::steady_clock::now();
-
-        // Process any keypress
-        char c;
-        if (read(STDIN_FILENO, &c, 1) > 0)
+        // Only take reading when sensor is ready
+        if (sensor.isReady())
         {
-            switch (c)
-            {
-            case 'q':
-                running = false;
-                break;
-            case 's':
-                print_stats(readings);
-                break;
-            case 'r':
-                readings.clear();
-                read_count = 0;
-                error_count = 0;
-                std::cout << "Statistics reset" << std::endl;
-                break;
-            }
-        }
+            read_count++; // Increment read attempts
+            float distance = sensor.getDistance();
 
-        // Get distance measurement
-        float distance = sensor.getDistance();
-        read_count++;
-
-        if (distance > 0)
-        {
-            readings.push_back(distance);
-
-            // Print current reading with color coding based on distance
-            std::cout << "\rDistance: ";
-            if (distance < 20.0f)
+            if (distance < 0)
             {
-                std::cout << "\033[31m"; // Red for close objects
-            }
-            else if (distance < 50.0f)
-            {
-                std::cout << "\033[33m"; // Yellow for medium range
+                error_count++; // Increment error count on invalid reading
+                std::cerr << "Error getting distance: "
+                          << sensor.getLastError() << "\r";
             }
             else
             {
-                std::cout << "\033[32m"; // Green for clear path
+                readings.push_back(distance);
+                std::cout << "Distance: " << std::fixed << std::setprecision(1)
+                          << distance << " cm           \r" << std::flush;
             }
-            std::cout << std::fixed << std::setprecision(1) << std::setw(6)
-                      << distance << " cm\033[0m" << std::flush;
         }
-        else
+
+        // Check for keyboard input to exit
+        char c;
+        if (read(STDIN_FILENO, &c, 1) > 0)
         {
-            error_count++;
-            std::cout << "\rError: " << sensor.getLastError() << std::flush;
+            if (c == 'q' || c == 'Q')
+            {
+                running = false;
+            }
         }
 
-        // Show stats every 5 seconds
-        auto now = std::chrono::steady_clock::now();
-        if (std::chrono::duration_cast<std::chrono::seconds>(now - last_stats_time).count() >= 5)
-        {
-            float success_rate = (read_count > 0) ? (1.0f - (float)error_count / read_count) * 100.0f : 0.0f;
-
-            std::cout << "\nSuccess rate: " << std::fixed << std::setprecision(1)
-                      << success_rate << "% ("
-                      << (read_count - error_count) << "/" << read_count
-                      << " readings)\n"
-                      << std::endl;
-
-            last_stats_time = now;
-        }
-
-        // Calculate how long to sleep
-        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::steady_clock::now() - start);
-
-        // Maintain ~10Hz sampling rate
-        if (elapsed < std::chrono::milliseconds(100))
-        {
-            usleep((100 - elapsed.count()) * 1000);
-        }
+        usleep(50000); // 50ms delay between readings
     }
 
     restore_terminal();
