@@ -1,43 +1,55 @@
-#include <string>
-#include <fstream>
-#include <thread>
 #include <chrono>
-#include <iostream>
-#include <cmath>
+#include <thread>
+#include <system_error>
 #include "ultrasonic.hpp"
 
 namespace ultrasonic
 {
 
-    class UltrasonicImpl
+    class Ultrasonic::Impl
     {
     public:
-        UltrasonicImpl(const Ultrasonic::PinConfig &config)
-            : m_triggerPin(config.trigger_pin), m_echoPin(config.echo_pin), m_initialized(false), m_lastError("")
+        explicit Impl(const PinConfig &config)
+            : m_config(config), m_initialized(false), m_lastError("")
         {
+            // Chips and lines will be initialized in init()
         }
 
         bool init()
         {
             try
             {
-                // Export GPIO pins
-                exportGPIO(m_triggerPin);
-                exportGPIO(m_echoPin);
+                // Open GPIO chips
+                m_triggerChip = gpiod::chip(m_config.trigger_chip);
+                m_echoChip = gpiod::chip(m_config.echo_chip);
 
-                // Configure directions
-                setDirection(m_triggerPin, "out");
-                setDirection(m_echoPin, "in");
+                // Get GPIO lines
+                m_triggerLine = m_triggerChip.get_line(m_config.trigger_line);
+                m_echoLine = m_echoChip.get_line(m_config.echo_line);
 
-                // Set initial trigger state
-                writeValue(m_triggerPin, "0");
+                // Configure trigger as output
+                m_triggerLine.request(
+                    {
+                        "hexapod-ultrasonic",
+                        gpiod::line_request::DIRECTION_OUTPUT,
+                        0,
+                    });
+
+                // Configure echo as input
+                m_echoLine.request(
+                    {
+                        "hexapod-ultrasonic",
+                        gpiod::line_request::DIRECTION_INPUT,
+                        0,
+                    });
 
                 m_initialized = true;
                 return true;
             }
-            catch (const std::exception &e)
+            catch (const std::system_error &e)
             {
-                m_lastError = std::string("Initialization failed: ") + e.what();
+                m_lastError = "GPIO initialization failed: " + std::string(e.what());
+                m_initialized = false;
                 return false;
             }
         }
@@ -47,51 +59,62 @@ namespace ultrasonic
             if (!m_initialized)
             {
                 m_lastError = "Sensor not initialized";
-                return -1;
+                return -1.0f;
             }
 
             try
             {
                 // Send trigger pulse
-                writeValue(m_triggerPin, "1");
+                m_triggerLine.set_value(1);
                 std::this_thread::sleep_for(std::chrono::microseconds(10));
-                writeValue(m_triggerPin, "0");
+                m_triggerLine.set_value(0);
 
-                // Wait for echo start
-                auto start = std::chrono::high_resolution_clock::now();
-                while (readValue(m_echoPin) == "0")
+                // Wait for echo to start (timeout after 100ms)
+                auto startTime = std::chrono::steady_clock::now();
+                while (m_echoLine.get_value() == 0)
                 {
                     if (std::chrono::duration_cast<std::chrono::milliseconds>(
-                            std::chrono::high_resolution_clock::now() - start)
-                            .count() > 100)
+                            std::chrono::steady_clock::now() - startTime)
+                            .count() >
+                        100)
                     {
-                        m_lastError = "Echo timeout";
-                        return -1;
+                        m_lastError = "Echo start timeout";
+                        return -1.0f;
                     }
                 }
 
-                // Measure echo duration
-                start = std::chrono::high_resolution_clock::now();
-                while (readValue(m_echoPin) == "1")
+                // Get echo start time
+                auto echoStart = std::chrono::steady_clock::now();
+
+                // Wait for echo to end (timeout after 100ms)
+                startTime = std::chrono::steady_clock::now();
+                while (m_echoLine.get_value() == 1)
                 {
                     if (std::chrono::duration_cast<std::chrono::milliseconds>(
-                            std::chrono::high_resolution_clock::now() - start)
-                            .count() > 100)
+                            std::chrono::steady_clock::now() - startTime)
+                            .count() >
+                        100)
                     {
-                        m_lastError = "Echo timeout";
-                        return -1;
+                        m_lastError = "Echo end timeout";
+                        return -1.0f;
                     }
                 }
-                auto end = std::chrono::high_resolution_clock::now();
 
-                // Calculate distance
-                float duration = std::chrono::duration<float>(end - start).count();
-                return (duration * 34300.0f) / 2.0f; // Speed of sound / 2 for return trip
+                // Calculate duration
+                auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
+                                    std::chrono::steady_clock::now() - echoStart)
+                                    .count();
+
+                // Speed of sound = 343 m/s at room temperature
+                // Distance = (speed * time) / 2 (round trip)
+                // 343 * 100 = 34300 cm/s
+                // 34300 / 1000000 = 0.0343 cm/µs
+                return static_cast<float>(duration * 0.0343f / 2.0f);
             }
-            catch (const std::exception &e)
+            catch (const std::system_error &e)
             {
-                m_lastError = std::string("Measurement failed: ") + e.what();
-                return -1;
+                m_lastError = "Measurement failed: " + std::string(e.what());
+                return -1.0f;
             }
         }
 
@@ -106,66 +129,23 @@ namespace ultrasonic
         }
 
     private:
-        void exportGPIO(int pin)
-        {
-            std::ofstream export_file("/sys/class/gpio/export");
-            if (!export_file)
-            {
-                throw std::runtime_error("Failed to open GPIO export file");
-            }
-            export_file << pin;
-        }
-
-        void setDirection(int pin, const std::string &direction)
-        {
-            std::string path = "/sys/class/gpio/gpio" + std::to_string(pin) + "/direction";
-            std::ofstream dir_file(path);
-            if (!dir_file)
-            {
-                throw std::runtime_error("Failed to set GPIO direction");
-            }
-            dir_file << direction;
-        }
-
-        void writeValue(int pin, const std::string &value)
-        {
-            std::string path = "/sys/class/gpio/gpio" + std::to_string(pin) + "/value";
-            std::ofstream value_file(path);
-            if (!value_file)
-            {
-                throw std::runtime_error("Failed to write GPIO value");
-            }
-            value_file << value;
-        }
-
-        std::string readValue(int pin)
-        {
-            std::string path = "/sys/class/gpio/gpio" + std::to_string(pin) + "/value";
-            std::ifstream value_file(path);
-            if (!value_file)
-            {
-                throw std::runtime_error("Failed to read GPIO value");
-            }
-            std::string value;
-            value_file >> value;
-            return value;
-        }
-
-        int m_triggerPin;
-        int m_echoPin;
+        PinConfig m_config;
         bool m_initialized;
         std::string m_lastError;
+
+        gpiod::chip m_triggerChip;
+        gpiod::chip m_echoChip;
+        gpiod::line m_triggerLine;
+        gpiod::line m_echoLine;
     };
 
-    // Implement Ultrasonic class methods
+    // Public interface implementation
     Ultrasonic::Ultrasonic(const PinConfig &config)
-        : pImpl(std::make_unique<UltrasonicImpl>(config))
+        : pImpl(std::make_unique<Impl>(config))
     {
     }
 
     Ultrasonic::~Ultrasonic() = default;
-    Ultrasonic::Ultrasonic(Ultrasonic &&) noexcept = default;
-    Ultrasonic &Ultrasonic::operator=(Ultrasonic &&) noexcept = default;
 
     bool Ultrasonic::init()
     {

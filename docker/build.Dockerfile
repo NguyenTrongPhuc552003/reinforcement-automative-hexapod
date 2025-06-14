@@ -31,6 +31,11 @@ RUN apt-get update && apt-get install -y \
     libncurses5-dev \
     && rm -rf /var/lib/apt/lists/*
 
+# Install libgpiod for BeagleBone ARM platform
+RUN dpkg --add-architecture armhf
+RUN apt-get update && apt-get install -y libgpiod-dev:armhf
+
+
 # Create symlink for cross-compiler
 RUN ln -s /usr/bin/arm-linux-gnueabihf-gcc-${GCC_VERSION} /usr/bin/arm-linux-gnueabihf-gcc && \
     ln -s /usr/bin/arm-linux-gnueabihf-g++-${GCC_VERSION} /usr/bin/arm-linux-gnueabihf-g++

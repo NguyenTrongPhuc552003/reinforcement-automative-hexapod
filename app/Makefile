@@ -17,7 +17,7 @@ else
 endif
 
 # Add library linking with C++17 filesystem support
-LDFLAGS = -lm -L/build/deploy -lstdc++fs
+LDFLAGS = -lm -L/build/deploy -lgpiodcxx -lstdc++fs
 LDFLAGS += -Wl,-O1 -Wl,--as-needed
 
 # Directories for source, test, binary, object, and dependency files

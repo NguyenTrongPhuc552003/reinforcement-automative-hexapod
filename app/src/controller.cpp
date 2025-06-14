@@ -41,13 +41,15 @@ namespace controller
             clock_gettime(CLOCK_MONOTONIC, &lastUpdate);
 
             // Initialize ultrasonic sensor with BeagleBone AI GPIO pins
-            ultrasonic::Ultrasonic::PinConfig config{
-                .trigger_pin = ultrasonic::DefaultPins::TRIGGER_PIN, // P9_12
-                .echo_pin = ultrasonic::DefaultPins::ECHO_PIN,       // P9_13
-            };
+            ultrasonic::PinConfig config{
+                .trigger_chip = ultrasonic::DefaultPins::TRIGGER_CHIP,
+                .trigger_line = ultrasonic::DefaultPins::TRIGGER_LINE,
+                .echo_chip = ultrasonic::DefaultPins::ECHO_CHIP,
+                .echo_line = ultrasonic::DefaultPins::ECHO_LINE};
+
             m_ultrasonic = std::make_unique<ultrasonic::Ultrasonic>(config);
             m_ultrasonicEnabled = m_ultrasonic->init();
-            
+
             if (!m_ultrasonicEnabled)
             {
                 std::cerr << "Warning: Ultrasonic sensor initialization failed: "
