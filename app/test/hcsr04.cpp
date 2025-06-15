@@ -1,237 +1,187 @@
 #include <iostream>
 #include <iomanip>
-#include <string>
-#include <csignal>
-#include <unistd.h>
-#include <termios.h>
+#include <vector>
 #include <chrono>
+#include <thread>
+#include <csignal>
 #include <cmath>
+#include <algorithm>
 #include "ultrasonic.hpp"
 
-// Global flag for program termination
-static volatile bool running = true;
-static struct termios orig_termios;
-static bool terminal_modified = false;
+//==============================================================================
+// Test Program Support Types and Functions
+//==============================================================================
 
-// Add these global counters at the top of the file after includes
-static int read_count = 0;  // Track total number of readings attempted 
-static int error_count = 0; // Track number of failed/error readings
-
-// Signal handler for graceful termination
-static void handle_signal(int sig)
+namespace
 {
-    std::cout << "\nReceived signal " << sig << ", shutting down..." << std::endl;
-    running = false;
-}
+    // Program control and statistics
+    volatile bool running = true;
 
-// Setup terminal for non-blocking input
-static void setup_terminal()
-{
-    struct termios new_termios;
-
-    // Get current terminal settings
-    if (tcgetattr(STDIN_FILENO, &orig_termios) < 0)
+    /**
+     * @brief Collection of measurement statistics
+     */
+    struct Statistics
     {
-        std::cerr << "Warning: Failed to get terminal attributes" << std::endl;
-        return;
-    }
+        float min = std::numeric_limits<float>::max();
+        float max = std::numeric_limits<float>::min();
+        float sum = 0.0f;
+        size_t count = 0;
+        size_t errors = 0;
 
-    terminal_modified = true;
-    new_termios = orig_termios;
-
-    // Disable canonical mode and echo
-    new_termios.c_lflag &= ~(ICANON | ECHO | ECHOE | ECHOK | ECHONL | IEXTEN);
-    new_termios.c_iflag &= ~(ISTRIP | INLCR | ICRNL | IGNCR | IXON | IXOFF);
-    new_termios.c_cflag &= ~CSIZE;
-    new_termios.c_cflag |= CS8;
-
-    // Set input options for non-blocking reads
-    new_termios.c_cc[VMIN] = 0;  // Return immediately with what is available
-    new_termios.c_cc[VTIME] = 0; // No timeout
-
-    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &new_termios) < 0)
-    {
-        std::cerr << "Warning: Failed to set terminal attributes" << std::endl;
-        terminal_modified = false;
-    }
-}
-
-// Restore terminal to original state
-static void restore_terminal()
-{
-    if (terminal_modified)
-    {
-        tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
-        terminal_modified = false;
-    }
-}
-
-// Display statistics for distance readings
-static void print_stats(const std::vector<float> &readings)
-{
-    if (readings.empty())
-        return;
-
-    float min = readings[0];
-    float max = readings[0];
-    float sum = 0.0f;
-    int valid_count = 0;
-
-    for (float reading : readings)
-    {
-        if (reading > 0)
-        { // Only count valid readings
-            min = std::min(min, reading);
-            max = std::max(max, reading);
-            sum += reading;
-            valid_count++;
-        }
-    }
-
-    if (valid_count == 0)
-        return;
-
-    float avg = sum / valid_count;
-
-    // Calculate standard deviation
-    float variance = 0.0f;
-    for (float reading : readings)
-    {
-        if (reading > 0)
+        void update(float value)
         {
-            variance += (reading - avg) * (reading - avg);
+            min = std::min(min, value);
+            max = std::max(max, value);
+            sum += value;
+            count++;
         }
-    }
-    float std_dev = std::sqrt(variance / valid_count);
 
-    std::cout << "\nDistance Statistics (cm):" << std::endl;
-    std::cout << std::fixed << std::setprecision(1)
-              << "  Min: " << min
-              << " | Max: " << max
-              << " | Avg: " << avg
-              << " | Std Dev: " << std_dev
-              << " | Valid Readings: " << valid_count << "/" << readings.size()
-              << std::endl;
+        void addError() { errors++; }
+
+        float getAverage() const
+        {
+            return count > 0 ? sum / count : 0.0f;
+        }
+
+        float getSuccessRate() const
+        {
+            size_t total = count + errors;
+            return total > 0 ? (count * 100.0f) / total : 0.0f;
+        }
+
+        float getStandardDeviation(const std::vector<float> &measurements) const
+        {
+            if (count < 2)
+                return 0.0f;
+
+            float mean = getAverage();
+            float variance = 0.0f;
+
+            for (float value : measurements)
+            {
+                variance += (value - mean) * (value - mean);
+            }
+
+            return std::sqrt(variance / (count - 1));
+        }
+    };
+
+    /**
+     * @brief Signal handler for graceful shutdown
+     */
+    void signalHandler(int sig)
+    {
+        std::cout << "\nReceived signal " << sig << ", shutting down...\n";
+        running = false;
+    }
+
+    /**
+     * @brief Display real-time measurement data
+     */
+    void printMeasurement(float distance, const Statistics &stats)
+    {
+        static const char spinner[] = {'|', '/', '-', '\\'};
+        std::cout << "\r" << spinner[stats.count % 4]
+                  << " Distance: " << std::fixed << std::setprecision(1)
+                  << distance << " cm (Valid: " << stats.count
+                  << ", Errors: " << stats.errors << ")"
+                  << std::flush;
+    }
+
+    /**
+     * @brief Display final measurement statistics
+     */
+    void printStatistics(const Statistics &stats, const std::vector<float> &measurements)
+    {
+        if (stats.count == 0)
+            return;
+
+        float stddev = stats.getStandardDeviation(measurements);
+
+        std::cout << "\n\nMeasurement Statistics:\n"
+                  << "  Total Samples: " << (stats.count + stats.errors) << "\n"
+                  << "  Valid Samples: " << stats.count << "\n"
+                  << "  Errors: " << stats.errors << "\n"
+                  << "  Success Rate: " << std::fixed << std::setprecision(1)
+                  << stats.getSuccessRate() << "%\n"
+                  << "  Distance Range: " << stats.min << " to " << stats.max << " cm\n"
+                  << "  Average Distance: " << stats.getAverage() << " cm\n"
+                  << "  Standard Deviation: " << stddev << " cm\n";
+    }
 }
 
-int main(void)
-{
-    // Setup signal handlers
-    signal(SIGINT, handle_signal);
-    signal(SIGTERM, handle_signal);
+//==============================================================================
+// Main Test Program
+//==============================================================================
 
-    // Configure terminal
-    setup_terminal();
+int main()
+{
+    // Setup signal handlers for graceful shutdown
+    std::signal(SIGINT, signalHandler);
+    std::signal(SIGTERM, signalHandler);
 
     std::cout << "HC-SR04 Ultrasonic Sensor Test\n"
-              << "============================\n\n"
-              << "Press 's' for statistics, 'r' to reset stats, 'q' to quit\n"
-              << std::endl;
+              << "==============================\n"
+              << "Testing sensor with:\n"
+              << "  - Trigger GPIO: " << ultrasonic::Config::DEFAULT_TRIGGER_GPIO << "\n"
+              << "  - Echo GPIO: " << ultrasonic::Config::DEFAULT_ECHO_GPIO << "\n"
+              << "  - Measurement interval: "
+              << ultrasonic::Config::MIN_MEASUREMENT_INTERVAL_MS << "ms\n";
 
-    // Initialize sensor with BeagleBone AI GPIO pins
-    ultrasonic::PinConfig config{
-        .trigger_chip = ultrasonic::DefaultPins::TRIGGER_CHIP,
-        .trigger_line = ultrasonic::DefaultPins::TRIGGER_LINE,
-        .echo_chip = ultrasonic::DefaultPins::ECHO_CHIP,
-        .echo_line = ultrasonic::DefaultPins::ECHO_LINE};
-
-    ultrasonic::Ultrasonic sensor(config);
-
-    if (!sensor.init())
+    // Create and initialize sensor
+    ultrasonic::Ultrasonic sensor;
+    if (auto err = sensor.initialize())
     {
-        std::cerr << "Failed to initialize sensor: " << sensor.getLastError() << std::endl;
-        restore_terminal();
+        std::cerr << "Failed to initialize sensor: " << err.message() << '\n';
         return 1;
     }
 
-    // Initialize the hex  apod
-    std::vector<float> readings;
-    bool running = true;
+    // Measurement tracking
+    Statistics stats;
+    std::vector<float> measurements;
+    measurements.reserve(1000); // Pre-allocate for efficiency
 
-    // Configure terminal for immediate character reading
-    struct termios orig_termios;
-    tcgetattr(STDIN_FILENO, &orig_termios);
-    terminal_modified = true;
+    std::cout << "\nMeasuring distances... Press Ctrl+C to stop\n\n";
 
-    // Set non-blocking non-canonical mode
-    setup_terminal();
+    // Main measurement loop
+    auto testStart = std::chrono::steady_clock::now();
 
-    // Install signal handler
-    signal(SIGINT, handle_signal);
-
-    // Create ultrasonic sensor instance
-    ultrasonic::PinConfig config{
-        .trigger_chip = ultrasonic::DefaultPins::TRIGGER_CHIP,
-        .trigger_line = ultrasonic::DefaultPins::TRIGGER_LINE,
-        .echo_chip = ultrasonic::DefaultPins::ECHO_CHIP,
-        .echo_line = ultrasonic::DefaultPins::ECHO_LINE};
-
-    auto ultrasonic = std::make_unique<ultrasonic::Ultrasonic>(config);
-
-    if (!ultrasonic->init())
-    {
-        std::cerr << "Failed to initialize ultrasonic sensor: "
-                  << ultrasonic->getLastError() << std::endl;
-        restore_terminal();
-        return 1;
-    }
-
-    std::cout << "\nUltrasonic Distance Test\n"
-              << "Press Ctrl+C to end test\n"
-              << std::endl;
-
-    // Main test loop
     while (running)
     {
-        // Only take reading when sensor is ready
-        if (sensor.isReady())
-        {
-            read_count++; // Increment read attempts
-            float distance = sensor.getDistance();
+        // Get measurement with error handling
+        auto [distance, error] = sensor.getDistance();
 
-            if (distance < 0)
-            {
-                error_count++; // Increment error count on invalid reading
-                std::cerr << "Error getting distance: "
-                          << sensor.getLastError() << "\r";
-            }
-            else
-            {
-                readings.push_back(distance);
-                std::cout << "Distance: " << std::fixed << std::setprecision(1)
-                          << distance << " cm           \r" << std::flush;
-            }
+        if (error)
+        {
+            stats.addError();
+            std::cerr << "\rError: " << error.message() << std::flush;
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            continue;
         }
 
-        // Check for keyboard input to exit
-        char c;
-        if (read(STDIN_FILENO, &c, 1) > 0)
-        {
-            if (c == 'q' || c == 'Q')
-            {
-                running = false;
-            }
-        }
+        // Record valid measurement
+        stats.update(distance);
+        measurements.push_back(distance);
+        printMeasurement(distance, stats);
 
-        usleep(50000); // 50ms delay between readings
+        // Rate limit measurements
+        std::this_thread::sleep_for(
+            std::chrono::milliseconds(ultrasonic::Config::MIN_MEASUREMENT_INTERVAL_MS));
     }
 
-    restore_terminal();
-    std::cout << "\nTest completed." << std::endl;
+    // Calculate test duration
+    auto testDuration = std::chrono::duration_cast<std::chrono::seconds>(
+                            std::chrono::steady_clock::now() - testStart)
+                            .count();
 
-    // Show final statistics
-    if (!readings.empty())
-    {
-        std::cout << "\nFinal Statistics:" << std::endl;
-        print_stats(readings);
+    // Display final results
+    std::cout << "\n\nTest completed after " << testDuration << " seconds.\n";
+    printStatistics(stats, measurements);
 
-        float success_rate = (read_count > 0) ? (1.0f - (float)error_count / read_count) * 100.0f : 0.0f;
-
-        std::cout << "Overall success rate: " << std::fixed << std::setprecision(1)
-                  << success_rate << "% ("
-                  << (read_count - error_count) << "/" << read_count
-                  << " readings)" << std::endl;
-    }
+    // Display measurement rate
+    float measurementRate = float(stats.count + stats.errors) / testDuration;
+    std::cout << "Average measurement rate: " << std::fixed << std::setprecision(1)
+              << measurementRate << " Hz\n";
 
     return 0;
 }
