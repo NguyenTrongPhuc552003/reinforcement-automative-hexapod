@@ -2,7 +2,7 @@
 
 A comprehensive control system for a six-legged robot (hexapod) using BeagleBone AI (or Black), featuring both kernel-space drivers and user-space applications with reinforcement learning capabilities.
 
-![Hexapod Robot](resource/overview.jpg)
+![Hexapod Robot](resource/beagleboneAI/overview.jpg)
 
 ## Project Overview
 
@@ -65,24 +65,22 @@ The system follows a layered architecture with hardware abstraction. For visual 
 
 1. Build the kernel module:
    ```bash
-   cd driver
-   make
+   ./scripts/build.sh -m
    ```
 
-2. Install the kernel module:
+2. Install the kernel module on BeagleBone AI:
    ```bash
-   sudo insmod hexapod_driver.ko
+   ./install.sh
    ```
 
 3. Build user-space applications:
    ```bash
-   cd app
-   make
+   ./scripts/build.sh -u
    ```
 
-4. Run the test utility:
+4. Run the test utility on BeagleBone AI:
    ```bash
-   sudo ./test_servo
+   ./test_servo
    ```
 
 ## Development
@@ -94,18 +92,13 @@ See individual README files in subdirectories for detailed development guides:
 
 ## Testing
 
-Run the test suite:
-```bash
-cd app
-make
-```
-
 Individual tests:
 ```bash
 ./test_servo       # Test servo control
 ./test_mpu6050     # Test IMU sensor
 ./test_movement    # Test movements like tripod, ripple, ...
 ./test_calibration # Test servos offset for each leg
+./test_hcsr04      # Test HC-SR04 sensor
 ```
 
 ## Troubleshooting
@@ -138,7 +131,7 @@ This project is licensed under the GPL License - see the [LICENSE](LICENSE) file
 
 ## Authors
 
-- StrongFood - I mean "TrongPhuc"
+- StrongFood - I mean **"TrongPhuc"**
 
 ## Acknowledgments
 
