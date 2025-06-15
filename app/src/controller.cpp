@@ -40,20 +40,14 @@ namespace controller
         {
             clock_gettime(CLOCK_MONOTONIC, &lastUpdate);
 
-            // Initialize ultrasonic sensor with BeagleBone AI GPIO pins
-            ultrasonic::PinConfig config{
-                .trigger_chip = ultrasonic::DefaultPins::TRIGGER_CHIP,
-                .trigger_line = ultrasonic::DefaultPins::TRIGGER_LINE,
-                .echo_chip = ultrasonic::DefaultPins::ECHO_CHIP,
-                .echo_line = ultrasonic::DefaultPins::ECHO_LINE};
-
-            m_ultrasonic = std::make_unique<ultrasonic::Ultrasonic>(config);
-            m_ultrasonicEnabled = m_ultrasonic->init();
-
-            if (!m_ultrasonicEnabled)
-            {
+            // Create ultrasonic sensor with default GPIO pins
+            m_ultrasonic = std::make_unique<ultrasonic::Ultrasonic>();
+            if (auto err = m_ultrasonic->initialize()) {
                 std::cerr << "Warning: Ultrasonic sensor initialization failed: "
-                          << m_ultrasonic->getLastError() << std::endl;
+                          << err.message() << std::endl;
+                m_ultrasonicEnabled = false;
+            } else {
+                m_ultrasonicEnabled = true;
             }
         }
 
@@ -295,8 +289,8 @@ namespace controller
             // Process ultrasonic data if enabled
             if (m_ultrasonicEnabled && m_ultrasonic->isReady())
             {
-                float distance = m_ultrasonic->getDistance();
-                if (distance > 0)
+                auto [distance, error] = m_ultrasonic->getDistance();
+                if (!error)
                 {
                     // Adjust behavior based on distance
                     if (distance < 20) // Within 20cm
