@@ -45,10 +45,10 @@ MAKE_PARAMS="ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} KERNEL_DIR=${KERNEL_DIR
 
 case "$1" in
     "module")
-        cd /build/module
         log "${GREEN}" "Building kernel module..."
+        cd /build/module
         
-        # Configure build based on build type
+        # Configure build type
         if [ "$BUILD_TYPE" = "debug" ]; then
             EXTRA_CFLAGS="-DDEBUG -I/build/module/inc"
             log "${GREEN}" "Debug build enabled"
@@ -73,6 +73,7 @@ case "$1" in
         ;;
         
     "user")
+        log "${GREEN}" "Building user space applications..."
         cd /build/user
         log "${GREEN}" "Building user space programs..."
         

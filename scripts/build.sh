@@ -68,24 +68,30 @@ build_docker_image() {
         exit 1
     fi
     
-    if [ ! -f "${PROJECT_ROOT}/docker/build.Dockerfile" ]; then
-        log "${RED}" "build.Dockerfile not found in docker/ directory!"
+    if [ ! -f "${PROJECT_ROOT}/docker/common.Dockerfile" ]; then
+        log "${RED}" "common.Dockerfile not found in docker/ directory!"
         exit 1
     fi
     
-    # Build the Docker image using the correct Dockerfile location
-    docker build ${cache_flag} -t hexapod-builder -f "${PROJECT_ROOT}/docker/build.Dockerfile" "${PROJECT_ROOT}" || {
-        log "${RED}" "Docker build failed!"
+    # Build the common base image
+    docker build ${cache_flag} -t hexapod-common:latest -f "${PROJECT_ROOT}/docker/common.Dockerfile" "${PROJECT_ROOT}" || {
+        log "${RED}" "Docker build for common base failed!"
         exit 1
     }
     
-    # Verify image was created
-    if ! docker images | grep -q hexapod-builder; then
-        log "${RED}" "Failed to create Docker image 'hexapod-builder'"
+    # Build the app image
+    docker build ${cache_flag} -t hexapod-app -f "${PROJECT_ROOT}/docker/app.Dockerfile" "${PROJECT_ROOT}" || {
+        log "${RED}" "Docker build for app failed!"
         exit 1
-    fi
+    }
     
-    log "${GREEN}" "Docker image 'hexapod-builder' created successfully"
+    # Build the driver image
+    docker build ${cache_flag} -t hexapod-driver -f "${PROJECT_ROOT}/docker/driver.Dockerfile" "${PROJECT_ROOT}" || {
+        log "${RED}" "Docker build for driver failed!"
+        exit 1
+    }
+    
+    log "${GREEN}" "Docker images built successfully (common, app, driver)"
 }
 
 # Function to build kernel module
