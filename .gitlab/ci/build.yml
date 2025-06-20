@@ -20,6 +20,7 @@ build_app:
       - deploy/test_calibration
       - deploy/test_servo
       - deploy/test_movement
+      - deploy/test_hcsr04
 
 build_pytd3:
   stage: build

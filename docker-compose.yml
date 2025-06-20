@@ -4,36 +4,43 @@ version: '3.8'
 x-common-settings: &common-settings
   restart: "no"
   environment: &common-env
-    TIDL_PLATFORM: AM5729
-    OCL_PLATFORM: 0
-    PYTHONPATH: /app
+    KERNEL_VERSION: 4.14.108-ti-r144
+    DEBIAN_VERSION: buster
+    GCC_VERSION: 8
 
 services:
-  # === BUILD ENVIRONMENT SERVICES ===
-
-  # Service for building kernel modules and driver components
-  build-driver:
+  # Base image with common tools
+  common:
     build:
       context: .
-      dockerfile: docker/build.Dockerfile
+      dockerfile: docker/common.Dockerfile
+    image: hexapod-common:latest
+
+  # Build environment for kernel modules
+  build-driver:
+    <<: *common-settings
+    build:
+      context: .
+      dockerfile: docker/driver.Dockerfile
+    depends_on:
+      - common
     volumes:
       - ./driver:/build/module
       - ./deploy:/build/deploy
     command: module
-    environment:
-      BUILD_TYPE: release
 
-  # Service for building userspace applications
+  # Build environment for user applications
   build-app:
+    <<: *common-settings
     build:
       context: .
-      dockerfile: docker/build.Dockerfile
+      dockerfile: docker/app.Dockerfile
+    depends_on:
+      - common
     volumes:
       - ./app:/build/user
       - ./deploy:/build/deploy
     command: user
-    environment:
-      DEBUG: 0
 
   # Service for building PyTD3 reinforcement learning module
   build-pytd3:
