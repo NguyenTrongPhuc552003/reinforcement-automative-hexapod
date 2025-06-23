@@ -16,6 +16,16 @@ log() {
     echo -e "${color}$@${NC}"
 }
 
+# Configure git to trust the build directory to avoid ownership issues
+if command -v git &> /dev/null; then
+    git config --global --add safe.directory /build/kernel
+    git config --global --add safe.directory '*'
+fi
+
+# Configure terminal for TUI applications like menuconfig
+export TERM=xterm-256color
+export TERMINFO=/etc/terminfo
+
 # Function to organize build artifacts for kernel module
 organize_build_artifacts() {
     log "${YELLOW}" "Organizing build artifacts..."
@@ -211,19 +221,48 @@ case "$1" in
         fi
         
         # Optional: clean virtual environment
-        if [ "$CLEAN_VENV" = "1" ] && [ -d "/build/pytd3/venv" ]; then
+        if [ -d "/build/pytd3/venv" ]; then
             log "${YELLOW}" "Removing PyTD3 virtual environment..."
             rm -rf /build/pytd3/venv
+            # Clean Python cache files
+            find /build/pytd3 -name "__pycache__" -type d -exec rm -rf {} +
+            find /build/pytd3 -name "*.pyc" -delete
             log "${GREEN}" "PyTD3 virtual environment removed"
         fi
-        
-        # Clean Python cache files
-        find /build/pytd3 -name "__pycache__" -type d -exec rm -rf {} +
-        find /build/pytd3 -name "*.pyc" -delete
         
         log "${GREEN}" "Clean completed!"
         ;;
         
+    "kernel")
+        log "${GREEN}" "Building kernel and builtin drivers..."
+        cd /build/kernel
+        
+        # Configure git to trust this directory (redundant but safe)
+        if command -v git &> /dev/null; then
+            git config --global --add safe.directory $(pwd)
+        fi
+        
+        # Set environment variables for terminal-based UI
+        export HOME=/root
+        export SHELL=/bin/bash
+        
+        chmod +x ./build_deb.sh
+        
+        # Run build_deb.sh with terminal support
+        ./build_deb.sh || {
+            log "${RED}" "Kernel and builtin drivers build failed!"
+            exit 1
+        }
+        
+        # Copy any generated .deb packages to the deploy directory
+        if [ -d /build/kernel/deploy ] && [ "$(ls -A /build/kernel/deploy/*.deb 2>/dev/null)" ]; then
+            mkdir -p /build/deploy
+            cp -v /build/kernel/deploy/*.deb /build/deploy/ 2>/dev/null || true
+        fi
+        
+        log "${GREEN}" "Kernel and builtin drivers build completed successfully!"
+        ;;
+    
     *)
         # Default: execute the command directly
         exec "$@"

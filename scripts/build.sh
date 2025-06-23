@@ -28,13 +28,16 @@ usage() {
     echo "Usage: $0 [OPTIONS]"
     echo "Options:"
     echo "  (no argument)     Build all components"
+    echo "  -i, --image       Build Docker images"
     echo "  -m, --module      Build kernel modules"
+    echo "  -k, --kernel      Build kernel and builtin drivers"
     echo "  -u, --user        Build user space programs"
     echo "  -d, --pytd3       Build PyTD3 reinforcement learning module"
     echo "  -s, --setup       Setup Python virtual environment for PyTD3"
     echo "  -l, --uml         Build UML diagrams (no Docker required)"
     echo "  -t, --utility     Create utility scripts (no Docker required)"
     echo "  -c, --clean       Clean build artifacts"
+    echo "  -p, --purge       Purge all build artifacts and Docker images"
     echo "  -n, --no-cache    Build all without cache"
     echo "  -h, --help        Show this help message"
     echo ""
@@ -53,8 +56,10 @@ log() {
 
 # Function to build Docker image
 build_docker_image() {
-    local cache_flag=$1
-    log "${YELLOW}" "Preparing Docker image..."
+    local image_type=$1
+    local cache_flag=$2
+    
+    log "${YELLOW}" "Building Docker image: ${image_type}"
     
     # Check if Docker is installed and running
     if ! command -v docker &> /dev/null; then
@@ -68,35 +73,73 @@ build_docker_image() {
         exit 1
     fi
     
-    if [ ! -f "${PROJECT_ROOT}/docker/common.Dockerfile" ]; then
-        log "${RED}" "common.Dockerfile not found in docker/ directory!"
-        exit 1
-    fi
+    # Build the specified Docker image
+    case "${image_type}" in
+        app)
+            if [ ! -f "${PROJECT_ROOT}/docker/app.Dockerfile" ]; then
+                log "${RED}" "app.Dockerfile not found in docker/ directory!"
+                exit 1
+            fi
+            docker build ${cache_flag} -t hexapod-app -f "${PROJECT_ROOT}/docker/app.Dockerfile" "${PROJECT_ROOT}" || {
+                log "${RED}" "Docker build for app failed!"
+                exit 1
+            }
+            ;;
+        driver)
+            if [ ! -f "${PROJECT_ROOT}/docker/driver.Dockerfile" ]; then
+                log "${RED}" "driver.Dockerfile not found in docker/ directory!"
+                exit 1
+            fi
+            docker build ${cache_flag} -t hexapod-driver -f "${PROJECT_ROOT}/docker/driver.Dockerfile" "${PROJECT_ROOT}" || {
+                log "${RED}" "Docker build for driver failed!"
+                exit 1
+            }
+            ;;
+        kernel)
+            if [ ! -f "${PROJECT_ROOT}/docker/kernel.Dockerfile" ]; then
+                log "${RED}" "kernel.Dockerfile not found in docker/ directory!"
+                exit 1
+            fi
+            docker build ${cache_flag} -t hexapod-kernel -f "${PROJECT_ROOT}/docker/kernel.Dockerfile" "${PROJECT_ROOT}" || {
+                log "${RED}" "Docker build for kernel failed!"
+                exit 1
+            }
+            ;;
+        pytd3)
+            if [ ! -f "${PROJECT_ROOT}/docker/pytd3.Dockerfile" ]; then
+                log "${RED}" "pytd3.Dockerfile not found in docker/ directory!"
+                exit 1
+            fi
+            docker build ${cache_flag} -t hexapod-pytd3 -f "${PROJECT_ROOT}/docker/pytd3.Dockerfile" "${PROJECT_ROOT}" || {
+                log "${RED}" "Docker build for PyTD3 failed!"
+                exit 1
+            }
+            ;;
+        all)
+            # Build all images
+            log "${YELLOW}" "Building all Docker images..."
+            build_docker_image "app" ${cache_flag}
+            build_docker_image "driver" ${cache_flag}
+            build_docker_image "kernel" ${cache_flag}
+            build_docker_image "pytd3" ${cache_flag}
+            ;;
+        *)
+            log "${RED}" "Unknown image type: ${image_type}"
+            exit 1
+            ;;
+    esac
     
-    # Build the common base image
-    docker build ${cache_flag} -t hexapod-common:latest -f "${PROJECT_ROOT}/docker/common.Dockerfile" "${PROJECT_ROOT}" || {
-        log "${RED}" "Docker build for common base failed!"
-        exit 1
-    }
-    
-    # Build the app image
-    docker build ${cache_flag} -t hexapod-app -f "${PROJECT_ROOT}/docker/app.Dockerfile" "${PROJECT_ROOT}" || {
-        log "${RED}" "Docker build for app failed!"
-        exit 1
-    }
-    
-    # Build the driver image
-    docker build ${cache_flag} -t hexapod-driver -f "${PROJECT_ROOT}/docker/driver.Dockerfile" "${PROJECT_ROOT}" || {
-        log "${RED}" "Docker build for driver failed!"
-        exit 1
-    }
-    
-    log "${GREEN}" "Docker images built successfully (common, app, driver)"
+    log "${GREEN}" "Docker image ${image_type} built successfully!"
 }
 
 # Function to build kernel module
-build_kernel_module() {
+build_device_driver() {
     log "${YELLOW}" "Preparing kernel modules..."
+    
+    # First build the driver image if not already built
+    if ! docker image inspect hexapod-driver &> /dev/null; then
+        build_docker_image "driver" ""
+    fi
     
     # Release build by default, add DEBUG=1 for debug build
     local build_type="release"
@@ -111,7 +154,7 @@ build_kernel_module() {
         -v "${KERNEL_MODULE_DIR}:/build/module" \
         -v "${DEPLOY_DIR}:/build/deploy" \
         -e BUILD_TYPE=${build_type} \
-        hexapod-builder module || {
+        hexapod-driver module || {
         log "${RED}" "Kernel modules build failed!"
         exit 1
     }
@@ -120,6 +163,11 @@ build_kernel_module() {
 # Function to build user space program
 build_user_space() {
     log "${YELLOW}" "Preparing user space programs..."
+    
+    # First build the app image if not already built
+    if ! docker image inspect hexapod-app &> /dev/null; then
+        build_docker_image "app" ""
+    fi
     
     # Release build by default, add DEBUG=1 for debug build
     local env_params=""
@@ -135,7 +183,7 @@ build_user_space() {
         -v "${USER_SPACE_DIR}:/build/user" \
         -v "${DEPLOY_DIR}:/build/deploy" \
         ${env_params} \
-        hexapod-builder user || {
+        hexapod-app user || {
         log "${RED}" "User space programs build failed!"
         exit 1
     }
@@ -145,11 +193,16 @@ build_user_space() {
 setup_pytd3_env() {
     log "${YELLOW}" "Setting up Python virtual environment for PyTD3..."
     
+    # First build the pytd3 image if not already built
+    if ! docker image inspect hexapod-pytd3 &> /dev/null; then
+        build_docker_image "pytd3" ""
+    fi
+    
     # Run Docker with proper command format
     docker run --rm \
         -v "${PYTD3_DIR}:/build/pytd3" \
         -v "${DEPLOY_DIR}:/build/deploy" \
-        hexapod-builder setup_env || {
+        hexapod-pytd3 setup_env || {
         log "${RED}" "PyTD3 environment setup failed!"
         exit 1
     }
@@ -166,6 +219,11 @@ setup_pytd3_env() {
 build_pytd3() {
     log "${YELLOW}" "Building PyTD3 module..."
     
+    # First build the pytd3 image if not already built
+    if ! docker image inspect hexapod-pytd3 &> /dev/null; then
+        build_docker_image "pytd3" ""
+    fi
+    
     # Create build directory if it doesn't exist
     if [ ! -d "${PYTD3_DIR}/build" ]; then
         mkdir -p "${PYTD3_DIR}/build"
@@ -175,7 +233,7 @@ build_pytd3() {
     docker run --rm \
         -v "${PYTD3_DIR}:/build/pytd3" \
         -v "${DEPLOY_DIR}:/build/deploy" \
-        hexapod-builder pytd3
+        hexapod-pytd3 pytd3
     
     if [ $? -eq 0 ]; then
         log "${GREEN}" "PyTD3 build successful!"
@@ -234,8 +292,31 @@ build_utility_scripts() {
     log "${GREEN}" "Utility scripts prepared successfully"
 }
 
+# Function to build kernel and builtin drivers
+build_kernel_enable() {
+    log "${YELLOW}" "Building kernel and builtin drivers..."
+    
+    # First build the kernel image if not already built
+    if ! docker image inspect hexapod-kernel &> /dev/null; then
+        build_docker_image "kernel" ""
+    fi
+
+    # Run with terminal settings for menuconfig
+    docker run --rm -it \
+        -e TERM=xterm-256color \
+        -v "${PROJECT_ROOT}/utils/ti-linux-kernel-dev:/build/kernel" \
+        -v "${DEPLOY_DIR}:/build/deploy" \
+        -w /build/kernel \
+        hexapod-kernel kernel || {
+        log "${RED}" "Kernel and builtin drivers build failed!"
+        exit 1
+    }
+    log "${GREEN}" "Kernel and builtin drivers build completed successfully!"
+}
+
 # Initialize option flags
 DO_CLEAN=0
+DO_IMAGE=0
 DO_MODULE=0
 DO_USER=0
 DO_UTILITY=0
@@ -243,18 +324,20 @@ DO_UML=0
 DO_NO_CACHE=0
 DO_PYTD3=0
 DO_SETUP_ENV=0
-DO_DOCKER_REQUIRED=0
+DO_KERNEL=0
+DO_PURGE=0
 
 # Parse command-line arguments
 if [ $# -eq 0 ]; then
     # Default: build everything
+    DO_IMAGE=1
     DO_MODULE=1
     DO_UTILITY=1
     DO_UML=1
     DO_USER=1
     DO_SETUP_ENV=1
     DO_PYTD3=1
-    DO_DOCKER_REQUIRED=1
+    DO_KERNEL=1
 else
     for arg in "$@"; do
         if [[ "$arg" == "--no-cache" || "$arg" == "-n" ]]; then
@@ -264,6 +347,11 @@ else
             usage
         elif [[ "$arg" == "--clean" || "$arg" == "-c" ]]; then
             DO_CLEAN=1
+        elif [[ "$arg" == "--purge" || "$arg" == "-p" ]]; then
+            DO_PURGE=1
+        elif [[ "$arg" == "--image" || "$arg" == "-i" ]]; then
+            DO_IMAGE=1
+            DO_DOCKER_REQUIRED=1
         elif [[ "$arg" == "--module" || "$arg" == "-m"  ]]; then
             DO_MODULE=1
             DO_DOCKER_REQUIRED=1
@@ -280,6 +368,9 @@ else
             DO_DOCKER_REQUIRED=1
         elif [[ "$arg" == "--uml" || "$arg" == "-l" ]]; then
             DO_UML=1
+        elif [[ "$arg" == "--kernel" || "$arg" == "-k" ]]; then
+            DO_KERNEL=1
+            DO_DOCKER_REQUIRED=1
         elif [[ "$arg" == -* && "$arg" != "--"* ]]; then
             # Process combined short options like -tmu
             flags=${arg#-}
@@ -287,6 +378,8 @@ else
                 flag=${flags:$i:1}
                 case "$flag" in
                     c) DO_CLEAN=1 ;;
+                    p) DO_PURGE=1 ;;
+                    i) DO_IMAGE=1; DO_DOCKER_REQUIRED=1 ;;
                     m) DO_MODULE=1; DO_DOCKER_REQUIRED=1 ;;
                     u) DO_USER=1; DO_DOCKER_REQUIRED=1 ;;
                     t) DO_UTILITY=1 ;;
@@ -294,6 +387,7 @@ else
                     s) DO_SETUP_ENV=1; DO_DOCKER_REQUIRED=1 ;;
                     l) DO_UML=1 ;;
                     n) DO_NO_CACHE=1; DO_DOCKER_REQUIRED=1 ;;
+                    k) DO_KERNEL=1; DO_DOCKER_REQUIRED=1 ;;
                     h) usage ;;
                     *) 
                         log "${RED}" "Unknown option: -$flag"
@@ -321,53 +415,61 @@ if [ $DO_CLEAN -eq 1 ]; then
         fi
     fi
     
-    # Docker-based cleaning (only if Docker is available)
-    if command -v docker &> /dev/null && docker images | grep -q hexapod-builder; then
-        log "${YELLOW}" "Cleaning Docker-based components..."
-        # Clean kernel driver and user space using Docker
-        docker run --rm \
-            -v "${KERNEL_MODULE_DIR}:/build/module" \
-            -v "${USER_SPACE_DIR}:/build/user" \
-            hexapod-builder clean || {
-            # If Docker run failed for a reason other than missing image
-            if [ $? -ne 125 ]; then
-                log "${RED}" "Docker clean failed!"
-                exit 1
-            fi
-        }
-        
-        # Clean user space binaries with sudo if needed
-        if [ -d "${USER_SPACE_DIR}/bin" ]; then
-            log "${GREEN}" "Cleaning user space binaries..."
-            if ! rm -rf "${USER_SPACE_DIR}/bin" 2>/dev/null; then
-                log "${YELLOW}" "Using sudo to clean user space binaries..."
-                sudo rm -rf "${USER_SPACE_DIR}/bin"
-            fi
+    # Clean with Docker only if relevant images exist
+    if command -v docker &> /dev/null; then
+        # Clean using driver image if it exists
+        if docker image inspect hexapod-driver &> /dev/null; then
+            log "${YELLOW}" "Cleaning kernel modules..."
+            docker run --rm \
+                -v "${KERNEL_MODULE_DIR}:/build/module" \
+                hexapod-driver clean || true
         fi
-
-        # Clean PyTD3 build directory and virtual environment with sudo if needed
-        if [ -d "${PYTD3_DIR}/build" ] || [ -d "${PYTD3_DIR}/venv" ]; then
-            log "${GREEN}" "Cleaning PyTD3 build and virtual environment..."
-            if ! rm -rf "${PYTD3_DIR}/build" "${PYTD3_DIR}/venv" 2>/dev/null; then
-                log "${YELLOW}" "Using sudo to clean PyTD3 directories..."
-                sudo rm -rf "${PYTD3_DIR}/build" "${PYTD3_DIR}/venv"
-            fi
+        
+        # Clean using app image if it exists 
+        if docker image inspect hexapod-app &> /dev/null; then
+            log "${YELLOW}" "Cleaning user space applications..."
+            docker run --rm \
+                -v "${USER_SPACE_DIR}:/build/user" \
+                hexapod-app clean || true
+        fi
+        
+        # Clean using pytd3 image if it exists
+        if docker image inspect hexapod-pytd3 &> /dev/null; then
+            log "${YELLOW}" "Cleaning PyTD3..."
+            docker run --rm \
+                -v "${PYTD3_DIR}:/build/pytd3" \
+                hexapod-pytd3 clean || true
         fi
     else
-        log "${YELLOW}" "Docker not available or image doesn't exist, skipping Docker-based cleaning"
+        log "${YELLOW}" "Docker not available, skipping Docker-based cleaning"
+    fi
+    
+    # Clean local directories manually if needed
+    if [ -d "${USER_SPACE_DIR}/bin" ]; then
+        log "${GREEN}" "Cleaning user space binaries..."
+        if ! rm -rf "${USER_SPACE_DIR}/bin" 2>/dev/null; then
+            log "${YELLOW}" "Using sudo to clean user space binaries..."
+            sudo rm -rf "${USER_SPACE_DIR}/bin"
+        fi
+    fi
+
+    if [ -d "${PYTD3_DIR}/build" ] || [ -d "${PYTD3_DIR}/venv" ]; then
+        log "${GREEN}" "Cleaning PyTD3 build and virtual environment..."
+        if ! rm -rf "${PYTD3_DIR}/build" "${PYTD3_DIR}/venv" 2>/dev/null; then
+            log "${YELLOW}" "Using sudo to clean PyTD3 directories..."
+            sudo rm -rf "${PYTD3_DIR}/build" "${PYTD3_DIR}/venv"
+        fi
     fi
 
     # Clean UML diagrams without requiring Docker
     log "${YELLOW}" "Cleaning UML diagram files..."
     
     # Check if export.sh exists
-    if [ ! -f "${PROJECT_ROOT}/scripts/export.sh" ]; then
+    if [ -f "${PROJECT_ROOT}/scripts/export.sh" ]; then
+        bash "${PROJECT_ROOT}/scripts/export.sh" -c
+    else
         log "${RED}" "export.sh not found in scripts directory!"
-        return 1
     fi
-    
-    # Run export.sh script with clean option
-    bash "${PROJECT_ROOT}/scripts/export.sh" -c 
     
     log "${GREEN}" "Clean completed successfully!"
     exit 0
@@ -389,45 +491,61 @@ if [ $DO_UML -eq 1 ]; then
     # COMPONENTS_BUILT=1
 fi
 
-# Only prepare Docker if needed for other components
-if [ $DO_DOCKER_REQUIRED -eq 1 ]; then
+# Handle purge option
+if [ $DO_PURGE -eq 1 ]; then
+    # Remove Docker containers, images, volumes, and builders
+    log "${YELLOW}" "Pruning all Docker containers..."
+    sudo docker container prune -f
+    log "${YELLOW}" "Pruning all Docker images..."
+    sudo docker image prune -a -f
+    log "${YELLOW}" "Pruning all Docker volumes..."
+    sudo docker volume prune -f
+    log "${YELLOW}" "Pruning all Docker builders..."
+    sudo docker builder prune --all -f
+    log "${GREEN}" "Purge completed!"
+    exit 0
+fi
+
+# Build images if explicitly requested or needed for components
+if [ $DO_IMAGE -eq 1 ]; then
     # Handle Docker image building with or without cache
+    local cache_flag=""
     if [ $DO_NO_CACHE -eq 1 ]; then
-        echo "Hello"
-        # Remove Docker image if it exists
-        if docker images | grep -q hexapod-builder; then
-            log "${GREEN}" "Removing Docker image..."
-            docker rmi hexapod-builder || true
-        fi
-        build_docker_image "--no-cache"
-    else
-        build_docker_image ""
+        cache_flag="--no-cache"
     fi
+    build_docker_image "all" "${cache_flag}"
+    COMPONENTS_BUILT=1
+fi
 
-    # Setup Python virtual environment if requested (must be before building PyTD3)
-    if [ $DO_SETUP_ENV -eq 1 ]; then
-        setup_pytd3_env
-        COMPONENTS_BUILT=1
-    fi
-    
-    # Build Docker-dependent components
-    if [ $DO_MODULE -eq 1 ]; then
-        build_kernel_module
-        log "${GREEN}" "Kernel modules build completed successfully!"
-        COMPONENTS_BUILT=1
-    fi
+# Setup Python virtual environment if requested (must be before building PyTD3)
+if [ $DO_SETUP_ENV -eq 1 ]; then
+    setup_pytd3_env
+    COMPONENTS_BUILT=1
+fi
 
-    if [ $DO_USER -eq 1 ]; then
-        build_user_space
-        log "${GREEN}" "User space programs build completed successfully!"
-        COMPONENTS_BUILT=1
-    fi
+# Build Docker-dependent components
+if [ $DO_MODULE -eq 1 ]; then
+    build_device_driver
+    log "${GREEN}" "Kernel modules build completed successfully!"
+    COMPONENTS_BUILT=1
+fi
 
-    # Build PyTD3 if requested
-    if [ $DO_PYTD3 -eq 1 ]; then
-        build_pytd3 || EXIT_CODE=1
-        COMPONENTS_BUILT=1
-    fi
+if [ $DO_USER -eq 1 ]; then
+    build_user_space
+    log "${GREEN}" "User space programs build completed successfully!"
+    COMPONENTS_BUILT=1
+fi
+
+if [ $DO_KERNEL -eq 1 ]; then
+    build_kernel_enable
+    log "${GREEN}" "Kernel and builtin drivers build completed successfully!"
+    COMPONENTS_BUILT=1
+fi
+
+if [ $DO_PYTD3 -eq 1 ]; then
+    build_pytd3
+    log "${GREEN}" "PyTD3 build completed successfully!"
+    COMPONENTS_BUILT=1
 fi
 
 # Print overall success message if anything was built
