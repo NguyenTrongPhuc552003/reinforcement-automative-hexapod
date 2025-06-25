@@ -102,14 +102,3 @@ services:
       - ./deploy:/app/deploy
       - ./models:/app/models
     command: bash -c "tar -czvf /app/deploy/hexapod-package.tar.gz -C /app/deploy ."
-
-  # === KERNEL BUILD SERVICE ===
-  kernel-build:
-    build:
-      context: .
-      dockerfile: docker/kernel.Dockerfile
-    volumes:
-      - ./utils/ti-linux-kernel-dev:/build/kernel
-      - ./deploy:/build/deploy
-    working_dir: /build/kernel
-    command: bash -c "chmod +x ./build_deb.sh && ./build_deb.sh"
