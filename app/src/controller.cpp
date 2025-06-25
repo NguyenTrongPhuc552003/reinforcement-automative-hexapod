@@ -9,7 +9,7 @@
 #include <time.h>
 #include <iostream>
 #include "controller.hpp"
-#include "ultrasonic.hpp"
+#include "sharpsensor.hpp" // Replace ultrasonic.hpp with sharpsensor.hpp
 
 namespace controller
 {
@@ -36,18 +36,21 @@ namespace controller
               gaitType(gait::GaitType::TRIPOD),
               state(ControllerState::IDLE),
               terminalConfigured(false),
-              m_ultrasonicEnabled(false)
+              m_irSensorEnabled(false)
         {
             clock_gettime(CLOCK_MONOTONIC, &lastUpdate);
 
-            // Create ultrasonic sensor with default GPIO pins
-            m_ultrasonic = std::make_unique<ultrasonic::Ultrasonic>();
-            if (auto err = m_ultrasonic->initialize()) {
-                std::cerr << "Warning: Ultrasonic sensor initialization failed: "
-                          << err.message() << std::endl;
-                m_ultrasonicEnabled = false;
-            } else {
-                m_ultrasonicEnabled = true;
+            // Create IR distance sensor with default ADC input
+            m_irSensor = std::make_unique<SharpSensor>("in_voltage0_raw");
+            if (!m_irSensor->init())
+            {
+                std::cerr << "Warning: IR distance sensor initialization failed" << std::endl;
+                m_irSensorEnabled = false;
+            }
+            else
+            {
+                std::cout << "IR distance sensor initialized successfully" << std::endl;
+                m_irSensorEnabled = true;
             }
         }
 
@@ -212,11 +215,11 @@ namespace controller
                 state = ControllerState::IDLE;
                 return hexapod.centerAll();
 
-            // Ultrasonic sensor toggle
+            // IR sensor toggle
             case 'u':
-                m_ultrasonicEnabled = !m_ultrasonicEnabled;
-                std::cout << "Ultrasonic sensing "
-                          << (m_ultrasonicEnabled ? "enabled" : "disabled")
+                m_irSensorEnabled = !m_irSensorEnabled;
+                std::cout << "IR distance sensing "
+                          << (m_irSensorEnabled ? "enabled" : "disabled")
                           << std::endl;
                 return true;
 
@@ -286,11 +289,11 @@ namespace controller
                 }
             }
 
-            // Process ultrasonic data if enabled
-            if (m_ultrasonicEnabled && m_ultrasonic->isReady())
+            // Process IR distance sensor data if enabled
+            if (m_irSensorEnabled)
             {
-                auto [distance, error] = m_ultrasonic->getDistance();
-                if (!error)
+                float distance = m_irSensor->readDistanceCm();
+                if (distance > 0)
                 {
                     // Adjust behavior based on distance
                     if (distance < 20) // Within 20cm
@@ -593,9 +596,9 @@ namespace controller
         // Balance settings
         BalanceConfig balanceConfig;
 
-        // Ultrasonic sensor
-        std::unique_ptr<ultrasonic::Ultrasonic> m_ultrasonic;
-        bool m_ultrasonicEnabled;
+        // Ultrasonic sensor replaced with IR distance sensor
+        std::unique_ptr<SharpSensor> m_irSensor;
+        bool m_irSensorEnabled;
 
         /**
          * @brief Calculate tilt angles from accelerometer data
