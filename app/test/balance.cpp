@@ -1,413 +1,610 @@
 #include <iostream>
 #include <iomanip>
+#include <string>
+#include <vector>
+#include <atomic>
 #include <cmath>
-#include <csignal>
-#include <unistd.h>
-#include <termios.h>
-#include <fcntl.h>
-#include <ctime>
 #include "hexapod.hpp"
-#include "kinematics.hpp"
+#include "controller.hpp"
+#include "common.hpp"
 
-// Global control flags
-static volatile bool running = true;
-static volatile bool pause_balance = false;
-static volatile bool debug_mode = false;
+// Global running flag for signal handling
+static std::atomic<bool> running(true);
 
-// Default parameters
-struct BalanceConfig
+// Signal handler using common utilities
+void signalHandler(int signal)
 {
-    double max_tilt_adjustment = 30.0; // Maximum angle adjustment in degrees
-    double base_height = -120.0;       // Base height for standing (mm)
-    double response_factor = 0.8;      // How responsive the balance is (0.0-1.0)
-    double deadzone = 2.0;             // Minimum tilt (degrees) before reacting
-    double update_rate = 20.0;         // Target updates per second
-    int display_decimation = 5;        // Only update display every N iterations
-} config;
-
-// Terminal state handling
-static struct termios orig_termios;
-
-// Signal handler for graceful termination
-void handle_signal(int sig)
-{
-    std::cout << "\nReceived signal " << sig << ", exiting..." << std::endl;
-    running = false;
+    running.store(false);
+    common::ErrorReporter::reportInfo("Balance-Test", "Received termination signal " + std::to_string(signal));
 }
 
-// Setup terminal for non-blocking input
-void setup_terminal()
+// Display test menu
+static void print_menu()
 {
-    // Get current terminal settings
-    tcgetattr(STDIN_FILENO, &orig_termios);
-
-    // Modified settings for non-canonical mode
-    struct termios new_termios = orig_termios;
-    new_termios.c_lflag &= ~(ICANON | ECHO);
-    new_termios.c_cc[VMIN] = 0;
-    new_termios.c_cc[VTIME] = 0;
-
-    // Apply new settings
-    tcsetattr(STDIN_FILENO, TCSANOW, &new_termios);
-
-    // Set stdin to non-blocking
-    int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
-    fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
+    std::cout << "\nBalance Test Program - Commands\n"
+              << "===============================\n"
+              << "  1: Test IMU sensor readings\n"
+              << "  2: Test balance adjustments\n"
+              << "  3: Continuous balance mode\n"
+              << "  4: Manual tilt test\n"
+              << "  5: Response sensitivity test\n"
+              << "  6: Deadzone calibration\n"
+              << "  7: Balance stress test\n"
+              << "  8: IMU calibration\n"
+              << "  b: Toggle balance mode\n"
+              << "  +/-: Adjust response factor\n"
+              << "  [/]: Adjust deadzone\n"
+              << "  s: Show balance status\n"
+              << "  c: Center all legs\n"
+              << "  h: Show this help\n"
+              << "  q: Quit\n\n";
 }
 
-// Restore terminal to original state
-void restore_terminal()
+// Test IMU sensor readings
+bool test_imu_readings(hexapod::Hexapod &hexapod, double duration)
 {
-    tcsetattr(STDIN_FILENO, TCSANOW, &orig_termios);
-}
+    common::ErrorReporter::reportInfo("Balance-Test", "Testing IMU readings for " + 
+        common::StringUtils::formatDuration(duration));
 
-// Process keyboard input
-void process_input()
-{
-    char c;
-    if (read(STDIN_FILENO, &c, 1) <= 0)
-        return;
+    common::PerformanceMonitor perfMonitor;
+    auto start_time = common::getCurrentTime();
+    auto end_time = start_time + duration;
 
-    switch (c)
+    int successful_reads = 0;
+    int total_reads = 0;
+    std::vector<double> roll_readings, pitch_readings;
+
+    std::cout << "Reading IMU data for " << common::StringUtils::formatDuration(duration) << "..." << std::endl;
+    std::cout << "Press 'q' to abort early" << std::endl;
+
+    while (running.load() && common::getCurrentTime() < end_time)
     {
-    case 'q':
-        running = false;
-        break;
-    case 'p':
-        pause_balance = !pause_balance;
-        std::cout << (pause_balance ? "Balance paused" : "Balance resumed") << std::endl;
-        break;
-    case 'd':
-        debug_mode = !debug_mode;
-        std::cout << (debug_mode ? "Debug mode ON" : "Debug mode OFF") << std::endl;
-        break;
-    case '+':
-        config.response_factor = std::min(1.0, config.response_factor + 0.1);
-        std::cout << "Response factor: " << config.response_factor << std::endl;
-        break;
-    case '-':
-        config.response_factor = std::max(0.1, config.response_factor - 0.1);
-        std::cout << "Response factor: " << config.response_factor << std::endl;
-        break;
-    case 'r':
-        // Reset to default height and orientation
-        std::cout << "Resetting to default position" << std::endl;
-        break;
-    case 'h':
-        // Show help
-        std::cout << "\nBalance Test Controls:\n"
-                  << "  q: Quit the test\n"
-                  << "  p: Pause/resume balance\n"
-                  << "  d: Toggle debug mode\n"
-                  << "  +: Increase response factor\n"
-                  << "  -: Decrease response factor\n"
-                  << "  r: Reset to default position\n"
-                  << "  h: Show this help\n"
-                  << std::endl;
-        break;
-    }
-}
-
-// Calculate tilt angles from accelerometer data
-void calculate_tilt(const ImuData &imu_data, double &roll, double &pitch)
-{
-    // Conversion for accessing accelerometer data in g units
-    double ax = imu_data.getAccelX();
-    double ay = imu_data.getAccelY();
-    double az = imu_data.getAccelZ();
-
-    // Calculate roll and pitch in degrees
-    // Roll: rotation around X-axis (side-to-side tilt)
-    // Pitch: rotation around Y-axis (front-to-back tilt)
-    roll = atan2(ay, az) * 180.0 / M_PI;
-    pitch = atan2(-ax, sqrt(ay * ay + az * az)) * 180.0 / M_PI;
-}
-
-// Apply tilt compensation to leg positions
-bool apply_balance_adjustments(Hexapod &hexapod, double roll, double pitch)
-{
-    // Apply deadzone - ignore small tilts
-    if (fabs(roll) < config.deadzone)
-        roll = 0;
-    if (fabs(pitch) < config.deadzone)
-        pitch = 0;
-
-    // Cap maximum adjustment
-    roll = std::max(-config.max_tilt_adjustment, std::min(config.max_tilt_adjustment, roll));
-    pitch = std::max(-config.max_tilt_adjustment, std::min(config.max_tilt_adjustment, pitch));
-
-    // Scale by response factor
-    roll *= config.response_factor;
-    pitch *= config.response_factor;
-
-    // No need to adjust if tilt is negligible
-    if (fabs(roll) < 0.1 && fabs(pitch) < 0.1)
-    {
-        return true;
-    }
-
-    // Prepare for inverse kinematics calculations
-    bool success = true;
-
-    // Loop through each leg to calculate and apply adjustments
-    for (int leg = 0; leg < NUM_LEGS; leg++)
-    {
-        // Define base position for this leg
-        double baseX, baseY, baseZ = config.base_height;
-
-        // Default leg positions (when standing) - these depend on leg position around body
-        // Note: These are approximate hexapod "home" positions and would be adjusted
-        // based on the actual robot's geometry
-        switch (leg)
+        perfMonitor.startFrame();
+        
+        hexapod::ImuData imuData;
+        if (hexapod.getImuData(imuData))
         {
-        case 0: // Front right
-            baseX = 100.0;
-            baseY = 100.0;
-            break;
-        case 1: // Middle right
-            baseX = 0.0;
-            baseY = 120.0;
-            break;
-        case 2: // Rear right
-            baseX = -100.0;
-            baseY = 100.0;
-            break;
-        case 3: // Front left
-            baseX = 100.0;
-            baseY = -100.0;
-            break;
-        case 4: // Middle left
-            baseX = 0.0;
-            baseY = -120.0;
-            break;
-        case 5: // Rear left
-            baseX = -100.0;
-            baseY = -100.0;
-            break;
-        }
-
-        // Calculate leg height adjustment based on tilt
-        // This creates a plane that compensates for the tilt
-        double zAdjustment = sin(roll * M_PI / 180.0) * baseY - sin(pitch * M_PI / 180.0) * baseX;
-
-        // Apply adjustment to position
-        kinematics::Point3D targetPos(baseX, baseY, baseZ + zAdjustment);
-
-        // Use inverse kinematics to get joint angles
-        LegPosition legPos;
-        legPos.leg_num = leg;
-
-        if (Kinematics::getInstance().inverseKinematics(targetPos, legPos))
-        {
-            // Apply the calculated position
-            if (!hexapod.setLegPosition(leg, legPos))
-            {
-                std::cerr << "Failed to set position for leg " << leg << ": "
-                          << hexapod.getLastErrorMessage() << std::endl;
-                success = false;
-            }
+            successful_reads++;
+            
+            // Calculate roll and pitch from accelerometer data
+            double ax = imuData.getAccelX();
+            double ay = imuData.getAccelY();
+            double az = imuData.getAccelZ();
+            
+            double roll = atan2(ay, az) * 180.0 / M_PI;
+            double pitch = atan2(-ax, sqrt(ay * ay + az * az)) * 180.0 / M_PI;
+            
+            roll_readings.push_back(roll);
+            pitch_readings.push_back(pitch);
+            
+            // Display real-time data
+            std::cout << "\rRoll: " << std::setw(6) << common::StringUtils::formatNumber(roll, 1) << "°"
+                      << " Pitch: " << std::setw(6) << common::StringUtils::formatNumber(pitch, 1) << "°"
+                      << " | Accel: " << common::StringUtils::formatNumber(imuData.getAccelX(), 2) << "g "
+                      << common::StringUtils::formatNumber(imuData.getAccelY(), 2) << "g "
+                      << common::StringUtils::formatNumber(imuData.getAccelZ(), 2) << "g" << std::flush;
         }
         else
         {
-            std::cerr << "Inverse kinematics failed for leg " << leg << std::endl;
-            success = false;
+            std::cerr << "\rIMU read failed: " << hexapod.getLastErrorMessage() << std::flush;
         }
+        
+        perfMonitor.endFrame();
+        total_reads++;
+
+        // Check for user abort
+        char key;
+        if (common::TerminalManager::readChar(key) && (key == 'q' || key == 27))
+        {
+            std::cout << "\nIMU test aborted by user" << std::endl;
+            return false;
+        }
+
+        common::sleepMs(50); // 20Hz update rate
     }
 
-    return success;
-}
+    std::cout << std::endl;
+    perfMonitor.printReport("IMU reading ");
 
-// Display current status
-void display_status(const ImuData &imu_data, double roll, double pitch, int iter)
-{
-    // Only update display periodically to avoid console flicker
-    if (iter % config.display_decimation != 0)
-        return;
-
-    std::cout << "\r"
-              << "Roll: " << std::fixed << std::setprecision(1) << std::setw(6) << roll << "° | "
-              << "Pitch: " << std::setw(6) << pitch << "° | "
-              << "Accel: X=" << std::setw(5) << imu_data.getAccelX() << "g "
-              << "Y=" << std::setw(5) << imu_data.getAccelY() << "g "
-              << "Z=" << std::setw(5) << imu_data.getAccelZ() << "g | "
-              << (pause_balance ? "PAUSED" : "ACTIVE") << std::flush;
-}
-
-// Parse command line arguments
-void parse_arguments(int argc, char *argv[], BalanceConfig &config)
-{
-    for (int i = 1; i < argc; i++)
+    // Calculate statistics
+    if (!roll_readings.empty())
     {
-        std::string arg = argv[i];
+        double roll_avg = 0, pitch_avg = 0;
+        for (size_t i = 0; i < roll_readings.size(); i++)
+        {
+            roll_avg += roll_readings[i];
+            pitch_avg += pitch_readings[i];
+        }
+        roll_avg /= roll_readings.size();
+        pitch_avg /= pitch_readings.size();
 
-        if (arg == "--help" || arg == "-h")
+        double roll_std = 0, pitch_std = 0;
+        for (size_t i = 0; i < roll_readings.size(); i++)
         {
-            std::cout << "Hexapod Balance Test - Usage:\n"
-                      << "  " << argv[0] << " [options]\n\n"
-                      << "Options:\n"
-                      << "  -r, --response FACTOR   Set response factor (0.1-1.0, default: 0.8)\n"
-                      << "  -d, --deadzone DEGREES  Set deadzone in degrees (0.0-10.0, default: 2.0)\n"
-                      << "  -z, --height HEIGHT     Set base height in mm (default: -120.0)\n"
-                      << "  -m, --max-tilt DEGREES  Set maximum tilt adjustment (default: 30.0)\n"
-                      << "  -u, --update-rate HZ    Set target update frequency (default: 20.0)\n"
-                      << "  -h, --help              Show this help message\n"
-                      << std::endl;
-            exit(0);
+            roll_std += pow(roll_readings[i] - roll_avg, 2);
+            pitch_std += pow(pitch_readings[i] - pitch_avg, 2);
         }
-        else if ((arg == "--response" || arg == "-r") && i + 1 < argc)
-        {
-            config.response_factor = std::stod(argv[++i]);
-            // Clamp to valid range
-            config.response_factor = std::max(0.1, std::min(1.0, config.response_factor));
-        }
-        else if ((arg == "--deadzone" || arg == "-d") && i + 1 < argc)
-        {
-            config.deadzone = std::stod(argv[++i]);
-            // Clamp to valid range
-            config.deadzone = std::max(0.0, std::min(10.0, config.deadzone));
-        }
-        else if ((arg == "--height" || arg == "-z") && i + 1 < argc)
-        {
-            config.base_height = std::stod(argv[++i]);
-            // Clamp to reasonable range
-            config.base_height = std::max(-150.0, std::min(-50.0, config.base_height));
-        }
-        else if ((arg == "--max-tilt" || arg == "-m") && i + 1 < argc)
-        {
-            config.max_tilt_adjustment = std::stod(argv[++i]);
-            // Clamp to reasonable range
-            config.max_tilt_adjustment = std::max(5.0, std::min(45.0, config.max_tilt_adjustment));
-        }
-        else if ((arg == "--update-rate" || arg == "-u") && i + 1 < argc)
-        {
-            config.update_rate = std::stod(argv[++i]);
-            // Clamp to reasonable range
-            config.update_rate = std::max(5.0, std::min(50.0, config.update_rate));
-        }
+        roll_std = sqrt(roll_std / roll_readings.size());
+        pitch_std = sqrt(pitch_std / pitch_readings.size());
+
+        std::cout << "\nIMU Statistics:" << std::endl;
+        std::cout << "  Success rate: " << common::StringUtils::formatNumber((successful_reads * 100.0) / total_reads, 1) 
+                  << "% (" << successful_reads << "/" << total_reads << ")" << std::endl;
+        std::cout << "  Roll: avg=" << common::StringUtils::formatNumber(roll_avg, 1) << "° std=" 
+                  << common::StringUtils::formatNumber(roll_std, 2) << "°" << std::endl;
+        std::cout << "  Pitch: avg=" << common::StringUtils::formatNumber(pitch_avg, 1) << "° std=" 
+                  << common::StringUtils::formatNumber(pitch_std, 2) << "°" << std::endl;
     }
+
+    return successful_reads > 0;
 }
 
-// Display current configuration
-void display_config(const BalanceConfig &config)
+// Test balance adjustments
+bool test_balance_adjustments(controller::Controller &controller, double duration)
 {
-    std::cout << "Current configuration:\n"
-              << "  Response factor: " << config.response_factor << "\n"
-              << "  Deadzone: " << config.deadzone << " degrees\n"
-              << "  Base height: " << config.base_height << " mm\n"
-              << "  Maximum tilt: " << config.max_tilt_adjustment << " degrees\n"
-              << "  Update rate: " << config.update_rate << " Hz\n"
-              << std::endl;
+    common::ErrorReporter::reportInfo("Balance-Test", "Testing balance adjustments for " + 
+        common::StringUtils::formatDuration(duration));
+
+    // Enable balance mode
+    controller.setBalanceEnabled(true);
+    
+    common::PerformanceMonitor perfMonitor;
+    auto start_time = common::getCurrentTime();
+    auto end_time = start_time + duration;
+
+    std::cout << "Balance mode enabled. Tilt the robot to test adjustments..." << std::endl;
+    std::cout << "Press 'q' to stop test" << std::endl;
+
+    while (running.load() && common::getCurrentTime() < end_time)
+    {
+        perfMonitor.startFrame();
+        
+        if (!controller.update())
+        {
+            common::ErrorReporter::reportError("Balance-Test", "Controller Update", "Failed to update controller");
+            return false;
+        }
+        
+        perfMonitor.endFrame();
+
+        // Show progress
+        double progress = (common::getCurrentTime() - start_time) / duration;
+        if (static_cast<int>(progress * 20) % 5 == 0) // Update every 25%
+        {
+            common::ProgressBar::displayPercent(progress, 30, "Balance test");
+        }
+
+        // Check for user abort
+        char key;
+        if (common::TerminalManager::readChar(key) && (key == 'q' || key == 27))
+        {
+            std::cout << "\nBalance test aborted by user" << std::endl;
+            break;
+        }
+
+        common::sleepMs(20); // 50Hz update rate
+    }
+
+    common::ProgressBar::clear();
+    perfMonitor.printReport("Balance adjustment ");
+    std::cout << "Balance adjustment test completed" << std::endl;
+    return true;
 }
 
-int main(int argc, char *argv[])
+// Manual tilt test
+bool test_manual_tilt(controller::Controller &controller)
 {
-    // Register signal handler
-    std::signal(SIGINT, handle_signal);
-    std::signal(SIGTERM, handle_signal);
+    common::ErrorReporter::reportInfo("Balance-Test", "Running manual tilt test");
 
-    // Parse command line arguments
-    parse_arguments(argc, argv, config);
+    std::vector<std::pair<double, double>> test_tilts = {
+        {0.0, 0.0},    // Center
+        {10.0, 0.0},   // Forward tilt
+        {-10.0, 0.0},  // Backward tilt
+        {0.0, 10.0},   // Right tilt
+        {0.0, -10.0},  // Left tilt
+        {5.0, 5.0},    // Forward-right
+        {-5.0, -5.0},  // Backward-left
+        {0.0, 0.0}     // Return to center
+    };
 
-    // Set up terminal for immediate input
-    setup_terminal();
+    std::cout << "Testing manual tilt positions..." << std::endl;
 
-    std::cout << "Hexapod Balance Test" << std::endl;
-    std::cout << "===================" << std::endl;
-    std::cout << "This test uses IMU data to maintain balance when the hexapod is tilted." << std::endl;
+    common::PerformanceMonitor perfMonitor;
 
-    // Display configuration after parsing arguments
-    display_config(config);
+    for (size_t i = 0; i < test_tilts.size(); i++)
+    {
+        double tiltX = test_tilts[i].first;
+        double tiltY = test_tilts[i].second;
 
-    std::cout << "Press 'h' for help, 'q' to quit." << std::endl
-              << std::endl;
+        std::cout << "Setting tilt: X=" << common::StringUtils::formatNumber(tiltX, 1) 
+                  << "° Y=" << common::StringUtils::formatNumber(tiltY, 1) << "°..." << std::flush;
+
+        perfMonitor.startFrame();
+        controller.setTilt(tiltX, tiltY);
+        
+        // Update controller to apply the tilt
+        for (int j = 0; j < 10; j++) // Allow time for tilt to be applied
+        {
+            if (!controller.update())
+            {
+                std::cout << " FAILED" << std::endl;
+                common::ErrorReporter::reportError("Balance-Test", "Manual Tilt", "Controller update failed");
+                return false;
+            }
+            common::sleepMs(50);
+        }
+        perfMonitor.endFrame();
+
+        std::cout << " OK (" << common::StringUtils::formatNumber(perfMonitor.getAverageFrameTime()) << "ms)" << std::endl;
+
+        // Check for user abort
+        char key;
+        if (common::TerminalManager::readChar(key) && (key == 'q' || key == 27))
+        {
+            std::cout << "Manual tilt test aborted by user" << std::endl;
+            return false;
+        }
+
+        // Pause between positions
+        common::sleepMs(1000);
+    }
+
+    std::cout << "Manual tilt test completed successfully" << std::endl;
+    return true;
+}
+
+// Response sensitivity test
+bool test_response_sensitivity(controller::Controller &controller)
+{
+    common::ErrorReporter::reportInfo("Balance-Test", "Testing response sensitivity");
+
+    std::vector<double> response_factors = {0.2, 0.5, 0.8, 1.0};
+    
+    std::cout << "Testing different response sensitivity levels..." << std::endl;
+
+    for (double factor : response_factors)
+    {
+        std::cout << "Testing response factor: " << common::StringUtils::formatNumber(factor, 1) << std::endl;
+        
+        controller.setBalanceResponseFactor(factor);
+        controller.setBalanceEnabled(true);
+
+        // Run for a short period with this setting
+        auto start_time = common::getCurrentTime();
+        auto end_time = start_time + 3.0; // 3 seconds per test
+
+        common::PerformanceMonitor perfMonitor;
+        int updates = 0;
+
+        while (running.load() && common::getCurrentTime() < end_time)
+        {
+            perfMonitor.startFrame();
+            if (!controller.update())
+            {
+                common::ErrorReporter::reportError("Balance-Test", "Sensitivity Test", "Controller update failed");
+                return false;
+            }
+            perfMonitor.endFrame();
+            updates++;
+            common::sleepMs(50);
+        }
+
+        perfMonitor.printReport("  Response factor " + common::StringUtils::formatNumber(factor, 1) + " ");
+        std::cout << "  Updates: " << updates << std::endl;
+
+        // Brief pause between tests
+        common::sleepMs(500);
+    }
+
+    std::cout << "Response sensitivity test completed" << std::endl;
+    return true;
+}
+
+// Deadzone calibration test
+bool test_deadzone_calibration(controller::Controller &controller)
+{
+    common::ErrorReporter::reportInfo("Balance-Test", "Testing deadzone calibration");
+
+    std::vector<double> deadzone_values = {0.5, 1.0, 2.0, 5.0};
+    
+    std::cout << "Testing different deadzone values..." << std::endl;
+
+    for (double deadzone : deadzone_values)
+    {
+        std::cout << "Testing deadzone: " << common::StringUtils::formatNumber(deadzone, 1) << "°" << std::endl;
+        
+        controller.setBalanceDeadzone(deadzone);
+        controller.setBalanceEnabled(true);
+
+        // Run for a short period with this setting
+        auto start_time = common::getCurrentTime();
+        auto end_time = start_time + 3.0;
+
+        while (running.load() && common::getCurrentTime() < end_time)
+        {
+            if (!controller.update())
+            {
+                common::ErrorReporter::reportError("Balance-Test", "Deadzone Test", "Controller update failed");
+                return false;
+            }
+            common::sleepMs(50);
+        }
+
+        std::cout << "  Deadzone " << common::StringUtils::formatNumber(deadzone, 1) << "° completed" << std::endl;
+        common::sleepMs(500);
+    }
+
+    std::cout << "Deadzone calibration test completed" << std::endl;
+    return true;
+}
+
+// Balance stress test
+bool test_balance_stress(controller::Controller &controller, double duration)
+{
+    common::ErrorReporter::reportInfo("Balance-Test", "Running balance stress test for " + 
+        common::StringUtils::formatDuration(duration));
+
+    controller.setBalanceEnabled(true);
+    
+    common::PerformanceMonitor perfMonitor;
+    auto start_time = common::getCurrentTime();
+    auto end_time = start_time + duration;
+
+    int successful_updates = 0;
+    int total_updates = 0;
+
+    std::cout << "Running continuous balance updates for " << common::StringUtils::formatDuration(duration) << "..." << std::endl;
+    std::cout << "Press 'q' to abort early" << std::endl;
+
+    while (running.load() && common::getCurrentTime() < end_time)
+    {
+        perfMonitor.startFrame();
+        
+        if (controller.update())
+        {
+            successful_updates++;
+        }
+        total_updates++;
+        
+        perfMonitor.endFrame();
+
+        // Show progress every 100 updates
+        if (total_updates % 100 == 0)
+        {
+            double progress = (common::getCurrentTime() - start_time) / duration;
+            common::ProgressBar::displayPercent(progress, 40, "Stress test");
+        }
+
+        // Check for user abort
+        char key;
+        if (common::TerminalManager::readChar(key) && (key == 'q' || key == 27))
+        {
+            std::cout << "\nStress test aborted by user" << std::endl;
+            break;
+        }
+
+        common::sleepMs(10); // 100Hz update rate for stress test
+    }
+
+    common::ProgressBar::clear();
+    perfMonitor.printReport("Balance stress test ");
+
+    std::cout << "Stress test results:" << std::endl;
+    std::cout << "  Total updates: " << total_updates << std::endl;
+    std::cout << "  Successful: " << successful_updates << std::endl;
+    std::cout << "  Success rate: " << common::StringUtils::formatNumber((successful_updates * 100.0) / total_updates, 1) 
+              << "%" << std::endl;
+
+    return (successful_updates * 100.0) / total_updates > 95.0; // 95% success rate threshold
+}
+
+// Show balance status
+void show_balance_status(controller::Controller &controller)
+{
+    std::cout << "\nBalance System Status" << std::endl;
+    std::cout << "=====================" << std::endl;
+
+    auto config = controller.getBalanceConfig();
+    
+    std::cout << "Balance mode: " << (controller.isBalanceEnabled() ? "ENABLED" : "disabled") << std::endl;
+    std::cout << "Response factor: " << common::StringUtils::formatNumber(config.response_factor, 2) << std::endl;
+    std::cout << "Deadzone: " << common::StringUtils::formatNumber(config.deadzone, 1) << "°" << std::endl;
+    std::cout << "Max adjustment: " << common::StringUtils::formatNumber(config.max_tilt_adjustment, 1) << "°" << std::endl;
+    std::cout << std::endl;
+}
+
+int main()
+{
+    // Setup graceful shutdown handling using common utilities
+    common::SignalManager::setupGracefulShutdown(running, signalHandler);
+
+    // Initialize performance monitoring
+    common::PerformanceMonitor perfMonitor;
+
+    // Setup terminal for immediate input using common utilities
+    if (!common::TerminalManager::setupImmediate()) {
+        common::ErrorReporter::reportWarning("Balance-Test", "Failed to setup immediate terminal input");
+    }
+
+    std::cout << "Balance Test Program" << std::endl;
+    std::cout << "====================" << std::endl;
+    std::cout << "Testing hexapod balance and IMU systems" << std::endl;
 
     // Initialize hexapod
-    Hexapod hexapod;
+    hexapod::Hexapod hexapod;
+    
+    perfMonitor.startFrame();
     if (!hexapod.init())
     {
-        std::cerr << "Failed to initialize hexapod: "
-                  << hexapod.getLastErrorMessage() << std::endl;
-        restore_terminal();
+        common::ErrorReporter::reportError("Balance-Test", "Initialization", hexapod.getLastErrorMessage());
+        common::TerminalManager::restore();
+        return 1;
+    }
+    perfMonitor.endFrame();
+
+    common::ErrorReporter::reportInfo("Balance-Test", "Hexapod initialized successfully in " +
+        common::StringUtils::formatNumber(perfMonitor.getAverageFrameTime()) + "ms");
+
+    // Initialize controller
+    controller::Controller controller(hexapod);
+    if (!controller.init())
+    {
+        common::ErrorReporter::reportError("Balance-Test", "Controller Init", "Failed to initialize controller");
+        common::TerminalManager::restore();
         return 1;
     }
 
-    std::cout << "Hexapod initialized. Centering legs..." << std::endl;
-
-    // Center all legs to starting position
+    // Center all legs for safety
+    std::cout << "Centering all legs for safety..." << std::endl;
     if (!hexapod.centerAll())
     {
-        std::cerr << "Failed to center legs: "
-                  << hexapod.getLastErrorMessage() << std::endl;
-        hexapod.cleanup();
-        restore_terminal();
-        return 1;
+        common::ErrorReporter::reportWarning("Balance-Test", "Failed to center legs");
     }
 
-    std::cout << "Starting balance control loop. Press 'q' to quit." << std::endl;
+    print_menu();
 
-    // Main balance loop
-    int iterations = 0;
-    double last_update_time = hexapod.getCurrentTime();
-    double update_interval = 1.0 / config.update_rate;
-
-    while (running)
+    // Main test loop
+    while (running.load())
     {
-        // Process any keyboard input
-        process_input();
-
-        // Check if it's time for an update
-        double current_time = hexapod.getCurrentTime();
-        if ((current_time - last_update_time) < update_interval)
+        std::cout << "Enter command (h for help): ";
+        char command;
+        
+        if (common::TerminalManager::readChar(command))
         {
-            // Sleep for a bit to avoid consuming 100% CPU
-            usleep(1000);
-            continue;
+            switch (command)
+            {
+            case '1': // IMU readings test
+                test_imu_readings(hexapod, 10.0);
+                break;
+
+            case '2': // Balance adjustments test
+                test_balance_adjustments(controller, 15.0);
+                break;
+
+            case '3': // Continuous balance mode
+            {
+                std::cout << "Continuous balance mode activated. Tilt the robot to see adjustments." << std::endl;
+                std::cout << "Press any key to stop..." << std::endl;
+                
+                controller.setBalanceEnabled(true);
+                
+                while (running.load())
+                {
+                    if (!controller.update())
+                    {
+                        common::ErrorReporter::reportError("Balance-Test", "Continuous Mode", "Controller update failed");
+                        break;
+                    }
+                    
+                    char key;
+                    if (common::TerminalManager::readChar(key))
+                    {
+                        break;
+                    }
+                    
+                    common::sleepMs(20);
+                }
+                
+                controller.setBalanceEnabled(false);
+                std::cout << "Continuous balance mode stopped" << std::endl;
+                break;
+            }
+
+            case '4': // Manual tilt test
+                test_manual_tilt(controller);
+                break;
+
+            case '5': // Response sensitivity test
+                test_response_sensitivity(controller);
+                break;
+
+            case '6': // Deadzone calibration
+                test_deadzone_calibration(controller);
+                break;
+
+            case '7': // Stress test
+                test_balance_stress(controller, 30.0);
+                break;
+
+            case '8': // IMU calibration
+                std::cout << "IMU calibration not yet implemented" << std::endl;
+                break;
+
+            case 'b': // Toggle balance mode
+                controller.setBalanceEnabled(!controller.isBalanceEnabled());
+                break;
+
+            case '+': // Increase response factor
+            {
+                auto config = controller.getBalanceConfig();
+                controller.setBalanceResponseFactor(std::min(1.0, config.response_factor + 0.1));
+                break;
+            }
+
+            case '-': // Decrease response factor
+            {
+                auto config = controller.getBalanceConfig();
+                controller.setBalanceResponseFactor(std::max(0.1, config.response_factor - 0.1));
+                break;
+            }
+
+            case '[': // Decrease deadzone
+            {
+                auto config = controller.getBalanceConfig();
+                controller.setBalanceDeadzone(std::max(0.0, config.deadzone - 0.5));
+                break;
+            }
+
+            case ']': // Increase deadzone
+            {
+                auto config = controller.getBalanceConfig();
+                controller.setBalanceDeadzone(std::min(10.0, config.deadzone + 0.5));
+                break;
+            }
+
+            case 's': // Show status
+                show_balance_status(controller);
+                break;
+
+            case 'c': // Center legs
+                std::cout << "Centering all legs..." << std::endl;
+                if (hexapod.centerAll())
+                {
+                    std::cout << "All legs centered successfully" << std::endl;
+                }
+                else
+                {
+                    common::ErrorReporter::reportError("Balance-Test", "Center", hexapod.getLastErrorMessage());
+                }
+                break;
+
+            case 'h': // Help
+                print_menu();
+                break;
+
+            case 'q': // Quit
+                std::cout << "Exiting balance test program..." << std::endl;
+                running.store(false);
+                break;
+
+            default:
+                std::cout << "Unknown command. Press 'h' for help." << std::endl;
+                break;
+            }
         }
 
-        // Update timing
-        last_update_time = current_time;
-        iterations++;
-
-        // Read IMU data
-        ImuData imu_data;
-        if (!hexapod.getImuData(imu_data))
-        {
-            std::cerr << "\nFailed to read IMU data: "
-                      << hexapod.getLastErrorMessage() << std::endl;
-            continue;
-        }
-
-        // Calculate tilt angles from accelerometer data
-        double roll, pitch;
-        calculate_tilt(imu_data, roll, pitch);
-
-        // Display status
-        display_status(imu_data, roll, pitch, iterations);
-
-        // Skip adjustment if paused
-        if (pause_balance)
-        {
-            continue;
-        }
-
-        // Apply balance adjustments
-        apply_balance_adjustments(hexapod, roll, pitch);
-
-        // Extra debug information if enabled
-        if (debug_mode && iterations % config.display_decimation == 0)
-            hexapod.printImuData(imu_data);
+        // Small delay to prevent excessive CPU usage
+        common::sleepMs(50);
     }
 
-    // Clean shutdown
-    std::cout << "\nShutting down..." << std::endl;
-
-    // Center all legs before exit
+    // Final safety - disable balance and center legs before exit
+    std::cout << "Disabling balance mode and centering legs for safe shutdown..." << std::endl;
+    controller.setBalanceEnabled(false);
     hexapod.centerAll();
-    hexapod.cleanup();
 
     // Restore terminal settings
-    restore_terminal();
+    common::TerminalManager::restore();
 
-    std::cout << "Balance test completed." << std::endl;
+    std::cout << "Balance test program completed." << std::endl;
     return 0;
 }
