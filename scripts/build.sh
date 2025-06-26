@@ -27,21 +27,29 @@ fi
 usage() {
     echo "Usage: $0 [OPTIONS]"
     echo "Options:"
-    echo "  (no argument)     Build all components"
-    echo "  -i, --image       Build Docker images"
-    echo "  -m, --module      Build kernel modules"
-    echo "  -k, --kernel      Build kernel and builtin drivers"
-    echo "  -u, --user        Build user space programs"
-    echo "  -d, --pytd3       Build PyTD3 reinforcement learning module"
-    echo "  -s, --setup       Setup Python virtual environment for PyTD3"
-    echo "  -l, --uml         Build UML diagrams (no Docker required)"
-    echo "  -t, --utility     Create utility scripts (no Docker required)"
-    echo "  -c, --clean       Clean build artifacts"
-    echo "  -p, --purge       Purge all build artifacts and Docker images"
-    echo "  -n, --no-cache    Build all without cache"
-    echo "  -h, --help        Show this help message"
+    echo "  (no argument)       Build all components"
+    echo "  -i, --image [TYPE]  Build Docker images (optional TYPE: app|driver|pytd3)"
+    echo "  -b, --build [TYPE]  Build components (TYPE: app|driver|pytd3|all)"
+    echo "  -s, --setup         Setup Python virtual environment for PyTD3"
+    echo "  -l, --uml           Build UML diagrams (no Docker required)"
+    echo "  -t, --utility       Create utility scripts (no Docker required)"
+    echo "  -c, --clean [TYPE]  Clean build artifacts (optional TYPE: app|driver|pytd3|deploy)"
+    echo "  -p, --purge [TYPE]  Purge all build artifacts and Docker images (optional TYPE: app|driver|pytd3)"
+    echo "  -n, --no-cache      Build all without cache"
+    echo "  -h, --help          Show this help message"
     echo ""
-    echo "Options can be combined, e.g., -mt to build modules & utility scripts"
+    echo "Examples:"
+    echo "  ./scripts/build.sh -i app        Build only the app Docker image"
+    echo "  ./scripts/build.sh -b app        Build only user space programs"
+    echo "  ./scripts/build.sh -b driver     Build only kernel modules"
+    echo "  ./scripts/build.sh -b pytd3      Build only PyTD3 module"
+    echo "  ./scripts/build.sh -b            Build all components (app, driver, pytd3)"
+    echo "  ./scripts/build.sh -ib app       Build app image and components"
+    echo "  ./scripts/build.sh -ib           Build all images and components"
+    echo "  ./scripts/build.sh -c driver     Clean only the driver build artifacts"
+    echo "  ./scripts/build.sh -p pytd3      Purge only the PyTD3 Docker image"
+    echo ""
+    echo "Options can be combined, e.g., -bt to build all components & utility scripts"
     echo "Note: UML diagrams (-l) and utility scripts (-t) can be built without Docker"
     echo ""
     exit 1
@@ -95,16 +103,6 @@ build_docker_image() {
                 exit 1
             }
             ;;
-        kernel)
-            if [ ! -f "${PROJECT_ROOT}/docker/kernel.Dockerfile" ]; then
-                log "${RED}" "kernel.Dockerfile not found in docker/ directory!"
-                exit 1
-            fi
-            docker build ${cache_flag} -t hexapod-kernel -f "${PROJECT_ROOT}/docker/kernel.Dockerfile" "${PROJECT_ROOT}" || {
-                log "${RED}" "Docker build for kernel failed!"
-                exit 1
-            }
-            ;;
         pytd3)
             if [ ! -f "${PROJECT_ROOT}/docker/pytd3.Dockerfile" ]; then
                 log "${RED}" "pytd3.Dockerfile not found in docker/ directory!"
@@ -120,7 +118,6 @@ build_docker_image() {
             log "${YELLOW}" "Building all Docker images..."
             build_docker_image "app" ${cache_flag}
             build_docker_image "driver" ${cache_flag}
-            build_docker_image "kernel" ${cache_flag}
             build_docker_image "pytd3" ${cache_flag}
             ;;
         *)
@@ -132,7 +129,7 @@ build_docker_image() {
     log "${GREEN}" "Docker image ${image_type} built successfully!"
 }
 
-# Function to build kernel module
+# Function to build kernel module (now called by driver build type)
 build_device_driver() {
     log "${YELLOW}" "Preparing kernel modules..."
     
@@ -160,7 +157,7 @@ build_device_driver() {
     }
 }
 
-# Function to build user space program
+# Function to build user space program (now called by app build type)
 build_user_space() {
     log "${YELLOW}" "Preparing user space programs..."
     
@@ -292,54 +289,35 @@ build_utility_scripts() {
     log "${GREEN}" "Utility scripts prepared successfully"
 }
 
-# Function to build kernel and builtin drivers
-build_kernel_enable() {
-    log "${YELLOW}" "Building kernel and builtin drivers..."
-    
-    # First build the kernel image if not already built
-    if ! docker image inspect hexapod-kernel &> /dev/null; then
-        build_docker_image "kernel" ""
-    fi
-
-    # Run with terminal settings for menuconfig
-    docker run --rm -it \
-        -e TERM=xterm-256color \
-        -v "${PROJECT_ROOT}/utils/ti-linux-kernel-dev:/build/kernel" \
-        -v "${DEPLOY_DIR}:/build/deploy" \
-        -w /build/kernel \
-        hexapod-kernel kernel || {
-        log "${RED}" "Kernel and builtin drivers build failed!"
-        exit 1
-    }
-    log "${GREEN}" "Kernel and builtin drivers build completed successfully!"
-}
-
 # Initialize option flags
 DO_CLEAN=0
 DO_IMAGE=0
-DO_MODULE=0
-DO_USER=0
+DO_BUILD=0
 DO_UTILITY=0
 DO_UML=0
 DO_NO_CACHE=0
-DO_PYTD3=0
 DO_SETUP_ENV=0
-DO_KERNEL=0
 DO_PURGE=0
+IMAGE_TYPE="all" # Default to all images
+BUILD_TYPE="all" # Default to all components
+CLEAN_TYPE="all" # Default to all modules
+PURGE_TYPE="all" # Default to all images
 
 # Parse command-line arguments
 if [ $# -eq 0 ]; then
     # Default: build everything
     DO_IMAGE=1
-    DO_MODULE=1
+    DO_BUILD=1
+    BUILD_TYPE="all"
     DO_UTILITY=1
     DO_UML=1
-    DO_USER=1
     DO_SETUP_ENV=1
-    DO_PYTD3=1
-    DO_KERNEL=1
 else
-    for arg in "$@"; do
+    i=0
+    while [ $i -lt $# ]; do
+        i=$((i+1))
+        arg="${!i}"
+        
         if [[ "$arg" == "--no-cache" || "$arg" == "-n" ]]; then
             DO_NO_CACHE=1
             DO_DOCKER_REQUIRED=1
@@ -347,47 +325,71 @@ else
             usage
         elif [[ "$arg" == "--clean" || "$arg" == "-c" ]]; then
             DO_CLEAN=1
+            # Check if next argument specifies a module to clean
+            next_i=$((i+1))
+            if [ $next_i -le $# ]; then
+                next_arg="${!next_i}"
+                if [[ "$next_arg" == "app" || "$next_arg" == "driver" || "$next_arg" == "pytd3" || "$next_arg" == "deploy" ]]; then
+                    CLEAN_TYPE="$next_arg"
+                    i=$next_i  # Skip the next argument since we've consumed it
+                fi
+            fi
         elif [[ "$arg" == "--purge" || "$arg" == "-p" ]]; then
             DO_PURGE=1
+            # Check if next argument specifies a module to purge
+            next_i=$((i+1))
+            if [ $next_i -le $# ]; then
+                next_arg="${!next_i}"
+                if [[ "$next_arg" == "app" || "$next_arg" == "driver" || "$next_arg" == "pytd3" ]]; then
+                    PURGE_TYPE="$next_arg"
+                    i=$next_i  # Skip the next argument since we've consumed it
+                fi
+            fi
         elif [[ "$arg" == "--image" || "$arg" == "-i" ]]; then
             DO_IMAGE=1
             DO_DOCKER_REQUIRED=1
-        elif [[ "$arg" == "--module" || "$arg" == "-m"  ]]; then
-            DO_MODULE=1
+            # Check if next argument is an image type
+            next_i=$((i+1))
+            if [ $next_i -le $# ]; then
+                next_arg="${!next_i}"
+                if [[ "$next_arg" == "app" || "$next_arg" == "driver" || "$next_arg" == "pytd3" ]]; then
+                    IMAGE_TYPE="$next_arg"
+                    i=$next_i  # Skip the next argument since we've consumed it
+                fi
+            fi
+        elif [[ "$arg" == "--build" || "$arg" == "-b" ]]; then
+            DO_BUILD=1
             DO_DOCKER_REQUIRED=1
-        elif [[ "$arg" == "--user" || "$arg" == "-u"  ]]; then
-            DO_USER=1
-            DO_DOCKER_REQUIRED=1
+            # Check if next argument is a build type
+            next_i=$((i+1))
+            if [ $next_i -le $# ]; then
+                next_arg="${!next_i}"
+                if [[ "$next_arg" == "app" || "$next_arg" == "driver" || "$next_arg" == "pytd3" || "$next_arg" == "all" ]]; then
+                    BUILD_TYPE="$next_arg"
+                    i=$next_i  # Skip the next argument since we've consumed it
+                fi
+            fi
         elif [[ "$arg" == "--utility" || "$arg" == "-t"  ]]; then
             DO_UTILITY=1
-        elif [[ "$arg" == "--pytd3" || "$arg" == "-d" ]]; then
-            DO_PYTD3=1
-            DO_DOCKER_REQUIRED=1
         elif [[ "$arg" == "--setup" || "$arg" == "-s" ]]; then
             DO_SETUP_ENV=1
             DO_DOCKER_REQUIRED=1
         elif [[ "$arg" == "--uml" || "$arg" == "-l" ]]; then
             DO_UML=1
-        elif [[ "$arg" == "--kernel" || "$arg" == "-k" ]]; then
-            DO_KERNEL=1
-            DO_DOCKER_REQUIRED=1
         elif [[ "$arg" == -* && "$arg" != "--"* ]]; then
-            # Process combined short options like -tmu
+            # Process combined short options like -tbl
             flags=${arg#-}
-            for (( i=0; i<${#flags}; i++ )); do
-                flag=${flags:$i:1}
+            for (( j=0; j<${#flags}; j++ )); do
+                flag=${flags:$j:1}
                 case "$flag" in
                     c) DO_CLEAN=1 ;;
                     p) DO_PURGE=1 ;;
                     i) DO_IMAGE=1; DO_DOCKER_REQUIRED=1 ;;
-                    m) DO_MODULE=1; DO_DOCKER_REQUIRED=1 ;;
-                    u) DO_USER=1; DO_DOCKER_REQUIRED=1 ;;
+                    b) DO_BUILD=1; DO_DOCKER_REQUIRED=1 ;;
                     t) DO_UTILITY=1 ;;
-                    d) DO_PYTD3=1; DO_DOCKER_REQUIRED=1 ;;
                     s) DO_SETUP_ENV=1; DO_DOCKER_REQUIRED=1 ;;
                     l) DO_UML=1 ;;
                     n) DO_NO_CACHE=1; DO_DOCKER_REQUIRED=1 ;;
-                    k) DO_KERNEL=1; DO_DOCKER_REQUIRED=1 ;;
                     h) usage ;;
                     *) 
                         log "${RED}" "Unknown option: -$flag"
@@ -402,76 +404,249 @@ else
     done
 fi
 
-# Handle clean first (as it exits)
-if [ $DO_CLEAN -eq 1 ]; then
-    log "${YELLOW}" "Cleaning build artifacts..."
+# Function to clean app specific artifacts
+clean_app() {
+    local anything_cleaned=0
     
-    # Clean deploy directory utility scripts (no Docker required)
-    if [ -d "${DEPLOY_DIR}" ]; then
-        log "${YELLOW}" "Cleaning deploy directory..."
-        if ! rm -rf "${DEPLOY_DIR}" 2>/dev/null; then
-            log "${YELLOW}" "Using sudo to clean deploy directory..."
-            sudo rm -rf "${DEPLOY_DIR}"
-        fi
-    fi
-    
-    # Clean with Docker only if relevant images exist
-    if command -v docker &> /dev/null; then
-        # Clean using driver image if it exists
-        if docker image inspect hexapod-driver &> /dev/null; then
-            log "${YELLOW}" "Cleaning kernel modules..."
-            docker run --rm \
-                -v "${KERNEL_MODULE_DIR}:/build/module" \
-                hexapod-driver clean || true
-        fi
-        
-        # Clean using app image if it exists 
-        if docker image inspect hexapod-app &> /dev/null; then
-            log "${YELLOW}" "Cleaning user space applications..."
-            docker run --rm \
-                -v "${USER_SPACE_DIR}:/build/user" \
-                hexapod-app clean || true
-        fi
-        
-        # Clean using pytd3 image if it exists
-        if docker image inspect hexapod-pytd3 &> /dev/null; then
-            log "${YELLOW}" "Cleaning PyTD3..."
-            docker run --rm \
-                -v "${PYTD3_DIR}:/build/pytd3" \
-                hexapod-pytd3 clean || true
-        fi
-    else
-        log "${YELLOW}" "Docker not available, skipping Docker-based cleaning"
-    fi
-    
-    # Clean local directories manually if needed
+    # Check if app output directory exists
     if [ -d "${USER_SPACE_DIR}/bin" ]; then
         log "${GREEN}" "Cleaning user space binaries..."
         if ! rm -rf "${USER_SPACE_DIR}/bin" 2>/dev/null; then
             log "${YELLOW}" "Using sudo to clean user space binaries..."
             sudo rm -rf "${USER_SPACE_DIR}/bin"
         fi
+        anything_cleaned=1
+    else
+        log "${YELLOW}" "No user space binaries found to clean"
     fi
+    
+    # Clean using app Docker image if available
+    if command -v docker &> /dev/null && docker image inspect hexapod-app &> /dev/null; then
+        log "${YELLOW}" "Cleaning user space applications using Docker..."
+        docker run --rm \
+            -v "${USER_SPACE_DIR}:/build/user" \
+            hexapod-app clean || true
+        anything_cleaned=1
+    fi
+    
+    if [ $anything_cleaned -eq 0 ]; then
+        log "${GREEN}" "Nothing to clean for app module"
+    fi
+}
 
+# Function to clean driver specific artifacts
+clean_driver() {
+    local anything_cleaned=0
+    
+    # Check if driver build artifacts exist
+    if [ -d "${KERNEL_MODULE_DIR}/obj" ] || [ -d "${KERNEL_MODULE_DIR}/cmd" ] || \
+       [ -d "${KERNEL_MODULE_DIR}/deps" ] || [ -f "${KERNEL_MODULE_DIR}/hexapod_driver.ko" ]; then
+        anything_cleaned=1
+    fi
+    
+    # Clean using driver Docker image if available
+    if command -v docker &> /dev/null && docker image inspect hexapod-driver &> /dev/null; then
+        log "${YELLOW}" "Cleaning kernel modules using Docker..."
+        docker run --rm \
+            -v "${KERNEL_MODULE_DIR}:/build/module" \
+            hexapod-driver clean || true
+        anything_cleaned=1
+    fi
+    
+    if [ $anything_cleaned -eq 0 ]; then
+        log "${GREEN}" "Nothing to clean for driver module"
+    fi
+}
+
+# Function to clean pytd3 specific artifacts
+clean_pytd3() {
+    local anything_cleaned=0
+    
+    # Check if pytd3 build artifacts exist
     if [ -d "${PYTD3_DIR}/build" ] || [ -d "${PYTD3_DIR}/venv" ]; then
         log "${GREEN}" "Cleaning PyTD3 build and virtual environment..."
         if ! rm -rf "${PYTD3_DIR}/build" "${PYTD3_DIR}/venv" 2>/dev/null; then
             log "${YELLOW}" "Using sudo to clean PyTD3 directories..."
             sudo rm -rf "${PYTD3_DIR}/build" "${PYTD3_DIR}/venv"
         fi
-    fi
-
-    # Clean UML diagrams without requiring Docker
-    log "${YELLOW}" "Cleaning UML diagram files..."
-    
-    # Check if export.sh exists
-    if [ -f "${PROJECT_ROOT}/scripts/export.sh" ]; then
-        bash "${PROJECT_ROOT}/scripts/export.sh" -c
+        anything_cleaned=1
     else
-        log "${RED}" "export.sh not found in scripts directory!"
+        log "${YELLOW}" "No PyTD3 build artifacts found to clean"
     fi
+    
+    # Clean using pytd3 Docker image if available
+    if command -v docker &> /dev/null && docker image inspect hexapod-pytd3 &> /dev/null; then
+        log "${YELLOW}" "Cleaning PyTD3 using Docker..."
+        docker run --rm \
+            -v "${PYTD3_DIR}:/build/pytd3" \
+            hexapod-pytd3 clean || true
+        anything_cleaned=1
+    fi
+    
+    if [ $anything_cleaned -eq 0 ]; then
+        log "${GREEN}" "Nothing to clean for PyTD3 module"
+    fi
+}
+
+# Function to clean deploy directory
+clean_deploy() {
+    local anything_cleaned=0
+    
+    # Check if deploy directory exists
+    if [ -d "${DEPLOY_DIR}" ]; then
+        log "${YELLOW}" "Cleaning deploy directory..."
+        if ! rm -rf "${DEPLOY_DIR}"/* 2>/dev/null; then
+            log "${YELLOW}" "Using sudo to clean deploy directory..."
+            sudo rm -rf "${DEPLOY_DIR}"/*
+        fi
+        anything_cleaned=1
+    else
+        log "${GREEN}" "Nothing to clean in deploy directory"
+    fi
+    
+    return $anything_cleaned
+}
+
+# Function to purge Docker images
+purge_docker_images() {
+    local image_type=$1
+    local anything_purged=0
+    
+    # Check if Docker is available
+    if ! command -v docker &> /dev/null; then
+        log "${RED}" "Docker is not installed or not in PATH"
+        return 0
+    fi
+    
+    case "$image_type" in
+        app)
+            if docker image inspect hexapod-app &> /dev/null; then
+                log "${YELLOW}" "Removing hexapod-app Docker image..."
+                docker rmi hexapod-app || true
+                anything_purged=1
+            else
+                log "${GREEN}" "No hexapod-app Docker image found to purge"
+            fi
+            ;;
+        driver)
+            if docker image inspect hexapod-driver &> /dev/null; then
+                log "${YELLOW}" "Removing hexapod-driver Docker image..."
+                docker rmi hexapod-driver || true
+                anything_purged=1
+            else
+                log "${GREEN}" "No hexapod-driver Docker image found to purge"
+            fi
+            ;;
+        pytd3)
+            if docker image inspect hexapod-pytd3 &> /dev/null; then
+                log "${YELLOW}" "Removing hexapod-pytd3 Docker image..."
+                docker rmi hexapod-pytd3 || true
+                anything_purged=1
+            else
+                log "${GREEN}" "No hexapod-pytd3 Docker image found to purge"
+            fi
+            ;;
+        all)
+            local purged_any=0
+            if docker image inspect hexapod-app &> /dev/null; then
+                log "${YELLOW}" "Removing hexapod-app Docker image..."
+                docker rmi hexapod-app || true
+                purged_any=1
+            fi
+            if docker image inspect hexapod-driver &> /dev/null; then
+                log "${YELLOW}" "Removing hexapod-driver Docker image..."
+                docker rmi hexapod-driver || true
+                purged_any=1
+            fi
+            if docker image inspect hexapod-pytd3 &> /dev/null; then
+                log "${YELLOW}" "Removing hexapod-pytd3 Docker image..."
+                docker rmi hexapod-pytd3 || true
+                purged_any=1
+            fi
+            
+            if [ $purged_any -eq 0 ]; then
+                log "${GREEN}" "No hexapod Docker images found to purge"
+            else
+                anything_purged=1
+            fi
+            ;;
+    esac
+    
+    return $anything_purged
+}
+
+# Handle clean first (as it exits)
+if [ $DO_CLEAN -eq 1 ]; then
+    log "${YELLOW}" "Cleaning build artifacts..."
+    
+    case "$CLEAN_TYPE" in
+        app)
+            clean_app
+            ;;
+        driver)
+            clean_driver
+            ;;
+        pytd3)
+            clean_pytd3
+            ;;
+        deploy)
+            clean_deploy
+            ;;
+        all)
+            # Clean all components
+            clean_app
+            clean_driver
+            clean_pytd3
+            clean_deploy
+            
+            # Clean UML diagrams without requiring Docker
+            log "${YELLOW}" "Cleaning UML diagram files..."
+            
+            # Check if export.sh exists
+            if [ -f "${PROJECT_ROOT}/scripts/export.sh" ]; then
+                bash "${PROJECT_ROOT}/scripts/export.sh" -c
+            else
+                log "${RED}" "export.sh not found in scripts directory!"
+            fi
+            ;;
+    esac
     
     log "${GREEN}" "Clean completed successfully!"
+    exit 0
+fi
+
+# Handle purge option
+if [ $DO_PURGE -eq 1 ]; then
+    case "$PURGE_TYPE" in
+        app|driver|pytd3)
+            purge_docker_images "$PURGE_TYPE"
+            ;;
+        all)
+            # Remove Docker containers, images, volumes, and builders
+            log "${YELLOW}" "Checking for Docker containers to purge..."
+            if docker ps -a | grep -q hexapod; then
+                log "${YELLOW}" "Pruning all Docker containers..."
+                docker container prune -f
+            else
+                log "${GREEN}" "No Docker containers found to purge"
+            fi
+            
+            purge_docker_images "all"
+            
+            log "${YELLOW}" "Checking for Docker volumes to purge..."
+            if docker volume ls | grep -q hexapod; then
+                log "${YELLOW}" "Pruning all Docker volumes..."
+                docker volume prune -f
+            else
+                log "${GREEN}" "No Docker volumes found to purge"
+            fi
+            
+            log "${YELLOW}" "Pruning Docker builder cache..."
+            docker builder prune --all -f
+            ;;
+    esac
+    
+    log "${GREEN}" "Purge completed!"
     exit 0
 fi
 
@@ -488,7 +663,6 @@ fi
 # Build UML diagrams (no Docker required)
 if [ $DO_UML -eq 1 ]; then
     build_uml_diagrams
-    # COMPONENTS_BUILT=1
 fi
 
 # Handle purge option
@@ -509,11 +683,11 @@ fi
 # Build images if explicitly requested or needed for components
 if [ $DO_IMAGE -eq 1 ]; then
     # Handle Docker image building with or without cache
-    local cache_flag=""
+    cache_flag=""
     if [ $DO_NO_CACHE -eq 1 ]; then
         cache_flag="--no-cache"
     fi
-    build_docker_image "all" "${cache_flag}"
+    build_docker_image "${IMAGE_TYPE}" "${cache_flag}"
     COMPONENTS_BUILT=1
 fi
 
@@ -523,29 +697,43 @@ if [ $DO_SETUP_ENV -eq 1 ]; then
     COMPONENTS_BUILT=1
 fi
 
-# Build Docker-dependent components
-if [ $DO_MODULE -eq 1 ]; then
-    build_device_driver
-    log "${GREEN}" "Kernel modules build completed successfully!"
-    COMPONENTS_BUILT=1
-fi
-
-if [ $DO_USER -eq 1 ]; then
-    build_user_space
-    log "${GREEN}" "User space programs build completed successfully!"
-    COMPONENTS_BUILT=1
-fi
-
-if [ $DO_KERNEL -eq 1 ]; then
-    build_kernel_enable
-    log "${GREEN}" "Kernel and builtin drivers build completed successfully!"
-    COMPONENTS_BUILT=1
-fi
-
-if [ $DO_PYTD3 -eq 1 ]; then
-    build_pytd3
-    log "${GREEN}" "PyTD3 build completed successfully!"
-    COMPONENTS_BUILT=1
+# Build Docker-dependent components using the unified -b/--build option
+if [ $DO_BUILD -eq 1 ]; then
+    case "$BUILD_TYPE" in
+        app)
+            build_user_space
+            log "${GREEN}" "User space programs build completed successfully!"
+            COMPONENTS_BUILT=1
+            ;;
+        driver)
+            build_device_driver
+            log "${GREEN}" "Kernel modules build completed successfully!"
+            COMPONENTS_BUILT=1
+            ;;
+        pytd3)
+            build_pytd3
+            log "${GREEN}" "PyTD3 build completed successfully!"
+            COMPONENTS_BUILT=1
+            ;;
+        all)
+            # Build all components in order
+            build_user_space
+            log "${GREEN}" "User space programs build completed successfully!"
+            
+            build_device_driver
+            log "${GREEN}" "Kernel modules build completed successfully!"
+            
+            build_pytd3
+            log "${GREEN}" "PyTD3 build completed successfully!"
+            
+            COMPONENTS_BUILT=1
+            ;;
+        *)
+            log "${RED}" "Unknown build type: ${BUILD_TYPE}"
+            log "${YELLOW}" "Valid build types: app, driver, pytd3, all"
+            exit 1
+            ;;
+    esac
 fi
 
 # Print overall success message if anything was built

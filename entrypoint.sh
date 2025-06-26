@@ -18,13 +18,8 @@ log() {
 
 # Configure git to trust the build directory to avoid ownership issues
 if command -v git &> /dev/null; then
-    git config --global --add safe.directory /build/kernel
-    git config --global --add safe.directory '*'
+    git config --global --add safe.directory /build/
 fi
-
-# Configure terminal for TUI applications like menuconfig
-export TERM=xterm-256color
-export TERMINFO=/etc/terminfo
 
 # Function to organize build artifacts for kernel module
 organize_build_artifacts() {
@@ -231,36 +226,6 @@ case "$1" in
         fi
         
         log "${GREEN}" "Clean completed!"
-        ;;
-        
-    "kernel")
-        log "${GREEN}" "Building kernel and builtin drivers..."
-        cd /build/kernel
-        
-        # Configure git to trust this directory (redundant but safe)
-        if command -v git &> /dev/null; then
-            git config --global --add safe.directory $(pwd)
-        fi
-        
-        # Set environment variables for terminal-based UI
-        export HOME=/root
-        export SHELL=/bin/bash
-        
-        chmod +x ./build_deb.sh
-        
-        # Run build_deb.sh with terminal support
-        ./build_deb.sh || {
-            log "${RED}" "Kernel and builtin drivers build failed!"
-            exit 1
-        }
-        
-        # Copy any generated .deb packages to the deploy directory
-        if [ -d /build/kernel/deploy ] && [ "$(ls -A /build/kernel/deploy/*.deb 2>/dev/null)" ]; then
-            mkdir -p /build/deploy
-            cp -v /build/kernel/deploy/*.deb /build/deploy/ 2>/dev/null || true
-        fi
-        
-        log "${GREEN}" "Kernel and builtin drivers build completed successfully!"
         ;;
     
     *)
