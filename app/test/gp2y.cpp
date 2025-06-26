@@ -1,73 +1,22 @@
 #include <iostream>
 #include <iomanip>
-#include <csignal>
 #include <chrono>
 #include <thread>
 #include <cmath>
 #include <string>
-#include <unistd.h>
-#include <termios.h>
-#include <fcntl.h>
 #include <vector>
+#include <atomic>
 #include "sharpsensor.hpp"
+#include "common.hpp"
 
-// Global flag for program termination
-static volatile bool running = true;
+// Global running flag for signal handling
+static std::atomic<bool> running(true);
 
-// Terminal state
-static struct termios orig_termios;
-static bool terminal_modified = false;
-
-// Signal handler
-static void signal_handler(int sig)
+// Signal handler using common utilities
+void signalHandler(int signal)
 {
-    running = false;
-    std::cout << "\nReceived signal " << sig << ", exiting..." << std::endl;
-}
-
-// Setup terminal for non-blocking input
-static void setup_terminal()
-{
-    // Get current terminal attributes
-    if (tcgetattr(STDIN_FILENO, &orig_termios) < 0)
-    {
-        std::cerr << "Warning: Failed to get terminal attributes" << std::endl;
-        return;
-    }
-
-    terminal_modified = true;
-
-    // Modify for non-canonical, non-echo mode
-    struct termios new_termios = orig_termios;
-    new_termios.c_lflag &= ~(ICANON | ECHO | ECHOE | ECHOK | ECHONL | IEXTEN);
-    new_termios.c_iflag &= ~(ISTRIP | INLCR | ICRNL | IGNCR | IXON | IXOFF);
-    new_termios.c_cflag &= ~CSIZE;
-    new_termios.c_cflag |= CS8;
-    new_termios.c_cc[VMIN] = 0;
-    new_termios.c_cc[VTIME] = 0;
-
-    // Apply the modified attributes
-    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &new_termios) < 0)
-    {
-        std::cerr << "Warning: Failed to set terminal attributes" << std::endl;
-        terminal_modified = false;
-    }
-
-    // Set stdin to non-blocking mode
-    int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
-    if (flags != -1)
-    {
-        fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
-    }
-}
-
-// Restore terminal to original state
-static void restore_terminal()
-{
-    if (terminal_modified)
-    {
-        tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
-    }
+    running.store(false);
+    common::ErrorReporter::reportInfo("GP2Y-Test", "Received termination signal " + std::to_string(signal));
 }
 
 // Render a distance visualization bar
@@ -84,7 +33,7 @@ static std::string render_distance_bar(float distance, float max_range, int widt
             bar += "-";
     }
 
-    bar += "] ";
+    bar += "]";
     return bar;
 }
 
@@ -107,19 +56,67 @@ static void print_help()
 
 enum class TestMode
 {
-    SINGLE,     // Single measurement
-    CONTINUOUS, // Continuous measurement
+    SINGLE,     // Single measurement mode
+    CONTINUOUS, // Continuous measurement mode
     AVERAGE     // Average of multiple measurements
 };
 
+// Program state machine
+enum class ProgramState
+{
+    NORMAL,               // Normal operation (handling commands)
+    AWAITING_MEASUREMENT, // Waiting for Enter to measure in SINGLE mode
+    CALIBRATION_PROMPT,   // Showing calibration prompt
+    CALIBRATION_ACTIVE,   // Actively calibrating
+    EXIT_REQUESTED        // Program is about to exit
+};
+
+/**
+ * @brief Process input in normal mode
+ */
+void processNormalInput(char key, TestMode &current_mode, ProgramState &program_state,
+                        int &num_samples, bool &filtering_enabled, bool &verbose_mode,
+                        std::string &status_message, SharpSensor &sensor);
+
+/**
+ * @brief Take a single measurement
+ */
+void takeSingleMeasurement(SharpSensor &sensor, TestMode &current_mode, ProgramState &program_state,
+                           std::vector<float> &measurements, float &min_distance,
+                           float &max_distance, float &sum_distance,
+                           int &valid_readings, int &error_readings);
+
+/**
+ * @brief Update the current measurement mode
+ */
+void updateCurrentMode(TestMode current_mode, SharpSensor &sensor,
+                       std::vector<float> &measurements, float &min_distance,
+                       float &max_distance, float &sum_distance,
+                       int &valid_readings, int &error_readings,
+                       bool verbose_mode, int num_samples);
+
+/**
+ * @brief Process sensor calibration
+ *
+ * @return true if status needs to be shown
+ */
+bool processSensorCalibration(SharpSensor &sensor, int &cal_samples, float &cal_avg,
+                              const int REQUIRED_SAMPLES, ProgramState &program_state,
+                              std::string &status_message);
+
 int main(int argc, char *argv[])
 {
-    // Set up signal handlers for clean termination
-    std::signal(SIGINT, signal_handler);
-    std::signal(SIGTERM, signal_handler);
+    // Setup graceful shutdown handling using common utilities
+    common::SignalManager::setupGracefulShutdown(running, signalHandler);
 
-    // Set up terminal
-    setup_terminal();
+    // Initialize performance monitoring
+    common::PerformanceMonitor perfMonitor;
+
+    // Setup terminal for non-blocking input using common utilities
+    if (!common::TerminalManager::setupNonBlocking())
+    {
+        common::ErrorReporter::reportWarning("GP2Y-Test", "Failed to setup non-blocking terminal");
+    }
 
     // Parse command line arguments for ADC input
     std::string ain_path = "in_voltage0_raw"; // Default ADC input
@@ -143,21 +140,40 @@ int main(int argc, char *argv[])
 
     // Initialize the sensor
     SharpSensor sensor(ain_path);
+    perfMonitor.startFrame();
     if (!sensor.init())
     {
-        std::cerr << "Failed to initialize sensor. Exiting.\n";
-        restore_terminal();
+        common::ErrorReporter::reportError("GP2Y-Test", "Sensor Initialization", "Failed to initialize sensor");
+        common::TerminalManager::restore();
         return 1;
     }
+    perfMonitor.endFrame();
 
-    std::cout << "Sensor initialized successfully!\n";
+    common::ErrorReporter::reportInfo("GP2Y-Test", "Sensor initialized successfully in " +
+                                                       common::StringUtils::formatNumber(perfMonitor.getAverageFrameTime()) + "ms");
 
-    // Test variables
+    // Improved state variables
     TestMode current_mode = TestMode::SINGLE;
+    ProgramState program_state = ProgramState::NORMAL;
     int num_samples = 5;
     bool verbose_mode = false;
     bool filtering_enabled = true;
     char key = 0;
+
+    // Calibration variables
+    float cal_avg = 0;
+    int cal_samples = 0;
+    const int REQUIRED_CAL_SAMPLES = 10;
+
+    // Timing variables using common utilities
+    unsigned long current_time = 0;
+    unsigned long last_prompt_time = 0;
+    unsigned long last_blink_time = 0;
+    bool blink_state = false;
+
+    // Message display variables
+    std::string status_message = "";
+    bool show_status = false;
 
     // Enable filtering by default
     sensor.enableFiltering(filtering_enabled);
@@ -166,17 +182,24 @@ int main(int argc, char *argv[])
     print_help();
     std::cout << "\nCurrent mode: Single measurement. Press '1-3' to change modes, 'h' for help.\n";
 
-    // Initial single measurement test
+    // Initial single measurement test with performance monitoring
     std::cout << "\nPerforming initial test measurement...\n";
+    perfMonitor.startFrame();
     float distance = sensor.readDistanceCm();
+    perfMonitor.endFrame();
+
     if (distance > 0)
     {
         std::cout << "Test measurement successful! Distance: " << distance << " cm\n";
+        std::cout << "Measurement took " << common::StringUtils::formatNumber(perfMonitor.getAverageFrameTime()) << "ms\n";
+        status_message = "Ready for measurements. Press Enter to measure in SINGLE mode.";
+        show_status = true;
     }
     else
     {
-        std::cout << "Test measurement failed! Check sensor connections.\n";
-        std::cout << "This might indicate wiring issues or incorrect ADC configuration.\n";
+        common::ErrorReporter::reportError("GP2Y-Test", "Initial Test", "Sensor not responding. Check connections.");
+        status_message = "Sensor not responding. Check connections and try again.";
+        show_status = true;
     }
 
     // Statistics tracking
@@ -187,215 +210,154 @@ int main(int argc, char *argv[])
     int valid_readings = 0;
     int error_readings = 0;
 
+    // Performance monitoring for main loop
+    common::PerformanceMonitor loopMonitor;
+    unsigned long frame_count = 0;
+
     // Main loop
-    while (running)
+    while (running.load())
     {
-        // Handle key input
-        if (read(STDIN_FILENO, &key, 1) > 0)
+        loopMonitor.startFrame();
+
+        // Update current time using common utilities
+        current_time = common::getCurrentTimeMs();
+
+        // Process user input using common terminal utilities
+        if (common::TerminalManager::readChar(key))
         {
-            switch (key)
+            // Process input based on current program state
+            switch (program_state)
             {
-            case '1':
-                current_mode = TestMode::SINGLE;
-                std::cout << "\nSwitched to Single measurement mode\n";
-                std::cout << "Press Enter to take a single measurement\n";
+            case ProgramState::NORMAL:
+                processNormalInput(key, current_mode, program_state, num_samples,
+                                   filtering_enabled, verbose_mode, status_message, sensor);
                 break;
 
-            case '2':
-                current_mode = TestMode::CONTINUOUS;
-                std::cout << "\nSwitched to Continuous measurement mode\n";
-                break;
-
-            case '3':
-                current_mode = TestMode::AVERAGE;
-                std::cout << "\nSwitched to Average measurement mode\n";
-                std::cout << "Using " << num_samples << " samples per measurement\n";
-                break;
-
-            case 'f':
-                filtering_enabled = !filtering_enabled;
-                sensor.enableFiltering(filtering_enabled);
-                std::cout << "\nFiltering " << (filtering_enabled ? "enabled" : "disabled") << "\n";
-                break;
-
-            case '+':
-                if (num_samples < 20)
+            case ProgramState::AWAITING_MEASUREMENT:
+                if (key == '\n')
                 {
-                    num_samples++;
-                    std::cout << "\nIncreased samples to " << num_samples << "\n";
+                    takeSingleMeasurement(sensor, current_mode, program_state, measurements,
+                                          min_distance, max_distance, sum_distance,
+                                          valid_readings, error_readings);
+                }
+                else if (key == 'q')
+                {
+                    running.store(false);
+                }
+                else
+                {
+                    program_state = ProgramState::NORMAL;
+                    processNormalInput(key, current_mode, program_state, num_samples,
+                                       filtering_enabled, verbose_mode, status_message, sensor);
                 }
                 break;
 
-            case '-':
-                if (num_samples > 1)
+            case ProgramState::CALIBRATION_PROMPT:
+                if (key == '\n')
                 {
-                    num_samples--;
-                    std::cout << "\nDecreased samples to " << num_samples << "\n";
+                    program_state = ProgramState::CALIBRATION_ACTIVE;
+                    status_message = "Calibrating... hold sensor still at 20cm";
+                    show_status = true;
+                    cal_samples = 0;
+                    cal_avg = 0;
+                }
+                else if (key == 'q' || key == 27)
+                {
+                    program_state = ProgramState::NORMAL;
+                    status_message = "Calibration cancelled";
+                    show_status = true;
                 }
                 break;
 
-            case 'r':
-            { // Add braces to create a scope for the case
-                std::cout << "\nRecalibrating sensor...\n";
-                // Simple calibration by taking an average reading at known distance
-                std::cout << "Place the sensor at exactly 20cm from an object\n";
-                std::cout << "Press Enter when ready...";
-                while (read(STDIN_FILENO, &key, 1) <= 0 || key != '\n')
+            case ProgramState::CALIBRATION_ACTIVE:
+                if (key == 'q' || key == 27)
                 {
-                    if (!running)
-                        break;
-                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                    program_state = ProgramState::NORMAL;
+                    status_message = "Calibration cancelled";
+                    show_status = true;
                 }
-                if (!running)
-                    break;
-
-                std::cout << "\nCalibrating...";
-                float cal_avg = 0;
-                for (int i = 0; i < 10; i++)
-                {
-                    cal_avg += sensor.readRawValue();
-                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                }
-                cal_avg /= 10;
-
-                // Set scale based on this reading for 20cm
-                float expected_value = 20.0f;
-                float new_scale = cal_avg * expected_value / 20.0f;
-                sensor.setScale(new_scale);
-                std::cout << "\nCalibration complete\n";
-            } // Close the scope for this case
-            break;
-
-            case 'v':
-                verbose_mode = !verbose_mode;
-                std::cout << "\nVerbose output " << (verbose_mode ? "enabled" : "disabled") << "\n";
                 break;
 
-            case 'h':
-                print_help();
+            case ProgramState::EXIT_REQUESTED:
                 break;
+            }
 
-            case 'q':
+            if (key == 'q' && program_state != ProgramState::EXIT_REQUESTED)
+            {
                 std::cout << "\nExiting...\n";
-                running = false;
-                break;
-
-            case '\n':
-                // Only trigger measurement in SINGLE mode
-                if (current_mode == TestMode::SINGLE)
-                {
-                    float single_distance = sensor.readDistanceCm();
-                    if (single_distance > 0)
-                    {
-                        std::cout << "Distance: " << std::fixed << std::setprecision(1)
-                                  << single_distance << " cm   "
-                                  << render_distance_bar(single_distance, 80.0f, 40) << "\n";
-
-                        // Update statistics
-                        min_distance = std::min(min_distance, single_distance);
-                        max_distance = std::max(max_distance, single_distance);
-                        sum_distance += single_distance;
-                        valid_readings++;
-                        measurements.push_back(single_distance);
-                    }
-                    else
-                    {
-                        std::cout << "Error reading sensor\n";
-                        error_readings++;
-                    }
-                }
-                break;
-
-            default:
-                // Ignore other keys
-                break;
+                program_state = ProgramState::EXIT_REQUESTED;
+                running.store(false);
             }
         }
 
-        // Process current mode
-        switch (current_mode)
+        // Update program based on current state
+        switch (program_state)
         {
-        case TestMode::SINGLE:
-            // Handled above with Enter key
+        case ProgramState::NORMAL:
+            updateCurrentMode(current_mode, sensor, measurements, min_distance, max_distance,
+                              sum_distance, valid_readings, error_readings, verbose_mode, num_samples);
+
+            if (current_mode == TestMode::SINGLE &&
+                (current_time - last_prompt_time > 3000))
+            {
+                std::cout << "\rPress Enter to take a measurement...  " << std::flush;
+                last_prompt_time = current_time;
+                program_state = ProgramState::AWAITING_MEASUREMENT;
+            }
             break;
 
-        case TestMode::CONTINUOUS:
-        {
-            float distance = sensor.readDistanceCm();
-            if (distance > 0)
+        case ProgramState::AWAITING_MEASUREMENT:
+            if (current_time - last_blink_time > 500)
             {
-                // Update statistics
-                min_distance = std::min(min_distance, distance);
-                max_distance = std::max(max_distance, distance);
-                sum_distance += distance;
-                valid_readings++;
-                measurements.push_back(distance);
-
-                // Maintain a reasonable buffer size
-                if (measurements.size() > 100)
-                {
-                    measurements.erase(measurements.begin());
-                }
-
-                std::cout << "\rDistance: " << std::fixed << std::setprecision(1)
-                          << distance << " cm   "
-                          << render_distance_bar(distance, 80.0f, 40);
-
-                if (verbose_mode)
-                {
-                    int raw_value = sensor.readRawValue();
-                    std::cout << " RAW: " << raw_value;
-                }
-
-                std::cout << std::flush;
+                blink_state = !blink_state;
+                last_blink_time = current_time;
+                std::cout << "\rPress Enter to measure" << (blink_state ? "..." : "   ") << std::flush;
             }
-            else
+            break;
+
+        case ProgramState::CALIBRATION_PROMPT:
+            if (current_time - last_blink_time > 500)
             {
-                std::cout << "\rError reading sensor                       " << std::flush;
-                error_readings++;
+                blink_state = !blink_state;
+                last_blink_time = current_time;
+                std::cout << "\rPlace sensor at 20cm and press Enter" << (blink_state ? "..." : "   ") << std::flush;
             }
+            break;
 
-            // Use a small delay to prevent flooding
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        case ProgramState::CALIBRATION_ACTIVE:
+            if (processSensorCalibration(sensor, cal_samples, cal_avg, REQUIRED_CAL_SAMPLES,
+                                         program_state, status_message))
+            {
+                show_status = true;
+            }
+            break;
+
+        case ProgramState::EXIT_REQUESTED:
             break;
         }
 
-        case TestMode::AVERAGE:
+        // Show status message if needed
+        if (show_status)
         {
-            float avg_distance = sensor.readAverageDistanceCm(num_samples);
-            if (avg_distance > 0)
-            {
-                // Update statistics
-                min_distance = std::min(min_distance, avg_distance);
-                max_distance = std::max(max_distance, avg_distance);
-                sum_distance += avg_distance;
-                valid_readings++;
-                measurements.push_back(avg_distance);
-
-                // Maintain a reasonable buffer size
-                if (measurements.size() > 100)
-                {
-                    measurements.erase(measurements.begin());
-                }
-
-                std::cout << "\rAvg Distance (" << num_samples << " samples): " << std::fixed
-                          << std::setprecision(1) << avg_distance << " cm   "
-                          << render_distance_bar(avg_distance, 80.0f, 40) << std::flush;
-            }
-            else
-            {
-                std::cout << "\rError reading sensor                       " << std::flush;
-                error_readings++;
-            }
-
-            // Use a larger delay for average mode to give feedback time
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
-            break;
+            std::cout << "\n"
+                      << status_message << std::endl;
+            show_status = false;
         }
+
+        loopMonitor.endFrame();
+        frame_count++;
+
+        // Report performance every 1000 frames
+        if (frame_count % 1000 == 0)
+        {
+            loopMonitor.printReport("Main loop ");
         }
+
+        // Use common sleep utility
+        common::sleepMs(30);
     }
 
-    // Print final statistics
+    // Print final statistics using common string utilities
     std::cout << "\n\nSensor Statistics:";
     std::cout << "\n  Total readings: " << (valid_readings + error_readings);
     std::cout << "\n  Valid readings: " << valid_readings;
@@ -413,13 +375,276 @@ int main(int argc, char *argv[])
         }
         float std_dev = std::sqrt(variance / measurements.size());
 
-        std::cout << "\n  Min distance: " << min_distance << " cm";
-        std::cout << "\n  Max distance: " << max_distance << " cm";
-        std::cout << "\n  Avg distance: " << avg_distance << " cm";
-        std::cout << "\n  Std deviation: " << std_dev << " cm";
+        std::cout << "\n  Min distance: " << common::StringUtils::formatNumber(min_distance, 1) << " cm";
+        std::cout << "\n  Max distance: " << common::StringUtils::formatNumber(max_distance, 1) << " cm";
+        std::cout << "\n  Avg distance: " << common::StringUtils::formatNumber(avg_distance, 1) << " cm";
+        std::cout << "\n  Std deviation: " << common::StringUtils::formatNumber(std_dev, 2) << " cm";
     }
 
+    // Final performance report
+    loopMonitor.printReport("Final performance ");
+
     std::cout << "\n\nExiting GP2Y0A21YK0F test program...\n";
-    restore_terminal();
+
+    // Restore terminal using common utilities
+    common::TerminalManager::restore();
     return 0;
+}
+
+/**
+ * @brief Process input in normal mode
+ */
+void processNormalInput(char key, TestMode &current_mode, ProgramState &program_state,
+                        int &num_samples, bool &filtering_enabled, bool &verbose_mode,
+                        std::string &status_message, SharpSensor &sensor)
+{
+    // Validate inputs using common utilities
+    if (!common::Validator::clamp(num_samples, 1, 20))
+    {
+        common::ErrorReporter::reportWarning("GP2Y-Test", "Invalid sample count, clamping to valid range");
+    }
+
+    switch (key)
+    {
+    case '1':
+        current_mode = TestMode::SINGLE;
+        status_message = "Switched to Single measurement mode. Press Enter to measure.";
+        program_state = ProgramState::AWAITING_MEASUREMENT;
+        break;
+
+    case '2':
+        current_mode = TestMode::CONTINUOUS;
+        status_message = "Switched to Continuous measurement mode.";
+        break;
+
+    case '3':
+        current_mode = TestMode::AVERAGE;
+        status_message = "Switched to Average measurement mode. Using " +
+                         std::to_string(num_samples) + " samples.";
+        break;
+
+    case 'f':
+        filtering_enabled = !filtering_enabled;
+        sensor.enableFiltering(filtering_enabled);
+        status_message = "Filtering " + std::string(filtering_enabled ? "enabled" : "disabled");
+        break;
+
+    case '+':
+        if (num_samples < 20)
+        {
+            num_samples++;
+            status_message = "Increased samples to " + std::to_string(num_samples);
+        }
+        break;
+
+    case '-':
+        if (num_samples > 1)
+        {
+            num_samples--;
+            status_message = "Decreased samples to " + std::to_string(num_samples);
+        }
+        break;
+
+    case 'r':
+        status_message = "Recalibrating sensor. Place sensor at exactly 20cm from object.";
+        program_state = ProgramState::CALIBRATION_PROMPT;
+        break;
+
+    case 'v':
+        verbose_mode = !verbose_mode;
+        status_message = "Verbose output " + std::string(verbose_mode ? "enabled" : "disabled");
+        break;
+
+    case 'h':
+        print_help();
+        status_message = "Help displayed. Press key to continue.";
+        break;
+
+    case '\n':
+        if (current_mode == TestMode::SINGLE)
+        {
+            program_state = ProgramState::AWAITING_MEASUREMENT;
+        }
+        break;
+    }
+}
+
+/**
+ * @brief Take a single measurement
+ */
+void takeSingleMeasurement(SharpSensor &sensor, TestMode &current_mode, ProgramState &program_state,
+                           std::vector<float> &measurements, float &min_distance,
+                           float &max_distance, float &sum_distance,
+                           int &valid_readings, int &error_readings)
+{
+    // Only for single mode
+    if (current_mode == TestMode::SINGLE)
+    {
+        float single_distance = sensor.readDistanceCm();
+        if (single_distance > 0)
+        {
+            std::cout << "\nDistance: " << std::fixed << std::setprecision(1)
+                      << single_distance << " cm   "
+                      << render_distance_bar(single_distance, 80.0f, 40) << "\n";
+            // Update statistics
+            min_distance = std::min(min_distance, single_distance);
+            max_distance = std::max(max_distance, single_distance);
+            sum_distance += single_distance;
+            valid_readings++;
+            measurements.push_back(single_distance);
+
+            // Limit measurements buffer size
+            if (measurements.size() > 100)
+            {
+                measurements.erase(measurements.begin());
+            }
+        }
+        else
+        {
+            std::cout << "\nError reading sensor\n";
+            error_readings++;
+        }
+
+        // Return to normal state with prompt to measure again
+        program_state = ProgramState::NORMAL;
+        std::cout << "\nPress Enter for another measurement, or select another mode." << std::endl;
+    }
+}
+
+/**
+ * @brief Update the current measurement mode
+ */
+void updateCurrentMode(TestMode current_mode, SharpSensor &sensor,
+                       std::vector<float> &measurements, float &min_distance,
+                       float &max_distance, float &sum_distance,
+                       int &valid_readings, int &error_readings,
+                       bool verbose_mode, int num_samples)
+{
+    // Process current mode (except SINGLE which is handled via key input)
+    switch (current_mode)
+    {
+    case TestMode::SINGLE:
+        // Handled through key input
+        break;
+
+    case TestMode::CONTINUOUS:
+    {
+        float distance = sensor.readDistanceCm();
+        if (distance > 0)
+        {
+            // Update statistics
+            min_distance = std::min(min_distance, distance);
+            max_distance = std::max(max_distance, distance);
+            sum_distance += distance;
+            valid_readings++;
+            measurements.push_back(distance);
+
+            // Maintain a reasonable buffer size
+            if (measurements.size() > 100)
+            {
+                measurements.erase(measurements.begin());
+            }
+
+            std::cout << "\rDistance: " << std::fixed << std::setprecision(1)
+                      << distance << " cm   "
+                      << render_distance_bar(distance, 80.0f, 40);
+
+            if (verbose_mode)
+            {
+                int raw_value = sensor.readRawValue();
+                std::cout << " RAW: " << raw_value;
+            }
+
+            std::cout << std::flush;
+        }
+        else
+        {
+            std::cout << "\rError reading sensor                       " << std::flush;
+            error_readings++;
+        }
+
+        // Use a small delay to prevent flooding
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+    break;
+
+    case TestMode::AVERAGE:
+    {
+        float avg_distance = sensor.readAverageDistanceCm(num_samples);
+        if (avg_distance > 0)
+        {
+            // Update statistics
+            min_distance = std::min(min_distance, avg_distance);
+            max_distance = std::max(max_distance, avg_distance);
+            sum_distance += avg_distance;
+            valid_readings++;
+            measurements.push_back(avg_distance);
+
+            // Maintain a reasonable buffer size
+            if (measurements.size() > 100)
+            {
+                measurements.erase(measurements.begin());
+            }
+
+            std::cout << "\rAvg Distance (" << num_samples << " samples): " << std::fixed
+                      << std::setprecision(1) << avg_distance << " cm   "
+                      << render_distance_bar(avg_distance, 80.0f, 40) << std::flush;
+        }
+        else
+        {
+            std::cout << "\rError reading sensor                       " << std::flush;
+            error_readings++;
+        }
+
+        // Use a larger delay for average mode
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    }
+    break;
+    }
+}
+
+/**
+ * @brief Process sensor calibration
+ *
+ * @return true if status needs to be shown
+ */
+bool processSensorCalibration(SharpSensor &sensor, int &cal_samples, float &cal_avg,
+                              const int REQUIRED_SAMPLES, ProgramState &program_state,
+                              std::string &status_message)
+{
+    // Take a sample for calibration
+    int raw_value = sensor.readRawValue();
+    if (raw_value > 0)
+    {
+        cal_avg += raw_value;
+        cal_samples++;
+
+        // Show progress
+        std::cout << "\rCalibrating: " << cal_samples << "/" << REQUIRED_SAMPLES
+                  << " samples collected..." << std::flush;
+
+        // When we have enough samples, finish calibration
+        if (cal_samples >= REQUIRED_SAMPLES)
+        {
+            cal_avg /= cal_samples;
+
+            // Calculate and apply scale factor
+            float expected_value = 20.0f;
+            float new_scale = cal_avg * expected_value / 20.0f;
+            sensor.setScale(new_scale);
+
+            status_message = "Calibration complete! Scale factor set to: " +
+                             std::to_string(new_scale);
+            program_state = ProgramState::NORMAL;
+            return true;
+        }
+    }
+    else
+    {
+        std::cout << "\rError reading sensor during calibration. Retrying...       " << std::flush;
+    }
+
+    // Add a small delay between calibration readings
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    return false;
 }
