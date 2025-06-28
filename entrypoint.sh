@@ -16,6 +16,11 @@ log() {
     echo -e "${color}$@${NC}"
 }
 
+# Configure git to trust the build directory to avoid ownership issues
+if command -v git &> /dev/null; then
+    git config --global --add safe.directory /build/
+fi
+
 # Function to organize build artifacts for kernel module
 organize_build_artifacts() {
     log "${YELLOW}" "Organizing build artifacts..."
@@ -211,19 +216,18 @@ case "$1" in
         fi
         
         # Optional: clean virtual environment
-        if [ "$CLEAN_VENV" = "1" ] && [ -d "/build/pytd3/venv" ]; then
+        if [ -d "/build/pytd3/venv" ]; then
             log "${YELLOW}" "Removing PyTD3 virtual environment..."
             rm -rf /build/pytd3/venv
+            # Clean Python cache files
+            find /build/pytd3 -name "__pycache__" -type d -exec rm -rf {} +
+            find /build/pytd3 -name "*.pyc" -delete
             log "${GREEN}" "PyTD3 virtual environment removed"
         fi
         
-        # Clean Python cache files
-        find /build/pytd3 -name "__pycache__" -type d -exec rm -rf {} +
-        find /build/pytd3 -name "*.pyc" -delete
-        
         log "${GREEN}" "Clean completed!"
         ;;
-        
+    
     *)
         # Default: execute the command directly
         exec "$@"

@@ -7,7 +7,21 @@
  */
 #include <iostream>
 #include <csignal>
+#include <atomic>
 #include "application.hpp"
+#include "common.hpp"
+
+// Global running flag for signal handling
+static std::atomic<bool> s_running(true);
+
+/**
+ * @brief Signal handler using common utilities
+ */
+void signalHandler(int signal)
+{
+    s_running.store(false);
+    common::ErrorReporter::reportInfo("Main", "Received termination signal " + std::to_string(signal));
+}
 
 /**
  * @brief Main entry point
@@ -17,26 +31,41 @@
  */
 int main(void)
 {
-    // Print startup banner
+    // Setup graceful shutdown handling using common utilities
+    common::SignalManager::setupGracefulShutdown(s_running, signalHandler);
+
+    // Initialize performance monitoring
+    common::PerformanceMonitor perfMonitor;
+
+    // Print startup banner using common string utilities
     std::cout << "=============================================" << std::endl;
     std::cout << "    Hexapod Robot Control System v1.0        " << std::endl;
     std::cout << "=============================================" << std::endl;
 
+    common::ErrorReporter::reportInfo("Main", "Starting hexapod control system");
+
     // Get singleton instance
     application::Application &app = application::Application::getInstance();
+
+    perfMonitor.startFrame();
 
     // Initialize with error checking
     if (!app.init())
     {
-        std::cerr << "Initialization failed: " << app.getLastErrorMessage() << std::endl;
+        common::ErrorReporter::reportError("Main", "Initialization", app.getLastErrorMessage());
         std::cerr << "Exiting with error." << std::endl;
         return 1; // Error code
     }
 
-    std::cout << "Initialization successful." << std::endl;
+    perfMonitor.endFrame();
+    common::ErrorReporter::reportInfo("Main", "Initialization completed in " + 
+        common::StringUtils::formatNumber(perfMonitor.getAverageFrameTime()) + "ms");
 
     // Run main application and check result
+    perfMonitor.reset();
+    perfMonitor.startFrame();
     auto result = app.run();
+    perfMonitor.endFrame();
 
     // Clean shutdown
     std::cout << "Application finished with status: ";
@@ -67,9 +96,19 @@ int main(void)
         break;
     }
 
+    // Print performance report
+    perfMonitor.printReport("Application runtime ");
+
+    // Final status report
+    bool success = (result == application::ExecutionResult::SUCCESS ||
+                   result == application::ExecutionResult::TERMINATED_BY_USER);
+    
+    if (success) {
+        common::ErrorReporter::reportInfo("Main", "Application completed successfully");
+    } else {
+        common::ErrorReporter::reportError("Main", "Execution", "Application terminated with errors");
+    }
+
     // Return appropriate exit code (0 for success, 1 for errors)
-    return (result == application::ExecutionResult::SUCCESS ||
-            result == application::ExecutionResult::TERMINATED_BY_USER)
-               ? 0
-               : 1;
+    return success ? 0 : 1;
 }

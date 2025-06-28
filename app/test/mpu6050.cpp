@@ -2,84 +2,19 @@
 #include <iomanip>
 #include <string>
 #include <cmath>
-#include <csignal>
-#include <unistd.h>
-#include <termios.h>
-#include <fcntl.h>
-#include <ctime>
+#include <atomic>
 #include <algorithm>
 #include "hexapod.hpp"
+#include "common.hpp"
 
-// Global flag for termination
-static volatile bool running = true;
+// Global running flag for signal handling
+static std::atomic<bool> running(true);
 
-// Terminal state
-static struct termios orig_termios;
-
-// Signal handler
-static void test_mpu6050_signal_handler(int sig)
+// Signal handler using common utilities
+void signalHandler(int signal)
 {
-    running = false;
-    std::cout << "\nReceived signal " << sig << ", exiting..." << std::endl;
-}
-
-// Setup terminal for non-blocking input
-static void setup_terminal()
-{
-    struct termios new_termios;
-
-    // Get current terminal settings
-    if (tcgetattr(STDIN_FILENO, &orig_termios) < 0)
-    {
-        std::cerr << "Warning: Failed to get terminal attributes" << std::endl;
-        return;
-    }
-
-    // Save a copy for modifications
-    new_termios = orig_termios;
-
-    // Disable canonical mode and echo
-    new_termios.c_lflag &= ~(ICANON | ECHO | ECHOE | ECHOK | ECHONL | IEXTEN);
-
-    // Disable implementation-defined input processing
-    new_termios.c_iflag &= ~(ISTRIP | INLCR | ICRNL | IGNCR | IXON | IXOFF);
-
-    // Set input character size
-    new_termios.c_cflag &= ~CSIZE;
-    new_termios.c_cflag |= CS8;
-
-    // One input byte is enough to return from read()
-    new_termios.c_cc[VMIN] = 0;
-
-    // Inter-character timer unused (timeout immediately)
-    new_termios.c_cc[VTIME] = 0;
-
-    // Apply the new settings
-    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &new_termios) < 0)
-    {
-        std::cerr << "Warning: Failed to set terminal attributes" << std::endl;
-    }
-
-    // Set stdin to non-blocking mode
-    int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
-    if (flags == -1)
-    {
-        std::cerr << "Warning: Failed to get file flags" << std::endl;
-    }
-    else if (fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK) == -1)
-    {
-        std::cerr << "Warning: Failed to set non-blocking mode" << std::endl;
-    }
-}
-
-// Restore terminal to original state
-static void restore_terminal()
-{
-    // Restore original terminal settings
-    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios) < 0)
-    {
-        std::cerr << "Warning: Failed to restore terminal attributes" << std::endl;
-    }
+    running.store(false);
+    common::ErrorReporter::reportInfo("MPU6050-Test", "Received termination signal " + std::to_string(signal));
 }
 
 // Display timing statistics for IMU readings
@@ -112,81 +47,91 @@ static void print_timing_stats(const double *intervals, int count)
     std_dev = std::sqrt(std_dev / count);
 
     std::cout << "\nIMU Timing Statistics (ms):" << std::endl;
-    std::cout << "  Min: " << std::fixed << std::setprecision(2) << min * 1000.0
-              << " | Max: " << max * 1000.0
-              << " | Avg: " << avg * 1000.0
-              << " | Std Dev: " << std_dev * 1000.0
+    std::cout << "  Min: " << common::StringUtils::formatNumber(min * 1000.0)
+              << " | Max: " << common::StringUtils::formatNumber(max * 1000.0)
+              << " | Avg: " << common::StringUtils::formatNumber(avg * 1000.0)
+              << " | Std Dev: " << common::StringUtils::formatNumber(std_dev * 1000.0)
               << " | Samples: " << count << std::endl;
 }
 
 int main()
 {
-    // Set up signal handler for clean termination
-    std::signal(SIGINT, test_mpu6050_signal_handler);
-    std::signal(SIGTERM, test_mpu6050_signal_handler);
+    // Setup graceful shutdown handling using common utilities
+    common::SignalManager::setupGracefulShutdown(running, signalHandler);
 
-    // Set up terminal
-    setup_terminal();
+    // Initialize performance monitoring
+    common::PerformanceMonitor perfMonitor;
+    common::PerformanceMonitor initMonitor;
 
-    // Initialize hexapod with retry logic
+    // Setup terminal for immediate input using common utilities
+    if (!common::TerminalManager::setupImmediate()) {
+        common::ErrorReporter::reportWarning("MPU6050-Test", "Failed to setup immediate terminal input");
+    }
+
+    // Initialize hexapod with retry logic and performance monitoring
     Hexapod hexapod;
     bool initialized = false;
     int retries = 3;
 
     std::cout << "MPU6050 Test - Press Ctrl+C to exit" << std::endl;
     std::cout << "================================" << std::endl;
-    std::cout << "Note: MPU6050 sensor automatically wakes from sleep mode when needed\n"
-              << std::endl;
+    std::cout << "Note: MPU6050 sensor automatically wakes from sleep mode when needed\n" << std::endl;
 
     while (!initialized && retries-- > 0)
     {
-        std::cout << "Initializing hexapod hardware (attempt " << (3 - retries) << ")..." << std::endl;
+        common::ErrorReporter::reportInfo("MPU6050-Test", "Initializing hexapod hardware (attempt " + std::to_string(3 - retries) + ")");
+        
+        initMonitor.startFrame();
         if (hexapod.init())
         {
             initialized = true;
-            std::cout << "Hexapod initialized successfully!" << std::endl;
+            initMonitor.endFrame();
+            common::ErrorReporter::reportInfo("MPU6050-Test", "Hexapod initialized successfully in " +
+                common::StringUtils::formatNumber(initMonitor.getAverageFrameTime()) + "ms");
         }
         else
         {
-            std::cerr << "Failed to initialize: " << hexapod.getLastErrorMessage() << std::endl;
+            initMonitor.endFrame();
+            common::ErrorReporter::reportError("MPU6050-Test", "Initialization", hexapod.getLastErrorMessage());
             if (retries > 0)
             {
                 std::cout << "Retrying in 1 second..." << std::endl;
-                sleep(1);
+                common::sleepMs(1000);
             }
             else
             {
-                std::cerr << "Maximum retries reached, giving up." << std::endl;
-                restore_terminal();
+                common::ErrorReporter::reportError("MPU6050-Test", "Initialization", "Maximum retries reached, giving up");
+                common::TerminalManager::restore();
                 return 1;
             }
         }
     }
 
-    // Main loop with timeout detection and statistics gathering
-    double last_successful_read = hexapod.getCurrentTime();
+    // Main loop with timeout detection and statistics gathering using common utilities
+    double last_successful_read = common::getCurrentTime();
     double read_intervals[100] = {0}; // Store last 100 read intervals
     int interval_idx = 0;
     int total_reads = 0;
     int successful_reads = 0;
-    double last_stats_time = hexapod.getCurrentTime();
+    double last_stats_time = common::getCurrentTime();
 
     std::cout << "\nReading IMU data..." << std::endl;
-    std::cout << "Press 'q' to quit, 's' to show statistics\n"
-              << std::endl;
+    std::cout << "Press 'q' to quit, 's' to show statistics\n" << std::endl;
 
-    while (running)
+    while (running.load())
     {
         ImuData imuData;
         char key;
-        double start_time = hexapod.getCurrentTime();
+        
+        perfMonitor.startFrame();
+        double start_time = common::getCurrentTime();
 
-        // Check for key press
-        if (read(STDIN_FILENO, &key, 1) > 0)
+        // Check for key press using common terminal utilities
+        if (common::TerminalManager::readChar(key))
         {
             if (key == 'q' || key == 'Q')
             {
-                std::cout << "\nUser requested exit" << std::endl;
+                common::ErrorReporter::reportInfo("MPU6050-Test", "User requested exit");
                 break;
             }
             else if (key == 's' || key == 'S')
@@ -197,9 +142,10 @@ int main()
 
         // Get IMU data with timeout detection
         bool success = hexapod.getImuData(imuData);
-        double now = hexapod.getCurrentTime();
+        double now = common::getCurrentTime();
         double elapsed = now - start_time;
-
+        
+        perfMonitor.endFrame();
         total_reads++;
 
         if (success)
@@ -208,12 +154,15 @@ int main()
             read_intervals[interval_idx] = elapsed;
             interval_idx = (interval_idx + 1) % 100;
 
-            // Print formatted IMU data
-            std::cout << "\rAccel: X=" << std::fixed << std::showpos << std::setprecision(2) << std::setw(6)
-                      << imuData.getAccelX() << "g Y=" << std::setw(6) << imuData.getAccelY()
-                      << "g Z=" << std::setw(6) << imuData.getAccelZ() << "g | Gyro: X="
-                      << std::setw(7) << imuData.getGyroX() << "° Y=" << std::setw(7)
-                      << imuData.getGyroY() << "° Z=" << std::setw(7) << imuData.getGyroZ() << "°/s" << std::flush;
+            // Print formatted IMU data using common string utilities
+            std::cout << "\rAccel: X=" << std::showpos << std::setw(6)
+                      << common::StringUtils::formatNumber(imuData.getAccelX(), 2) << "g Y=" << std::setw(6) 
+                      << common::StringUtils::formatNumber(imuData.getAccelY(), 2)
+                      << "g Z=" << std::setw(6) << common::StringUtils::formatNumber(imuData.getAccelZ(), 2) 
+                      << "g | Gyro: X=" << std::setw(7) << common::StringUtils::formatNumber(imuData.getGyroX(), 1) 
+                      << "° Y=" << std::setw(7) << common::StringUtils::formatNumber(imuData.getGyroY(), 1)
+                      << "° Z=" << std::setw(7) << common::StringUtils::formatNumber(imuData.getGyroZ(), 1) 
+                      << "°/s" << std::flush;
             last_successful_read = now;
             successful_reads++;
         }
@@ -221,44 +170,47 @@ int main()
         {
             if (now - last_successful_read > 5.0) // 5 second timeout
             {
-                std::cerr << "\nNo response from IMU for 5 seconds, exiting..." << std::endl;
+                common::ErrorReporter::reportError("MPU6050-Test", "Timeout", "No response from IMU for 5 seconds");
                 break;
             }
             std::cerr << "\rFailed to read IMU: " << hexapod.getLastErrorMessage() << std::flush;
         }
 
-        // Show statistics periodically
+        // Show statistics periodically using common time utilities
         if (now - last_stats_time > 10.0)
         {
             double success_rate = (successful_reads * 100.0) / total_reads;
-            std::cout << "\n\nSuccess rate: " << std::fixed << std::setprecision(1)
-                      << success_rate << "% (" << successful_reads << "/"
+            std::cout << "\n\nSuccess rate: " << common::StringUtils::formatNumber(success_rate, 1)
+                      << "% (" << successful_reads << "/"
                       << total_reads << ") in last 10 seconds" << std::endl;
             last_stats_time = now;
         }
 
         // Brief sleep to prevent excessive CPU usage - dynamically adjust based on performance
-        usleep(elapsed < 0.005 ? 50000 : 10000); // Sleep longer if reads are fast
+        common::sleepUs(elapsed < 0.005 ? 50000 : 10000); // Sleep longer if reads are fast
     }
 
     std::cout << "\n\nExiting MPU6050 test program..." << std::endl;
 
-    // Print final statistics
+    // Print final statistics using common string utilities
     print_timing_stats(read_intervals, std::min(total_reads, 100));
 
     if (total_reads > 0)
     {
         double overall_success_rate = (successful_reads * 100.0) / total_reads;
-        std::cout << "Overall success rate: " << std::fixed << std::setprecision(1)
-                  << overall_success_rate << "% (" << successful_reads << "/"
+        std::cout << "Overall success rate: " << common::StringUtils::formatNumber(overall_success_rate, 1)
+                  << "% (" << successful_reads << "/"
                   << total_reads << ")" << std::endl;
     }
+
+    // Print final performance report
+    perfMonitor.printReport("IMU read operations ");
 
     // Explicitly cleanup
     hexapod.cleanup();
 
-    // Restore terminal settings
-    restore_terminal();
+    // Restore terminal settings using common utilities
+    common::TerminalManager::restore();
 
     return 0;
 }

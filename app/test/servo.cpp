@@ -1,397 +1,517 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
+#include <vector>
+#include <atomic>
 #include <cmath>
-#include <csignal>
-#include <unistd.h>
-#include <chrono>
-#include <termios.h>
 #include "hexapod.hpp"
+#include "common.hpp"
 
-// Global flags for program control
-static volatile bool running = true;
-static volatile bool emergency_stop = false;
+// Global running flag for signal handling
+static std::atomic<bool> running(true);
 
-// Configuration parameters
-static struct
+// Signal handler using common utilities
+void signalHandler(int signal)
 {
-    uint8_t leg_num;   // Current leg to test
-    int sweep_range;   // Range of motion in degrees (+/-)
-    int sweep_steps;   // Number of steps in the sweep motion
-    int delay_ms;      // Delay between position updates in ms
-    int transition_ms; // Delay between joint transitions in ms
-} config = {
-    0,   // Default to leg 0
-    45,  // Default to +/- 45 degrees
-    100, // Default to 100 steps
-    30,  // Default to 30ms between updates
-    300  // Default to 300ms between transitions
-};
-
-// Signal handler for graceful termination
-void handle_signal(int sig)
-{
-    if (sig == SIGINT)
-    {
-        std::cout << "\nReceived interrupt signal, initiating shutdown..." << std::endl;
-        running = false;
-    }
-    else if (sig == SIGTERM)
-    {
-        std::cout << "\nReceived termination signal, shutting down immediately..." << std::endl;
-        emergency_stop = true;
-        running = false;
-    }
-
-    // Force cleanup to happen faster on second signal
-    static int signal_count = 0;
-    if (++signal_count >= 2)
-    {
-        std::cerr << "\nForced exit - multiple signals received" << std::endl;
-        exit(1); // Force immediate exit if user is impatient
-    }
+    running.store(false);
+    common::ErrorReporter::reportInfo("Servo-Test", "Received termination signal " + std::to_string(signal));
 }
 
-// Print progress bar
-void print_progress(int current, int total, const char *joint_name)
+// Display test menu
+static void print_menu()
 {
-    const int bar_width = 40;
-    float progress = static_cast<float>(current) / total;
-    int pos = static_cast<int>(bar_width * progress);
+    std::cout << "\nServo Test Program - Commands\n"
+              << "=============================\n"
+              << "  1: Test individual servo\n"
+              << "  2: Test all servos sequentially\n"
+              << "  3: Sweep test (smooth movement)\n"
+              << "  4: Center all servos\n"
+              << "  5: Leg coordination test\n"
+              << "  6: Range of motion test\n"
+              << "  7: Load test (stress test)\n"
+              << "  8: Calibration test\n"
+              << "  s: Show servo status\n"
+              << "  h: Show this help\n"
+              << "  q: Quit\n\n";
+}
 
-    std::cout << joint_name << " [";
-    for (int i = 0; i < bar_width; ++i)
+// Test individual servo movement
+bool test_individual_servo(Hexapod &hexapod, int leg_num, int joint_type)
+{
+    common::ErrorReporter::reportInfo("Servo-Test", "Testing leg " + std::to_string(leg_num) + 
+        " joint " + std::to_string(joint_type));
+
+    LegPosition position;
+    position.leg_num = leg_num;
+    
+    // Get current position
+    if (!hexapod.getLegPosition(leg_num, position))
     {
-        if (i < pos)
-            std::cout << "=";
-        else if (i == pos)
-            std::cout << ">";
-        else
-            std::cout << " ";
+        common::ErrorReporter::reportError("Servo-Test", "Get Position", hexapod.getLastErrorMessage());
+        return false;
     }
-    std::cout << "] " << std::setw(3) << static_cast<int>(progress * 100) << "%\r";
-    std::cout << std::flush;
-}
 
-// Get current time for performance measurements
-double get_current_time()
-{
-    auto now = std::chrono::steady_clock::now();
-    auto duration = now.time_since_epoch();
-    return std::chrono::duration<double>(duration).count();
-}
-
-// Test a specific joint with improved error handling and feedback
-bool test_joint(Hexapod &hexapod, uint8_t leg_num, int joint_index, const char *joint_name)
-{
-    std::cout << "\nTesting " << joint_name << " joint of leg " << static_cast<int>(leg_num) << "..." << std::endl;
-
-    double start_time = get_current_time();
-    int success_count = 0;
-    int error_count = 0;
-    int consecutive_errors = 0; // Track consecutive errors for early bailout
-
-    // Create a single LegPosition object and reuse it
-    LegPosition pos(0, 0, 0);
-
-    // Perform the sweep motion
-    for (int i = 0; i < config.sweep_steps && running && !emergency_stop; i++)
+    // Test movement in small increments
+    std::vector<int> test_angles = {-30, -15, 0, 15, 30, 0}; // Return to center
+    
+    for (int angle : test_angles)
     {
-        // Calculate angle using sine wave: smooth transition from -range to +range
-        double progress = static_cast<double>(i) / config.sweep_steps;
-        int16_t angle = static_cast<int16_t>(sin(progress * M_PI) * config.sweep_range);
-
-        // Only set the target joint's angle - more efficient than creating a new object each time
-        if (joint_index == 0)
-            pos.setHip(angle);
-        else if (joint_index == 1)
-            pos.setKnee(angle);
-        else
-            pos.setAnkle(angle);
-
-        // Update progress bar every 5th step
-        if (i % 5 == 0)
-            print_progress(i, config.sweep_steps, joint_name);
-
-        if (hexapod.setLegPosition(leg_num, pos))
+        // Set the specific joint angle
+        switch (joint_type)
         {
-            success_count++;
-            consecutive_errors = 0; // Reset consecutive error counter
+        case 0: // Hip
+            position.setHip(angle);
+            break;
+        case 1: // Knee
+            position.setKnee(angle);
+            break;
+        case 2: // Ankle
+            position.setAnkle(angle);
+            break;
+        default:
+            common::ErrorReporter::reportError("Servo-Test", "Joint Type", "Invalid joint type");
+            return false;
+        }
+
+        std::cout << "Moving to angle: " << angle << "°..." << std::flush;
+        
+        if (hexapod.setLegPosition(leg_num, position))
+        {
+            std::cout << " OK" << std::endl;
+            common::sleepMs(500); // Wait for movement to complete
         }
         else
         {
-            error_count++;
-            consecutive_errors++;
+            std::cout << " FAILED" << std::endl;
+            common::ErrorReporter::reportError("Servo-Test", "Set Position", hexapod.getLastErrorMessage());
+            return false;
+        }
+    }
 
-            std::cerr << "\nError setting " << joint_name << " angle to " << angle
-                      << ": " << hexapod.getLastErrorMessage() << std::endl;
+    return true;
+}
 
-            // Bail out if too many consecutive errors
-            if (consecutive_errors >= 5)
+// Test all servos in sequence
+bool test_all_servos(Hexapod &hexapod)
+{
+    common::ErrorReporter::reportInfo("Servo-Test", "Testing all servos sequentially");
+    
+    common::PerformanceMonitor perfMonitor;
+    int successful_tests = 0;
+    int total_tests = hexapod::Config::NUM_LEGS * hexapod::Config::SERVOS_PER_LEG;
+
+    for (int leg = 0; leg < hexapod::Config::NUM_LEGS; leg++)
+    {
+        for (int joint = 0; joint < hexapod::Config::SERVOS_PER_LEG; joint++)
+        {
+            std::cout << "Testing Leg " << leg << ", Joint " << joint << " ";
+            
+            const char* joint_names[] = {"(Hip)", "(Knee)", "(Ankle)"};
+            std::cout << joint_names[joint] << "..." << std::endl;
+
+            perfMonitor.startFrame();
+            bool success = test_individual_servo(hexapod, leg, joint);
+            perfMonitor.endFrame();
+
+            if (success)
             {
-                std::cerr << "Too many consecutive errors, aborting joint test" << std::endl;
-                return false;
-            }
-
-            // Brief delay after error before continuing
-            usleep(100000);
-        }
-
-        // Sleep for specified delay between updates
-        usleep(config.delay_ms * 1000);
-    }
-
-    // Complete the progress bar
-    print_progress(config.sweep_steps, config.sweep_steps, joint_name);
-    std::cout << std::endl;
-
-    // Print performance statistics
-    double elapsed = get_current_time() - start_time;
-    double success_rate = (success_count > 0) ? (static_cast<double>(success_count) / (success_count + error_count) * 100.0) : 0.0;
-
-    std::cout << "Joint test completed in " << std::fixed << std::setprecision(2)
-              << elapsed << "s with " << success_rate << "% success rate" << std::endl;
-
-    return (success_count > 0 && success_rate >= 80.0);
-}
-
-// Test movement on a specific leg
-bool test_leg(Hexapod &hexapod, uint8_t leg_num)
-{
-    bool success = true;
-
-    std::cout << "\n=== Testing Leg " << static_cast<int>(leg_num) << " ===" << std::endl;
-
-    // Center the leg before testing
-    LegPosition center(0, 0, 0);
-    if (!hexapod.setLegPosition(leg_num, center))
-    {
-        std::cerr << "Failed to center leg before test: "
-                  << hexapod.getLastErrorMessage() << std::endl;
-        return false;
-    }
-
-    usleep(config.transition_ms * 1000);
-
-    // Test each joint
-    success &= test_joint(hexapod, leg_num, 0, "Hip  ");
-    if (!running || emergency_stop)
-        return false;
-
-    usleep(config.transition_ms * 1000);
-
-    success &= test_joint(hexapod, leg_num, 1, "Knee ");
-    if (!running || emergency_stop)
-        return false;
-
-    usleep(config.transition_ms * 1000);
-
-    success &= test_joint(hexapod, leg_num, 2, "Ankle");
-    if (!running || emergency_stop)
-        return false;
-
-    // Re-center the leg after testing
-    if (!hexapod.setLegPosition(leg_num, center))
-    {
-        std::cerr << "Failed to center leg after test: "
-                  << hexapod.getLastErrorMessage() << std::endl;
-        success = false;
-    }
-
-    std::cout << "\nLeg " << static_cast<int>(leg_num) << " test "
-              << (success ? "PASSED" : "FAILED") << std::endl;
-
-    return success;
-}
-
-// Test each leg sequentially
-void test_all_legs(Hexapod &hexapod)
-{
-    int passed = 0;
-    int failed = 0;
-
-    std::cout << "\n=== Testing All Legs ===" << std::endl;
-
-    for (uint8_t leg = 0; leg < NUM_LEGS && running && !emergency_stop; leg++)
-    {
-        if (test_leg(hexapod, leg))
-            passed++;
-        else
-            failed++;
-
-        // Brief delay between legs
-        usleep(500000);
-    }
-
-    std::cout << "\nTest Summary: " << passed << " legs passed, " << failed << " legs failed" << std::endl;
-}
-
-// Test synchronized movement of all legs
-void test_synchronized_movement(Hexapod &hexapod)
-{
-    std::cout << "\n=== Testing Synchronized Movement ===" << std::endl;
-
-    // Center all legs first
-    std::cout << "Centering all legs..." << std::endl;
-    if (!hexapod.centerAll())
-    {
-        std::cerr << "Failed to center all legs" << std::endl;
-        return;
-    }
-
-    sleep(1);
-
-    std::cout << "Moving all legs simultaneously..." << std::endl;
-
-    // Perform synchronized sweep
-    for (int i = 0; i < config.sweep_steps && running && !emergency_stop; i++)
-    {
-        double progress = static_cast<double>(i) / config.sweep_steps;
-        int16_t hip_angle = static_cast<int16_t>(sin(progress * M_PI) * 20);         // ±20°
-        int16_t knee_angle = static_cast<int16_t>(sin(progress * M_PI * 2) * 30);    // ±30°
-        int16_t ankle_angle = static_cast<int16_t>(sin(progress * M_PI * 0.5) * 25); // ±25°
-
-        // Update all legs with the same angles
-        for (uint8_t leg = 0; leg < NUM_LEGS; leg++)
-        {
-            LegPosition pos(hip_angle, knee_angle, ankle_angle);
-            hexapod.setLegPosition(leg, pos);
-        }
-
-        // Update progress every 5th step
-        if (i % 5 == 0)
-        {
-            print_progress(i, config.sweep_steps, "Sync");
-        }
-
-        // Shorter delay for synchronized movement
-        usleep(config.delay_ms * 1000);
-    }
-
-    print_progress(config.sweep_steps, config.sweep_steps, "Sync");
-    std::cout << std::endl;
-
-    // Center all legs again
-    std::cout << "Centering all legs..." << std::endl;
-    hexapod.centerAll();
-}
-
-// Parse command line arguments and set configuration
-void parse_arguments(int argc, char *argv[])
-{
-    for (int i = 1; i < argc; i++)
-    {
-        std::string arg = argv[i];
-
-        if (arg == "--leg" && i + 1 < argc)
-        {
-            config.leg_num = static_cast<uint8_t>(std::stoi(argv[++i]) % NUM_LEGS);
-        }
-        else if (arg == "--range" && i + 1 < argc)
-        {
-            config.sweep_range = std::stoi(argv[++i]);
-            config.sweep_range = std::min(90, std::max(10, config.sweep_range));
-        }
-        else if (arg == "--steps" && i + 1 < argc)
-        {
-            config.sweep_steps = std::stoi(argv[++i]);
-            config.sweep_steps = std::min(500, std::max(20, config.sweep_steps));
-        }
-        else if (arg == "--delay" && i + 1 < argc)
-        {
-            config.delay_ms = std::stoi(argv[++i]);
-            config.delay_ms = std::min(500, std::max(10, config.delay_ms));
-        }
-        else if (arg == "--help")
-        {
-            std::cout << "Usage: " << argv[0] << " [options]" << std::endl;
-            std::cout << "Options:" << std::endl;
-            std::cout << "  --leg N      Test only leg N (0-5)" << std::endl;
-            std::cout << "  --range N    Set sweep range to ±N degrees (10-90)" << std::endl;
-            std::cout << "  --steps N    Set sweep steps to N (20-500)" << std::endl;
-            std::cout << "  --delay N    Set delay between updates to N ms (10-500)" << std::endl;
-            std::cout << "  --help       Show this help message" << std::endl;
-            exit(0);
-        }
-    }
-}
-
-// Main program
-int main(int argc, char *argv[])
-{
-    // Register signal handler
-    std::signal(SIGINT, handle_signal);
-    std::signal(SIGTERM, handle_signal);
-
-    // Parse command line arguments
-    parse_arguments(argc, argv);
-
-    std::cout << "Hexapod Servo Test Utility" << std::endl;
-    std::cout << "=========================" << std::endl;
-    std::cout << "Configuration:" << std::endl;
-    std::cout << "  Leg: " << static_cast<int>(config.leg_num) << std::endl;
-    std::cout << "  Sweep Range: ±" << config.sweep_range << " degrees" << std::endl;
-    std::cout << "  Sweep Steps: " << config.sweep_steps << std::endl;
-    std::cout << "  Update Delay: " << config.delay_ms << " ms" << std::endl;
-    std::cout << "  Transition Delay: " << config.transition_ms << " ms" << std::endl;
-
-    // Initialize hexapod with retry logic
-    Hexapod hexapod;
-    bool initialized = false;
-    int retries = 3;
-
-    while (!initialized && retries-- > 0)
-    {
-        std::cout << "\nInitializing hexapod hardware (attempt " << 3 - retries << ")..." << std::endl;
-        if (hexapod.init())
-        {
-            initialized = true;
-            std::cout << "Hexapod initialized successfully!" << std::endl;
-        }
-        else
-        {
-            std::cerr << "Failed to initialize: " << hexapod.getLastErrorMessage() << std::endl;
-            if (retries > 0)
-            {
-                std::cout << "Retrying in 1 second..." << std::endl;
-                sleep(1);
+                successful_tests++;
+                std::cout << "✓ Test passed in " << 
+                    common::StringUtils::formatNumber(perfMonitor.getAverageFrameTime()) << "ms" << std::endl;
             }
             else
             {
-                std::cerr << "Failed to initialize after multiple attempts." << std::endl;
-                return 1;
+                std::cout << "✗ Test failed" << std::endl;
+            }
+
+            // Check if user wants to abort
+            char key;
+            if (common::TerminalManager::readChar(key) && (key == 'q' || key == 27))
+            {
+                std::cout << "Test aborted by user" << std::endl;
+                break;
             }
         }
     }
 
-    // Center all legs initially
-    if (!hexapod.centerAll())
+    std::cout << "\nTest Summary: " << successful_tests << "/" << total_tests 
+              << " servos passed (" << 
+              common::StringUtils::formatNumber((successful_tests * 100.0) / total_tests, 1) 
+              << "%)" << std::endl;
+
+    return successful_tests == total_tests;
+}
+
+// Smooth sweep test
+bool sweep_test(Hexapod &hexapod)
+{
+    common::ErrorReporter::reportInfo("Servo-Test", "Running smooth sweep test");
+
+    // Test smooth movement across range
+    const int steps = 20;
+    const int delay_ms = 100;
+    
+    for (int leg = 0; leg < hexapod::Config::NUM_LEGS; leg++)
     {
-        std::cerr << "Warning: Failed to center all legs at startup" << std::endl;
+        std::cout << "Sweeping leg " << leg << "..." << std::endl;
+        
+        LegPosition position;
+        position.leg_num = leg;
+        
+        // Sweep through range of motion
+        for (int step = 0; step <= steps; step++)
+        {
+            // Calculate smooth sine wave motion
+            double t = (double)step / steps * 2.0 * common::Constants::PI;
+            int hip_angle = (int)(30.0 * sin(t));
+            int knee_angle = (int)(20.0 * sin(t + common::Constants::PI / 3));
+            int ankle_angle = (int)(25.0 * sin(t + 2.0 * common::Constants::PI / 3));
+
+            position.setHip(hip_angle);
+            position.setKnee(knee_angle);
+            position.setAnkle(ankle_angle);
+
+            if (!hexapod.setLegPosition(leg, position))
+            {
+                common::ErrorReporter::reportError("Servo-Test", "Sweep Movement", 
+                    hexapod.getLastErrorMessage());
+                return false;
+            }
+
+            common::sleepMs(delay_ms);
+
+            // Show progress
+            if (step % 5 == 0)
+            {
+                common::ProgressBar::display(step, steps, 20, "Progress");
+            }
+
+            // Check for abort
+            char key;
+            if (common::TerminalManager::readChar(key) && (key == 'q' || key == 27))
+            {
+                std::cout << "\nSweep test aborted by user" << std::endl;
+                return false;
+            }
+        }
+        
+        common::ProgressBar::clear();
+        std::cout << "Leg " << leg << " sweep completed" << std::endl;
     }
 
-    if (argc > 1 && std::string(argv[1]) == "all")
-    {
-        // Test all legs sequentially
-        test_all_legs(hexapod);
+    return true;
+}
 
-        if (running && !emergency_stop)
+// Range of motion test
+bool range_of_motion_test(Hexapod &hexapod)
+{
+    common::ErrorReporter::reportInfo("Servo-Test", "Testing range of motion limits");
+
+    struct JointLimits {
+        const char* name;
+        int min_angle;
+        int max_angle;
+    };
+
+    JointLimits limits[] = {
+        {"Hip", hexapod::AngleLimits::HIP_MIN, hexapod::AngleLimits::HIP_MAX},
+        {"Knee", hexapod::AngleLimits::KNEE_MIN, hexapod::AngleLimits::KNEE_MAX},
+        {"Ankle", hexapod::AngleLimits::ANKLE_MIN, hexapod::AngleLimits::ANKLE_MAX}
+    };
+
+    for (int leg = 0; leg < hexapod::Config::NUM_LEGS; leg++)
+    {
+        std::cout << "Testing range of motion for leg " << leg << std::endl;
+
+        for (int joint = 0; joint < 3; joint++)
         {
-            // Test synchronized movement after individual tests
-            test_synchronized_movement(hexapod);
+            std::cout << "  " << limits[joint].name << " joint: ";
+
+            LegPosition position;
+            position.leg_num = leg;
+
+            // Test minimum position
+            switch (joint)
+            {
+            case 0: position.setHip(limits[joint].min_angle); break;
+            case 1: position.setKnee(limits[joint].min_angle); break;
+            case 2: position.setAnkle(limits[joint].min_angle); break;
+            }
+
+            if (hexapod.setLegPosition(leg, position))
+            {
+                common::sleepMs(300);
+                std::cout << "Min(" << limits[joint].min_angle << "°) ";
+
+                // Test maximum position
+                switch (joint)
+                {
+                case 0: position.setHip(limits[joint].max_angle); break;
+                case 1: position.setKnee(limits[joint].max_angle); break;
+                case 2: position.setAnkle(limits[joint].max_angle); break;
+                }
+
+                if (hexapod.setLegPosition(leg, position))
+                {
+                    common::sleepMs(300);
+                    std::cout << "Max(" << limits[joint].max_angle << "°) ✓" << std::endl;
+
+                    // Return to center
+                    switch (joint)
+                    {
+                    case 0: position.setHip(0); break;
+                    case 1: position.setKnee(0); break;
+                    case 2: position.setAnkle(0); break;
+                    }
+                    hexapod.setLegPosition(leg, position);
+                    common::sleepMs(200);
+                }
+                else
+                {
+                    std::cout << "Max FAILED ✗" << std::endl;
+                }
+            }
+            else
+            {
+                std::cout << "Min FAILED ✗" << std::endl;
+            }
         }
     }
-    else
+
+    return true;
+}
+
+// Load test - stress test servos
+bool load_test(Hexapod &hexapod)
+{
+    common::ErrorReporter::reportInfo("Servo-Test", "Running servo load test");
+
+    const int test_duration_seconds = 30;
+    const int movements_per_second = 5;
+    const int total_movements = test_duration_seconds * movements_per_second;
+
+    std::cout << "Running " << test_duration_seconds << " second load test..." << std::endl;
+    std::cout << "Press 'q' to abort early" << std::endl;
+
+    common::PerformanceMonitor perfMonitor;
+    int successful_movements = 0;
+
+    auto start_time = common::getCurrentTimeMs();
+
+    for (int movement = 0; movement < total_movements && running.load(); movement++)
     {
-        // Test specific leg from configuration
-        test_leg(hexapod, config.leg_num);
+        perfMonitor.startFrame();
+
+        // Generate random leg and position
+        int leg = movement % hexapod::Config::NUM_LEGS;
+        LegPosition position;
+        position.leg_num = leg;
+
+        // Generate random angles within safe range
+        position.setHip((movement * 7) % 61 - 30);     // -30 to +30
+        position.setKnee((movement * 11) % 41 - 20);   // -20 to +20
+        position.setAnkle((movement * 13) % 51 - 25);  // -25 to +25
+
+        if (hexapod.setLegPosition(leg, position))
+        {
+            successful_movements++;
+        }
+
+        perfMonitor.endFrame();
+
+        // Show progress every 10 movements
+        if (movement % 10 == 0)
+        {
+            common::ProgressBar::display(movement, total_movements, 40, "Load test");
+        }
+
+        // Check for user abort
+        char key;
+        if (common::TerminalManager::readChar(key) && (key == 'q' || key == 27))
+        {
+            std::cout << "\nLoad test aborted by user" << std::endl;
+            break;
+        }
+
+        // Maintain target rate
+        common::sleepMs(1000 / movements_per_second);
     }
 
-    // Center all legs before exit for safety
-    std::cout << "\nCentering all legs before exit..." << std::endl;
+    common::ProgressBar::clear();
+
+    auto end_time = common::getCurrentTimeMs();
+    double actual_duration = (end_time - start_time) / 1000.0;
+
+    perfMonitor.printReport("Load test ");
+
+    std::cout << "Load test completed:" << std::endl;
+    std::cout << "  Duration: " << common::StringUtils::formatDuration(actual_duration) << std::endl;
+    std::cout << "  Successful movements: " << successful_movements << "/" << total_movements 
+              << " (" << common::StringUtils::formatNumber((successful_movements * 100.0) / total_movements, 1) 
+              << "%)" << std::endl;
+
+    return successful_movements == total_movements;
+}
+
+// Show servo status
+void show_servo_status(Hexapod &hexapod)
+{
+    std::cout << "\nServo Status Report" << std::endl;
+    std::cout << "===================" << std::endl;
+
+    for (int leg = 0; leg < hexapod::Config::NUM_LEGS; leg++)
+    {
+        LegPosition position;
+        if (hexapod.getLegPosition(leg, position))
+        {
+            std::cout << "Leg " << leg << ": Hip=" << std::setw(4) << position.getHip()
+                      << "° Knee=" << std::setw(4) << position.getKnee()
+                      << "° Ankle=" << std::setw(4) << position.getAnkle() << "°" << std::endl;
+        }
+        else
+        {
+            std::cout << "Leg " << leg << ": ERROR - " << hexapod.getLastErrorMessage() << std::endl;
+        }
+    }
+    std::cout << std::endl;
+}
+
+int main()
+{
+    // Setup graceful shutdown handling using common utilities
+    common::SignalManager::setupGracefulShutdown(running, signalHandler);
+
+    // Initialize performance monitoring
+    common::PerformanceMonitor perfMonitor;
+
+    // Setup terminal for immediate input using common utilities
+    if (!common::TerminalManager::setupImmediate()) {
+        common::ErrorReporter::reportWarning("Servo-Test", "Failed to setup immediate terminal input");
+    }
+
+    std::cout << "Servo Test Program" << std::endl;
+    std::cout << "==================" << std::endl;
+    std::cout << "Testing hexapod servo functionality" << std::endl;
+
+    // Initialize hexapod
+    Hexapod hexapod;
+    
+    perfMonitor.startFrame();
+    if (!hexapod.init())
+    {
+        common::ErrorReporter::reportError("Servo-Test", "Initialization", hexapod.getLastErrorMessage());
+        common::TerminalManager::restore();
+        return 1;
+    }
+    perfMonitor.endFrame();
+
+    common::ErrorReporter::reportInfo("Servo-Test", "Hexapod initialized successfully in " +
+        common::StringUtils::formatNumber(perfMonitor.getAverageFrameTime()) + "ms");
+
+    // Center all servos for safety
+    std::cout << "Centering all servos for safety..." << std::endl;
+    if (!hexapod.centerAll())
+    {
+        common::ErrorReporter::reportWarning("Servo-Test", "Failed to center servos: " + hexapod.getLastErrorMessage());
+    }
+
+    print_menu();
+
+    // Main test loop
+    while (running.load())
+    {
+        std::cout << "Enter command: ";
+        char command;
+        
+        if (common::TerminalManager::readChar(command))
+        {
+            switch (command)
+            {
+            case '1': // Individual servo test
+            {
+                int leg, joint;
+                std::cout << "\nEnter leg number (0-" << (hexapod::Config::NUM_LEGS-1) << "): ";
+                std::cin >> leg;
+                std::cout << "Enter joint (0=Hip, 1=Knee, 2=Ankle): ";
+                std::cin >> joint;
+
+                if (common::Validator::validateLegNumber(leg) && joint >= 0 && joint < 3)
+                {
+                    test_individual_servo(hexapod, leg, joint);
+                }
+                else
+                {
+                    common::ErrorReporter::reportError("Servo-Test", "Input", "Invalid leg or joint number");
+                }
+                break;
+            }
+
+            case '2': // Test all servos
+                test_all_servos(hexapod);
+                break;
+
+            case '3': // Sweep test
+                sweep_test(hexapod);
+                break;
+
+            case '4': // Center all
+                std::cout << "Centering all servos..." << std::endl;
+                if (hexapod.centerAll())
+                {
+                    std::cout << "All servos centered successfully" << std::endl;
+                }
+                else
+                {
+                    common::ErrorReporter::reportError("Servo-Test", "Center", hexapod.getLastErrorMessage());
+                }
+                break;
+
+            case '5': // Leg coordination test
+                std::cout << "Leg coordination test not yet implemented" << std::endl;
+                break;
+
+            case '6': // Range of motion test
+                range_of_motion_test(hexapod);
+                break;
+
+            case '7': // Load test
+                load_test(hexapod);
+                break;
+
+            case '8': // Calibration test
+                std::cout << "Calibration test not yet implemented" << std::endl;
+                break;
+
+            case 's': // Show status
+                show_servo_status(hexapod);
+                break;
+
+            case 'h': // Help
+                print_menu();
+                break;
+
+            case 'q': // Quit
+                std::cout << "Exiting servo test program..." << std::endl;
+                running.store(false);
+                break;
+
+            default:
+                std::cout << "Unknown command. Press 'h' for help." << std::endl;
+                break;
+            }
+        }
+
+        // Small delay to prevent excessive CPU usage
+        common::sleepMs(50);
+    }
+
+    // Final safety - center all servos before exit
+    std::cout << "Centering servos for safe shutdown..." << std::endl;
     hexapod.centerAll();
 
-    // Clean exit
-    std::cout << "\nTest completed." << std::endl;
+    // Restore terminal settings
+    common::TerminalManager::restore();
+
+    std::cout << "Servo test program completed." << std::endl;
     return 0;
 }

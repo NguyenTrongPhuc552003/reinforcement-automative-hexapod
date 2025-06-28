@@ -16,7 +16,8 @@ This directory contains the user-space components of the hexapod control system.
     ├── test_servo.c
     ├── test_mpu6050.c
     ├── test_calibration.c
-    └── test_movement.c
+    ├── test_movement.c
+    └── test_hcsr04.c
 ```
 
 ## Features
@@ -35,6 +36,7 @@ This directory contains the user-space components of the hexapod control system.
 ### Hardware Interface
 - Servo control via kernel driver
 - IMU data reading
+- Ultrasonic distance sensing
 - Error handling and recovery
 
 ## Building
@@ -53,17 +55,15 @@ sudo ./test_servo       # Test servo control
 sudo ./test_mpu6050     # Test IMU sensor
 sudo ./test_movement    # Test movement patterns
 sudo ./test_kinematics  # Test kinematics
+sudo ./test_hcsr04      # Test ultrasonic sensor
 ```
 
 ## Usage
 
-### Library Usage
-```c
-#include "hexapod.h"
-
-int main() {
-    hexapod_init();
-    // Control code here
+The application can be run using the main controller:
+```bash
+sudo ./hexapod_controller
+```
     hexapod_cleanup();
     return 0;
 }

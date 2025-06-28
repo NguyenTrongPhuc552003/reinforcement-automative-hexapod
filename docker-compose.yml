@@ -9,21 +9,12 @@ x-common-settings: &common-settings
     GCC_VERSION: 8
 
 services:
-  # Base image with common tools
-  common:
-    build:
-      context: .
-      dockerfile: docker/common.Dockerfile
-    image: hexapod-common:latest
-
   # Build environment for kernel modules
   build-driver:
     <<: *common-settings
     build:
       context: .
       dockerfile: docker/driver.Dockerfile
-    depends_on:
-      - common
     volumes:
       - ./driver:/build/module
       - ./deploy:/build/deploy
@@ -35,8 +26,6 @@ services:
     build:
       context: .
       dockerfile: docker/app.Dockerfile
-    depends_on:
-      - common
     volumes:
       - ./app:/build/user
       - ./deploy:/build/deploy
@@ -46,7 +35,7 @@ services:
   build-pytd3:
     build:
       context: .
-      dockerfile: docker/build.Dockerfile
+      dockerfile: docker/pytd3.Dockerfile
     volumes:
       - ./pytd3:/build/pytd3
       - ./deploy:/build/deploy
