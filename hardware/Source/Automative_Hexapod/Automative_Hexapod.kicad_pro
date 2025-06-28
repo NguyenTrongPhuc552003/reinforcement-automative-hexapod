@@ -123,7 +123,7 @@
       },
       "rules": {
         "max_error": 0.005,
-        "min_clearance": 0.508,
+        "min_clearance": 0.254,
         "min_connection": 0.508,
         "min_copper_edge_clearance": 0.5,
         "min_groove_width": 0.0,
@@ -224,6 +224,10 @@
         {
           "diameter": 0.0,
           "drill": 0.0
+        },
+        {
+          "diameter": 2.0,
+          "drill": 1.2
         }
       ],
       "zones_allow_external_fillets": false
@@ -553,40 +557,82 @@
           "show": true
         },
         {
-          "group_by": true,
+          "group_by": false,
           "label": "DNP",
           "name": "${DNP}",
-          "show": true
+          "show": false
         },
         {
-          "group_by": true,
+          "group_by": false,
           "label": "Exclude from BOM",
           "name": "${EXCLUDE_FROM_BOM}",
-          "show": true
+          "show": false
         },
         {
-          "group_by": true,
+          "group_by": false,
           "label": "Exclude from Board",
           "name": "${EXCLUDE_FROM_BOARD}",
-          "show": true
+          "show": false
         },
         {
           "group_by": true,
           "label": "Footprint",
           "name": "Footprint",
-          "show": true
+          "show": false
         },
         {
           "group_by": false,
           "label": "Datasheet",
           "name": "Datasheet",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Supply name",
+          "name": "Supply name",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Supply part number",
+          "name": "Supply part number",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Supply Name",
+          "name": "Supply Name",
           "show": true
+        },
+        {
+          "group_by": false,
+          "label": "Supply Part Number",
+          "name": "Supply Part Number",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Supply URL",
+          "name": "Supply URL",
+          "show": true
+        },
+        {
+          "group_by": false,
+          "label": "Description",
+          "name": "Description",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "#",
+          "name": "${ITEM_NUMBER}",
+          "show": false
         }
       ],
       "filter_string": "",
       "group_symbols": true,
       "include_excluded_from_bom": true,
-      "name": "Default Editing",
+      "name": "",
       "sort_asc": true,
       "sort_field": "Reference"
     },

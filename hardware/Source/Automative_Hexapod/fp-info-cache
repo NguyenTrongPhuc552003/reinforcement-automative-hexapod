@@ -1,4 +1,4 @@
-24939599562625699
+24943101811575313
 Audio_Module
 Reverb_BTDR-1H
 Digital Reverberation Unit, http://www.belton.co.kr/inc/downfile.php?seq=17&file=pdf (footprint from http://www.uk-electronic.de/PDF/BTDR-1.pdf)
@@ -99540,9 +99540,23 @@ LED
 2
 2
 automative_hexapod
-PinHeader_2x02_P2.54mm_Vertical_SMD
-surface-mounted straight pin header, 2x02, 2.54mm pitch, double rows
-Surface mounted pin header SMD 2x02 2.54mm double row
+MPU6050
+Header 8P for MPU6050
+Through hole pin header THT 1x08 2.54mm single row
+0
+8
+8
+automative_hexapod
+PinHeader_1x03_P1.00mm_Vertical
+Through hole straight pin header, 1x03, 1.00mm pitch, single row
+Through hole pin header THT 1x03 1.00mm single row
+0
+3
+3
+automative_hexapod
+PinHeader_1x04_P1.00mm_Vertical
+Through hole straight pin header, 1x04, 1.00mm pitch, single row
+Through hole pin header THT 1x04 1.00mm single row
 0
 4
 4
