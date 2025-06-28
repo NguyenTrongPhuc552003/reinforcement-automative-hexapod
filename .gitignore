@@ -109,3 +109,6 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+
+# Hardware
+hardware/source/Automative_Hexapod/Automative_Hexapod-backups

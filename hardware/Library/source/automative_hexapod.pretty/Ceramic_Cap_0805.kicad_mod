@@ -1,0 +1,155 @@
+(footprint "Ceramic_Cap_0805"
+	(version 20241229)
+	(generator "pcbnew")
+	(generator_version "9.0")
+	(layer "F.Cu")
+	(tags "capacitor")
+	(property "Reference" "REF**"
+		(at 0 -1.9558 0)
+		(layer "F.SilkS")
+		(uuid "d8b50c90-0233-4120-8eb7-fd37553c1dae")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Value" "Ceramic_Cap_0805"
+		(at 0 1.43 0)
+		(layer "F.Fab")
+		(uuid "4e5feb93-e33a-49c0-b9c5-ae5884f54838")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "6a90d38b-7c8c-43cb-91d8-10c2d2b84580")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "e5c59a39-f1e6-4e58-b310-530517d201ee")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr smd)
+	(fp_line
+		(start -0.268504 -0.9144)
+		(end 0.254 -0.9144)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "22de468c-d932-4ac0-a04a-93e756364a56")
+	)
+	(fp_line
+		(start -0.245252 0.8128)
+		(end 0.277252 0.8128)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "0522bae6-6cd5-41fd-8778-55a174f0f322")
+	)
+	(fp_line
+		(start -1.7526 -0.9144)
+		(end 1.8034 -0.9144)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "58b3a676-ae44-4e34-839d-c5fad040c9b6")
+	)
+	(fp_line
+		(start -1.7526 0.8128)
+		(end -1.7526 -0.9144)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "4940a5a1-8cc3-4400-8656-008603d9af87")
+	)
+	(fp_line
+		(start 1.8034 -0.9144)
+		(end 1.8034 0.8128)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "06b3457f-bbdb-40e8-b716-4a52a56edf6a")
+	)
+	(fp_line
+		(start 1.8034 0.8128)
+		(end -1.7526 0.8128)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "7104084c-0922-4c51-99d0-6cbf214c4d22")
+	)
+	(fp_text user "${REFERENCE}"
+		(at 0.025 -0.0508 0)
+		(layer "F.Fab")
+		(uuid "5b20d55a-e535-4395-bf71-27e2fd433b98")
+		(effects
+			(font
+				(size 0.5 0.5)
+				(thickness 0.08)
+			)
+		)
+	)
+	(pad "1" smd roundrect
+		(at -1.0215 -0.0508)
+		(size 1.175 1.45)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(roundrect_rratio 0.212766)
+		(solder_mask_margin 0.102)
+		(uuid "33fe2260-a7c0-4df9-9407-8ff6b87c3486")
+	)
+	(pad "2" smd roundrect
+		(at 1.0535 -0.0508)
+		(size 1.175 1.45)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(roundrect_rratio 0.212766)
+		(solder_mask_margin 0.102)
+		(uuid "f119ae4c-a529-40d2-bafb-49c55c476e7d")
+	)
+	(embedded_fonts no)
+	(model "${KICAD8_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_0805_2012Metric.step"
+		(offset
+			(xyz 0 0 0)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 0)
+		)
+	)
+)
