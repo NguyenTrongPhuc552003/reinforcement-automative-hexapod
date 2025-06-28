@@ -25,12 +25,12 @@ static struct servo_driver servo_drv = {
 
 /* Servo mapping - which channel for each servo */
 static const u8 servo_map[SERVO_NUM_LEGS][SERVO_NUM_JOINTS_PER_LEG] = {
-    {0, 1, 2}, /* Leg 0 - First PCA9685 */
-    {3, 4, 5}, /* Leg 1 - First PCA9685 */
-    {6, 7, 8}, /* Leg 2 - First PCA9685 */
-    {0, 1, 2}, /* Leg 3 - Second PCA9685 */
-    {3, 4, 5}, /* Leg 4 - Second PCA9685 */
-    {6, 7, 8}  /* Leg 5 - Second PCA9685 */
+    {0, 1, 2},  /* Leg 0 - First PCA9685 */
+    {4, 5, 6},  /* Leg 1 - First PCA9685 */
+    {8, 9, 10}, /* Leg 2 - First PCA9685 */
+    {0, 1, 2},  /* Leg 3 - Second PCA9685 */
+    {4, 5, 6},  /* Leg 4 - Second PCA9685 */
+    {8, 9, 10}  /* Leg 5 - Second PCA9685 */
 };
 
 /* Which PCA9685 controller to use for each leg (0=primary, 1=secondary) */
