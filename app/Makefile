@@ -2,7 +2,7 @@
 CXX = arm-linux-gnueabihf-g++
 CXXFLAGS = -Wall -Wextra -O2 -std=c++17 -I./inc -fPIC
 CXXFLAGS += -march=armv7-a -mfpu=vfp -mfloat-abi=hard
-CXXFLAGS += -pipe -fno-rtti
+CXXFLAGS += -pipe -fno-rtti -lpthread
 
 # Add additional optimization flags
 RELEASE_FLAGS = -DNDEBUG -O3 -flto -ffast-math -fomit-frame-pointer
