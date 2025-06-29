@@ -2831,7 +2831,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "automative_hexapod:PinHeader_1x03_P2.54mm_Vertical"
 			(at 0 0 0)
 			(effects
 				(font
@@ -3054,7 +3054,7 @@
 				)
 			)
 		)
-		(property "Footprint" "automative_hexapod:PinHeader_1x04_P1.00mm_Vertical"
+		(property "Footprint" "automative_hexapod:PinHeader_1x04_P2.54mm_Vertical"
 			(at 0 0 0)
 			(effects
 				(font

@@ -5,196 +5,6 @@
 	(uuid "c07b6013-2147-4cef-a16e-342deb9ccbf5")
 	(paper "A3")
 	(lib_symbols
-		(symbol "Cap_Polarized_SMD_220uF_50V_1"
-			(pin_numbers
-				(hide yes)
-			)
-			(pin_names
-				(offset 0.254)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(property "Reference" "C"
-				(at -1.905 2.54 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify left)
-				)
-			)
-			(property "Value" "220uF/50V"
-				(at -5.334 -3.302 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify left)
-				)
-			)
-			(property "Footprint" "Capacitor_SMD:CP_Elec_10x10.5"
-				(at 3.302 12.7 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Datasheet" ""
-				(at 0.762 12.446 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Description" "Polarized capacitor 220uF 50V, 20%"
-				(at -0.762 12.192 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Supply name" "Thegioiic"
-				(at 2.032 12.446 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Supply part number" "Tụ Nhôm SMD 220uF 50V 10x10.5mm"
-				(at 1.27 12.446 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Supply URL" "https://www.thegioiic.com/tu-nhom-smd-220uf-50v-10x10-5mm"
-				(at 2.032 12.7 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_keywords" "cap capacitor"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_fp_filters" "CP_*"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(symbol "Cap_Polarized_SMD_220uF_50V_1_0_1"
-				(polyline
-					(pts
-						(xy -1.524 -1.27) (xy -1.524 -0.762)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -1.27 -1.016) (xy -1.778 -1.016)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -0.508 -1.524) (xy -0.508 1.524)
-					)
-					(stroke
-						(width 0.3048)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(arc
-					(start 0.762 -1.524)
-					(mid 0.3734 0)
-					(end 0.762 1.524)
-					(stroke
-						(width 0.3048)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-			)
-			(symbol "Cap_Polarized_SMD_220uF_50V_1_1_1"
-				(pin passive line
-					(at -2.54 0 0)
-					(length 2.032)
-					(name "~"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 2.54 0 180)
-					(length 2.032)
-					(name "~"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
 		(symbol "automative_hexapod:BeagleBone_AI"
 			(exclude_from_sim no)
 			(in_bom yes)
@@ -2089,6 +1899,196 @@
 			)
 			(embedded_fonts no)
 		)
+		(symbol "automative_hexapod:Cap_Polarized_SMD_220uF_50V"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0.254)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "C"
+				(at -1.905 2.54 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Value" "220uF/50V"
+				(at -5.334 -3.302 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Footprint" "Capacitor_SMD:CP_Elec_10x10.5"
+				(at 3.302 12.7 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0.762 12.446 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Polarized capacitor 220uF 50V, 20%"
+				(at -0.762 12.192 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Supply name" "Thegioiic"
+				(at 2.032 12.446 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Supply part number" "Tụ Nhôm SMD 220uF 50V 10x10.5mm"
+				(at 1.27 12.446 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Supply URL" "https://www.thegioiic.com/tu-nhom-smd-220uf-50v-10x10-5mm"
+				(at 2.032 12.7 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "cap capacitor"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "CP_*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "Cap_Polarized_SMD_220uF_50V_0_1"
+				(polyline
+					(pts
+						(xy -1.524 -1.27) (xy -1.524 -0.762)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -1.27 -1.016) (xy -1.778 -1.016)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -0.508 -1.524) (xy -0.508 1.524)
+					)
+					(stroke
+						(width 0.3048)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(arc
+					(start 0.762 -1.524)
+					(mid 0.3734 0)
+					(end 0.762 1.524)
+					(stroke
+						(width 0.3048)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "Cap_Polarized_SMD_220uF_50V_1_1"
+				(pin passive line
+					(at -2.54 0 0)
+					(length 2.032)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 2.54 0 180)
+					(length 2.032)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 		(symbol "automative_hexapod:Cap_Polarized_SMD_330uF_50V"
 			(pin_numbers
 				(hide yes)
@@ -2834,7 +2834,7 @@
 					)
 				)
 			)
-			(property "Footprint" "automative_hexapod:PinHeader_1x03_P1.00mm_Vertical"
+			(property "Footprint" "automative_hexapod:PinHeader_1x03_P2.54mm_Vertical"
 				(at 0 0 0)
 				(effects
 					(font
@@ -3057,7 +3057,7 @@
 					)
 				)
 			)
-			(property "Footprint" "automative_hexapod:PinHeader_1x04_P1.00mm_Vertical"
+			(property "Footprint" "automative_hexapod:PinHeader_1x04_P2.54mm_Vertical"
 				(at 0 0 0)
 				(effects
 					(font
@@ -13520,7 +13520,7 @@
 				)
 			)
 		)
-		(property "Footprint" "automative_hexapod:PinHeader_1x04_P1.00mm_Vertical"
+		(property "Footprint" "automative_hexapod:PinHeader_1x04_P2.54mm_Vertical"
 			(at 208.28 114.3 0)
 			(effects
 				(font
@@ -16495,7 +16495,6 @@
 		)
 	)
 	(symbol
-		(lib_name "Cap_Polarized_SMD_220uF_50V_1")
 		(lib_id "automative_hexapod:Cap_Polarized_SMD_220uF_50V")
 		(at 33.02 187.96 270)
 		(unit 1)
@@ -18520,7 +18519,7 @@
 				)
 			)
 		)
-		(property "Footprint" "automative_hexapod:PinHeader_1x04_P1.00mm_Vertical"
+		(property "Footprint" "automative_hexapod:PinHeader_1x04_P2.54mm_Vertical"
 			(at 259.08 139.7 0)
 			(effects
 				(font
@@ -19206,7 +19205,7 @@
 				)
 			)
 		)
-		(property "Footprint" "automative_hexapod:PinHeader_1x03_P1.00mm_Vertical"
+		(property "Footprint" "automative_hexapod:PinHeader_1x03_P2.54mm_Vertical"
 			(at 209.55 139.7 0)
 			(effects
 				(font
@@ -21132,7 +21131,7 @@
 				)
 			)
 		)
-		(property "Footprint" "automative_hexapod:PinHeader_1x04_P1.00mm_Vertical"
+		(property "Footprint" "automative_hexapod:PinHeader_1x04_P2.54mm_Vertical"
 			(at 259.08 160.02 0)
 			(effects
 				(font
