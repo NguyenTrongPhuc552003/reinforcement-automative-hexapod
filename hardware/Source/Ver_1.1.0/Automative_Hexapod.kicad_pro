@@ -664,7 +664,7 @@
       "version": 1
     },
     "net_format_name": "",
-    "page_layout_descr_file": "kicad-embed://Automative_Hexapod_V1.0.0_template.kicad_wks",
+    "page_layout_descr_file": "kicad-embed://Template.kicad_wks",
     "plot_directory": "",
     "space_save_all_events": true,
     "spice_current_sheet_as_root": false,
@@ -696,6 +696,22 @@
     [
       "1eb57641-e2d8-463a-80a2-a390cc9b9921",
       "Servo Drivers"
+    ],
+    [
+      "e5d0e671-a9e7-4d45-9639-043c6f726ed8",
+      "Level Shifting"
+    ],
+    [
+      "d11b61d9-d9a4-4f55-b72c-db353535a927",
+      "Thermal Fan"
+    ],
+    [
+      "17f6d066-5870-44a8-b04d-4a566d8f6477",
+      "IR Distance"
+    ],
+    [
+      "716aec1c-0009-4d7b-ab53-21c905b5927d",
+      "HC-SR04"
     ]
   ],
   "text_variables": {}
