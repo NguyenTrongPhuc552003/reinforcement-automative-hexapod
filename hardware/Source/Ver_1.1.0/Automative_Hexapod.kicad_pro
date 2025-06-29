@@ -664,7 +664,7 @@
       "version": 1
     },
     "net_format_name": "",
-    "page_layout_descr_file": "",
+    "page_layout_descr_file": "kicad-embed://Automative_Hexapod_V1.1.0_template.kicad_wks",
     "plot_directory": "",
     "space_save_all_events": true,
     "spice_current_sheet_as_root": false,
@@ -680,6 +680,22 @@
     [
       "c07b6013-2147-4cef-a16e-342deb9ccbf5",
       "Root"
+    ],
+    [
+      "e9a15bf3-25b5-4588-8308-b7d586974115",
+      "Power Supply"
+    ],
+    [
+      "34b09aed-df58-4a48-9644-db85eade86b6",
+      "BBAI"
+    ],
+    [
+      "6f119c3f-94db-4ed9-9af0-8eee89c2f72e",
+      "IMU"
+    ],
+    [
+      "1eb57641-e2d8-463a-80a2-a390cc9b9921",
+      "Servo Drivers"
     ]
   ],
   "text_variables": {}
