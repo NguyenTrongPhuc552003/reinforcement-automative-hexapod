@@ -11,48 +11,6 @@
 	)
 	(lib_symbols)
 	(sheet
-		(at 127 139.7)
-		(size 25.4 25.4)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(stroke
-			(width 0.254)
-			(type solid)
-		)
-		(fill
-			(color 0 0 0 0.0000)
-		)
-		(uuid "17f6d066-5870-44a8-b04d-4a566d8f6477")
-		(property "Sheetname" "IR Distance"
-			(at 127 138.9376 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left bottom)
-			)
-		)
-		(property "Sheetfile" "IRDistance.kicad_sch"
-			(at 127 165.7354 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left top)
-			)
-		)
-		(instances
-			(project "Automative_Hexapod"
-				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5"
-					(page "8")
-				)
-			)
-		)
-	)
-	(sheet
 		(at 254 139.7)
 		(size 25.4 25.4)
 		(exclude_from_sim no)
@@ -173,7 +131,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5"
-					(page "4")
+					(page "6")
 				)
 			)
 		)
@@ -205,6 +163,48 @@
 		)
 		(property "Sheetfile" "HC-SR04.kicad_sch"
 			(at 254 203.8354 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "Automative_Hexapod"
+				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5"
+					(page "9")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 292.1 139.7)
+		(size 25.4 25.4)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "bc00c079-2846-4ee6-b9f3-67c2426c6f23")
+		(property "Sheetname" "Connector Servo"
+			(at 292.1 138.9376 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "ConnectorServo.kicad_sch"
+			(at 292.1 165.7354 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -299,7 +299,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5"
-					(page "6")
+					(page "4")
 				)
 			)
 		)

@@ -588,14 +588,14 @@
         },
         {
           "group_by": false,
-          "label": "Supply name",
-          "name": "Supply name",
+          "label": "Supply Name",
+          "name": "Supply Name",
           "show": false
         },
         {
           "group_by": false,
-          "label": "Supply part number",
-          "name": "Supply part number",
+          "label": "Supply Part Number",
+          "name": "Supply Part Number",
           "show": false
         },
         {
