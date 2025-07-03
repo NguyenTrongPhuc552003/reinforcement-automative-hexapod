@@ -1,4 +1,4 @@
-25615088446457653
+25651871922417202
 Audio_Module
 Reverb_BTDR-1H
 Digital Reverberation Unit, http://www.belton.co.kr/inc/downfile.php?seq=17&file=pdf (footprint from http://www.uk-electronic.de/PDF/BTDR-1.pdf)
@@ -102648,9 +102648,51 @@ BeagleBone_AI
 92
 92
 automative_hexapod
-Ceramic_Cap_0805
-
+CP_Elec_6.3x5.4
+SMD capacitor, aluminum electrolytic, Panasonic C55, 6.3x5.4mm
+capacitor electrolytic
+0
+2
+2
+automative_hexapod
+Ceramic_Cap_0603
+Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf), generated with kicad-footprint-generator
 capacitor
+0
+2
+2
+automative_hexapod
+Ceramic_Cap_0805
+Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing), generated with kicad-footprint-generator
+capacitor
+0
+2
+2
+automative_hexapod
+Ceramic_Cap_1206
+Capacitor SMD 1206 (3216 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf), generated with kicad-footprint-generator
+capacitor
+0
+2
+2
+automative_hexapod
+Connector-Pin
+
+
+0
+2
+2
+automative_hexapod
+D_SMA
+Diode SMA (DO-214AC)
+Diode SMA (DO-214AC)
+0
+2
+2
+automative_hexapod
+FUSE_SMD_1808
+
+02540101Z 
 0
 2
 2
@@ -102661,6 +102703,41 @@ IND_CDRH127_LDNP-470MC_SUM
 0
 2
 2
+automative_hexapod
+Inductor_0630
+Inductor, APV, APH0630, 6.8x6.6x2.8mm, (http://en.apvind.com/public/upload/20240408/996aafa961154ed753e4983e7eb80fa7.pdf), generated with kicad-footprint-generator gen_inductor.py
+Inductor molded power shielded
+0
+2
+2
+automative_hexapod
+JST-XH-SMD-2-2.54mm
+
+
+0
+4
+2
+automative_hexapod
+JST-XH-SMD-3-2.54mm
+
+
+0
+5
+3
+automative_hexapod
+JST-XH-SMD-4-2.54mm
+
+
+0
+6
+4
+automative_hexapod
+JST_PH_B3B-PH-K_1x03_P2.00mm_Vertical
+JST PH series connector, B3B-PH-K (http://www.jst-mfg.com/product/pdf/eng/ePH.pdf), generated with kicad-footprint-generator
+connector JST PH vertical
+0
+3
+3
 automative_hexapod
 LED_0805
 LED SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC_7351 nominal, (Body size source: https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing), generated with kicad-footprint-generator
@@ -102676,19 +102753,54 @@ Through hole pin header THT 1x08 2.54mm single row
 8
 8
 automative_hexapod
-PinHeader_1x03_P1.00mm_Vertical
-Through hole straight pin header, 1x03, 1.00mm pitch, single row
-Through hole pin header THT 1x03 1.00mm single row
+MTS-102-C3
+
+
+0
+5
+4
+automative_hexapod
+MTS-103_JCV
+
+MTS-103 
 0
 3
 3
 automative_hexapod
-PinHeader_1x04_P1.00mm_Vertical
-Through hole straight pin header, 1x04, 1.00mm pitch, single row
-Through hole pin header THT 1x04 1.00mm single row
+PinHeader_1x03_P2.54mm_Vertical
+Through hole straight pin header, 1x03, 2.54mm pitch, single row
+Through hole pin header THT 1x03 2.54mm single row
+0
+3
+3
+automative_hexapod
+PinHeader_1x04_P2.54mm_Vertical
+Through hole straight pin header, 1x04, 2.54mm pitch, single row
+Through hole pin header THT 1x04 2.54mm single row
 0
 4
 4
+automative_hexapod
+Power External
+
+
+0
+36
+1
+automative_hexapod
+R_Array_Convex_4x0603
+Chip Resistor Network, ROHM MNR14 (see mnr_g.pdf)
+resistor array
+0
+8
+8
+automative_hexapod
+Res_0603
+Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf), generated with kicad-footprint-generator
+resistor
+0
+2
+2
 automative_hexapod
 Res_0805
 Resistor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC_7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf), generated with kicad-footprint-generator
@@ -102697,12 +102809,33 @@ resistor
 2
 2
 automative_hexapod
+Res_1206
+Resistor SMD 1206 (3216 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf), generated with kicad-footprint-generator
+resistor
+0
+2
+2
+automative_hexapod
+SOIC-8
+
+max485csa 
+0
+8
+8
+automative_hexapod
 SOT23
 
 
 0
 3
 3
+automative_hexapod
+SolderBridgeOpen
+
+
+0
+2
+2
 automative_hexapod
 TO-220-3
 
@@ -102717,3 +102850,17 @@ D2PAK DDPAK TO-263 D2PAK-5 TO-263-5 SOT-426
 0
 10
 5
+automative_hexapod
+TSSOP-28_4.4x9.7mm_P0.65mm
+TSSOP, 28 Pin (JEDEC MO-153 Var AE https://www.jedec.org/document_search?search_api_views_fulltext=MO-153), generated with kicad-footprint-generator ipc_gullwing_generator.py
+TSSOP SO
+0
+28
+28
+automative_hexapod
+TerminalBlock_Phoenix_MKDS-1,5-4-5.08_1x04_P5.08mm_Horizontal
+Terminal Block Phoenix MKDS-1,5-4-5.08, 4 pins, pitch 5.08mm, size 20.3x9.8mm, drill diameter 1.3mm, pad diameter 2.6mm, http://www.farnell.com/datasheets/100425.pdf, script-generated using https://gitlab.com/kicad/libraries/kicad-footprint-generator/-/tree/master/scripts/TerminalBlock_Phoenix
+THT Terminal Block Phoenix MKDS-1,5-4-5.08 pitch 5.08mm size 20.3x9.8mm drill 1.3mm pad 2.6mm
+0
+4
+4

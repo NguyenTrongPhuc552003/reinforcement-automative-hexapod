@@ -19,6 +19,7 @@
 	(property "Value" "Res_0805"
 		(at 0 1.65 0)
 		(layer "F.Fab")
+		(hide yes)
 		(uuid "83cd9c78-75b4-4eec-9501-2ff4a6e7a26e")
 		(effects
 			(font

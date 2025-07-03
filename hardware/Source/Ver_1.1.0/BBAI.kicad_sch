@@ -4,6 +4,10 @@
 	(generator_version "9.0")
 	(uuid "a449f992-210a-4440-be36-994d721c272b")
 	(paper "A4")
+	(title_block
+		(title "BBAI")
+		(date "2025-06-30")
+	)
 	(lib_symbols
 		(symbol "automative_hexapod:BeagleBone_AI"
 			(exclude_from_sim no)
@@ -1725,7 +1729,7 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "automative_hexapod:Ceramic_Cap_0805_100nF_50V"
+		(symbol "automative_hexapod:Ceramic_Cap_1206_100nF_50V"
 			(pin_numbers
 				(hide yes)
 			)
@@ -1743,15 +1747,15 @@
 					)
 				)
 			)
-			(property "Value" "100nF/50V"
-				(at -3.556 5.334 0)
+			(property "Value" "100nF"
+				(at -0.254 -3.81 0)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
 				)
 			)
-			(property "Footprint" "automative_hexapod:Ceramic_Cap_0805"
+			(property "Footprint" "automative_hexapod:Ceramic_Cap_1206"
 				(at -4.064 5.08 0)
 				(effects
 					(font
@@ -1769,7 +1773,7 @@
 					(hide yes)
 				)
 			)
-			(property "Description" "10%, 0805 (2012 Metric)"
+			(property "Description" "10%, 1206 (3216 Metric)"
 				(at -2.794 5.588 0)
 				(effects
 					(font
@@ -1778,7 +1782,34 @@
 					(hide yes)
 				)
 			)
-			(property "Supply name" "Thegioiic"
+			(property "Value 2" "50V"
+				(at -1.27 -5.842 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+						(color 0 132 132 1)
+					)
+				)
+			)
+			(property "Value 3" "1206"
+				(at -0.508 -7.874 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+						(color 0 132 132 1)
+					)
+				)
+			)
+			(property "Value 4" "10%"
+				(at -1.016 -9.652 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+						(color 0 132 132 1)
+					)
+				)
+			)
+			(property "Supply Name" "Thegioiic"
 				(at -2.54 5.08 0)
 				(effects
 					(font
@@ -1787,7 +1818,7 @@
 					(hide yes)
 				)
 			)
-			(property "Supply part number" "Tụ Gốm 0805 100nF (0.1uF) 50V"
+			(property "Supply Part Number" " Tụ Gốm 1206 100nF (0.1uF) 50V"
 				(at -2.54 5.588 0)
 				(effects
 					(font
@@ -1796,7 +1827,7 @@
 					(hide yes)
 				)
 			)
-			(property "Supply URL" "https://www.thegioiic.com/tu-gom-0805-100nf-0-1uf-50v"
+			(property "Supply URL" "https://www.Thegioiic.com/tu-gom-1206-100nf-0-1uf-50v"
 				(at -3.81 5.08 0)
 				(effects
 					(font
@@ -1805,7 +1836,7 @@
 					(hide yes)
 				)
 			)
-			(property "ki_keywords" "Ceramic_Cap_0805_100nF_50V"
+			(property "ki_keywords" "Ceramic_Cap_1206_100nF_50V"
 				(at 0 0 0)
 				(effects
 					(font
@@ -1814,7 +1845,7 @@
 					(hide yes)
 				)
 			)
-			(symbol "Ceramic_Cap_0805_100nF_50V_1_1"
+			(symbol "Ceramic_Cap_1206_100nF_50V_1_1"
 				(polyline
 					(pts
 						(xy -1.27 0) (xy -0.3302 0)
@@ -1902,7 +1933,7 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "automative_hexapod:Ceramic_Cap_0805_10uF_16V"
+		(symbol "automative_hexapod:Ceramic_Cap_1206_22uF_10V"
 			(pin_numbers
 				(hide yes)
 			)
@@ -1920,15 +1951,15 @@
 					)
 				)
 			)
-			(property "Value" "10uF/16V"
-				(at -3.556 5.334 0)
+			(property "Value" "22uF"
+				(at -0.254 -3.81 0)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
 				)
 			)
-			(property "Footprint" "automative_hexapod:Ceramic_Cap_0805"
+			(property "Footprint" "automative_hexapod:Ceramic_Cap_1206"
 				(at -4.064 5.08 0)
 				(effects
 					(font
@@ -1946,7 +1977,7 @@
 					(hide yes)
 				)
 			)
-			(property "Description" "10%, 0805 (2012 Metric)"
+			(property "Description" "20%, 1206 (3216 Metric)"
 				(at -2.794 5.588 0)
 				(effects
 					(font
@@ -1955,7 +1986,34 @@
 					(hide yes)
 				)
 			)
-			(property "Supply name" "Thegioiic"
+			(property "Value 2" "10V"
+				(at -0.762 -5.842 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+						(color 0 132 132 1)
+					)
+				)
+			)
+			(property "Value 3" "1206"
+				(at 0 -7.874 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+						(color 0 132 132 1)
+					)
+				)
+			)
+			(property "Value 4" "20%"
+				(at -0.508 -9.652 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+						(color 0 132 132 1)
+					)
+				)
+			)
+			(property "Supply Name" "Thegioiic"
 				(at -2.54 5.08 0)
 				(effects
 					(font
@@ -1964,7 +2022,7 @@
 					(hide yes)
 				)
 			)
-			(property "Supply part number" "Tụ Gốm 0805 10uF 16V"
+			(property "Supply Part Number" " Tụ Gốm 1206 22uF 10V"
 				(at -2.54 5.588 0)
 				(effects
 					(font
@@ -1973,7 +2031,7 @@
 					(hide yes)
 				)
 			)
-			(property "Supply URL" "https://www.thegioiic.com/tu-gom-0805-10uf-16v"
+			(property "Supply URL" "https://www.Thegioiic.com/tu-gom-1206-22uf-10v"
 				(at -3.81 5.08 0)
 				(effects
 					(font
@@ -1982,7 +2040,7 @@
 					(hide yes)
 				)
 			)
-			(property "ki_keywords" "Ceramic_Cap_0805_10uF_16V"
+			(property "ki_keywords" "Ceramic_Cap_1206_22uF_10V"
 				(at 0 0 0)
 				(effects
 					(font
@@ -1991,7 +2049,211 @@
 					(hide yes)
 				)
 			)
-			(symbol "Ceramic_Cap_0805_10uF_16V_1_1"
+			(symbol "Ceramic_Cap_1206_22uF_10V_1_1"
+				(polyline
+					(pts
+						(xy -1.27 0) (xy -0.3302 0)
+					)
+					(stroke
+						(width 0.2032)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -0.3302 -1.905) (xy -0.3302 1.905)
+					)
+					(stroke
+						(width 0.2032)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0.3048 0) (xy 1.27 0)
+					)
+					(stroke
+						(width 0.2032)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0.3048 -1.905) (xy 0.3048 1.905)
+					)
+					(stroke
+						(width 0.2032)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin unspecified line
+					(at -3.81 0 0)
+					(length 2.54)
+					(name ""
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin unspecified line
+					(at 3.81 0 180)
+					(length 2.54)
+					(name ""
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "automative_hexapod:Ceramic_Cap_1206_22uF_25V"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "C"
+				(at -1.524 2.794 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "22uF"
+				(at -0.254 -3.81 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" "automative_hexapod:Ceramic_Cap_1206"
+				(at -4.064 5.08 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at -3.556 5.08 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "20%, 1206 (3216 Metric)"
+				(at -2.794 5.588 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Value 2" "25V"
+				(at -0.762 -5.842 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+						(color 0 132 132 1)
+					)
+				)
+			)
+			(property "Value 3" "1206"
+				(at 0 -7.874 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+						(color 0 132 132 1)
+					)
+				)
+			)
+			(property "Value 4" "20%"
+				(at -0.508 -9.652 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+						(color 0 132 132 1)
+					)
+				)
+			)
+			(property "Supply Name" "Thegioiic"
+				(at -2.54 5.08 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Supply Part Number" "Tụ Gốm 1206 22uF 25V"
+				(at -2.54 5.588 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Supply URL" "https://www.Thegioiic.com/tu-gom-1206-22uf-25v"
+				(at -3.81 5.08 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "Ceramic_Cap_1206_22uF_25V"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "Ceramic_Cap_1206_22uF_25V_1_1"
 				(polyline
 					(pts
 						(xy -1.27 0) (xy -0.3302 0)
@@ -2133,7 +2395,7 @@
 					(hide yes)
 				)
 			)
-			(property "Supply name" "Thegioiic"
+			(property "Supply Name" "Thegioiic"
 				(at -0.762 5.334 0)
 				(effects
 					(font
@@ -2142,7 +2404,7 @@
 					(hide yes)
 				)
 			)
-			(property "Supply part number" "LED Xanh Lá 0805 Dán SMD Trong Suốt"
+			(property "Supply Part Number" "LED Xanh Lá 0805 Dán SMD Trong Suốt"
 				(at 0.508 4.826 0)
 				(effects
 					(font
@@ -2151,7 +2413,7 @@
 					(hide yes)
 				)
 			)
-			(property "Supply URL" "https://www.thegioiic.com/led-xanh-la-0805-dan-smd-trong-suot"
+			(property "Supply URL" "https://www.Thegioiic.com/led-xanh-la-0805-dan-smd-trong-suot"
 				(at -0.762 5.334 0)
 				(effects
 					(font
@@ -2298,8 +2560,8 @@
 					)
 				)
 			)
-			(property "Value" "1K/1%/1/8W"
-				(at 0.508 -3.556 0)
+			(property "Value" "1kOhm"
+				(at 0.254 -3.302 0)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -2307,7 +2569,7 @@
 				)
 			)
 			(property "Footprint" "automative_hexapod:Res_0805"
-				(at 0 -3.048 0)
+				(at -1.778 8.636 0)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -2325,7 +2587,7 @@
 				)
 			)
 			(property "Description" "Res_1K_0805_1%"
-				(at 0 2.54 0)
+				(at -0.508 8.382 0)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -2333,8 +2595,35 @@
 					(hide yes)
 				)
 			)
-			(property "Supply name" "thegioiic"
-				(at 0.254 -3.302 0)
+			(property "Value 2" "1/8W"
+				(at -0.254 -5.08 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+						(color 0 132 132 1)
+					)
+				)
+			)
+			(property "Value 3" "0805"
+				(at -0.508 -6.858 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+						(color 0 132 132 1)
+					)
+				)
+			)
+			(property "Value 4" "1%"
+				(at -1.524 -8.636 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+						(color 0 132 132 1)
+					)
+				)
+			)
+			(property "Supply Name" "Thegioiic"
+				(at 1.016 8.382 0)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -2342,8 +2631,8 @@
 					(hide yes)
 				)
 			)
-			(property "Supply part number" "Điện Trở 1 KOhm 0805 1%"
-				(at 0.508 -3.302 0)
+			(property "Supply Part Number" "Điện Trở 1 KOhm 0805 1%"
+				(at -1.27 8.382 0)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -2351,8 +2640,8 @@
 					(hide yes)
 				)
 			)
-			(property "Supply URL" "https://www.thegioiic.com/dien-tro-1-kohm-0805-1-"
-				(at 0 -3.556 0)
+			(property "Supply URL" "https://www.Thegioiic.com/dien-tro-1-kohm-0805-1-"
+				(at -1.778 8.128 0)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -2824,52 +3113,76 @@
 		)
 	)
 	(junction
-		(at 184.15 152.4)
+		(at 39.37 106.68)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "193e19fa-de63-415d-84ec-42f11ca4156b")
+		(uuid "19ac8254-b18b-4251-83b4-529906af1cb4")
 	)
 	(junction
-		(at 115.57 146.05)
+		(at 24.13 106.68)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "224ad1a8-38b2-462a-ada2-51f381d2cfc4")
+		(uuid "34939951-c051-4498-8b5a-d629cadce303")
 	)
 	(junction
-		(at 200.66 31.75)
+		(at 115.57 144.78)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "56841cc4-bfe8-4a64-842d-36f54d7ede2d")
+		(uuid "3772bc37-008e-4fd5-bc07-c2e679c6d280")
 	)
 	(junction
-		(at 231.14 31.75)
+		(at 39.37 66.04)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "6fc990bd-dcaa-46ec-a0e9-c1e472e27949")
+		(uuid "40ec72ba-a7d5-48bc-b73b-453f3e4e86b0")
 	)
 	(junction
-		(at 115.57 151.13)
+		(at 39.37 119.38)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "72c33e3d-bfe2-42c5-8ba5-854d020cae49")
+		(uuid "52572654-f862-4207-85d4-40ce7c0f68a6")
 	)
 	(junction
-		(at 231.14 48.26)
+		(at 115.57 149.86)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "75c5b8ed-633e-465a-8c91-3ee673f13f2c")
+		(uuid "572254ad-cbf7-4d32-9778-143e4856bf6b")
 	)
 	(junction
-		(at 115.57 140.97)
+		(at 24.13 78.74)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "8c1feda6-6cb7-4953-b90f-0431b5a10ff9")
+		(uuid "77502f2c-0a7a-4845-af9c-794ecbcc90ef")
 	)
 	(junction
-		(at 200.66 48.26)
+		(at 24.13 119.38)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "a55d679a-ad77-48dd-abcd-045a7adb27a7")
+		(uuid "7dae615d-5d26-4190-9329-e20d1950ccab")
+	)
+	(junction
+		(at 184.15 149.86)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "bd26b2a0-fde7-49cf-87d9-005e3ab42959")
+	)
+	(junction
+		(at 39.37 78.74)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "d0bb6903-63d7-44bc-97e4-80308d75b4fc")
+	)
+	(junction
+		(at 115.57 139.7)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "f30a680e-0a33-48e5-9ca6-8c8418c9ed09")
+	)
+	(junction
+		(at 24.13 66.04)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "febac981-8172-4614-b56c-5a9a384dd10e")
 	)
 	(no_connect
 		(at 118.11 73.66)
@@ -3185,7 +3498,7 @@
 	)
 	(wire
 		(pts
-			(xy 111.76 140.97) (xy 115.57 140.97)
+			(xy 111.76 139.7) (xy 115.57 139.7)
 		)
 		(stroke
 			(width 0)
@@ -3195,33 +3508,53 @@
 	)
 	(wire
 		(pts
-			(xy 194.31 48.26) (xy 200.66 48.26)
+			(xy 39.37 119.38) (xy 24.13 119.38)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "0752cab5-bb3e-489d-becf-98632993b48a")
+		(uuid "05abb869-df5d-4bac-aac2-338a549aa70b")
 	)
 	(wire
 		(pts
-			(xy 115.57 152.4) (xy 115.57 151.13)
+			(xy 54.61 119.38) (xy 39.37 119.38)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "0f04fe82-28c8-4e99-8de6-8a471f8dfdfb")
+		(uuid "0921c679-7c8f-4df5-850c-b265f4024ac9")
 	)
 	(wire
 		(pts
-			(xy 115.57 151.13) (xy 115.57 149.86)
+			(xy 24.13 104.14) (xy 24.13 106.68)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "15697818-8332-4c37-8c50-3facfe605c29")
+		(uuid "0b570776-2006-45ec-9d04-c9a90f077875")
+	)
+	(wire
+		(pts
+			(xy 24.13 66.04) (xy 39.37 66.04)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0dd25785-ac29-409c-90cf-5c852aaae01c")
+	)
+	(wire
+		(pts
+			(xy 184.15 149.86) (xy 184.15 152.4)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "11f2afc1-7c7f-4a07-ae3f-491c91b64766")
 	)
 	(wire
 		(pts
@@ -3235,27 +3568,17 @@
 	)
 	(wire
 		(pts
-			(xy 231.14 48.26) (xy 237.49 48.26)
+			(xy 39.37 76.2) (xy 39.37 78.74)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "188653d8-df0a-49eb-a57a-5c36a8946dd7")
+		(uuid "1ef06984-a3c1-44c4-8c0d-962b846cb4c3")
 	)
 	(wire
 		(pts
-			(xy 184.15 149.86) (xy 184.15 152.4)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "1d07bcd5-9d56-4e0c-9b61-414c0ca42ecd")
-	)
-	(wire
-		(pts
-			(xy 113.03 151.13) (xy 115.57 151.13)
+			(xy 113.03 149.86) (xy 115.57 149.86)
 		)
 		(stroke
 			(width 0)
@@ -3265,7 +3588,7 @@
 	)
 	(wire
 		(pts
-			(xy 115.57 140.97) (xy 115.57 139.7)
+			(xy 115.57 139.7) (xy 115.57 142.24)
 		)
 		(stroke
 			(width 0)
@@ -3275,7 +3598,37 @@
 	)
 	(wire
 		(pts
-			(xy 106.68 143.51) (xy 106.68 146.05)
+			(xy 54.61 68.58) (xy 54.61 66.04)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "2cd14cfc-66d1-40a7-bda5-c8217bb42d3a")
+	)
+	(wire
+		(pts
+			(xy 39.37 66.04) (xy 54.61 66.04)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "365005cb-05b0-474f-ae7f-559f07ba77c8")
+	)
+	(wire
+		(pts
+			(xy 39.37 66.04) (xy 39.37 68.58)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3a430929-36e6-46a1-8dbc-075d96b52716")
+	)
+	(wire
+		(pts
+			(xy 106.68 142.24) (xy 106.68 144.78)
 		)
 		(stroke
 			(width 0)
@@ -3305,16 +3658,6 @@
 	)
 	(wire
 		(pts
-			(xy 207.01 31.75) (xy 200.66 31.75)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "52ca58d2-ba66-4fec-bbf0-f1e5a2bff931")
-	)
-	(wire
-		(pts
 			(xy 113.03 58.42) (xy 118.11 58.42)
 		)
 		(stroke
@@ -3325,7 +3668,17 @@
 	)
 	(wire
 		(pts
-			(xy 106.68 146.05) (xy 115.57 146.05)
+			(xy 24.13 76.2) (xy 24.13 78.74)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "584ac039-09d8-4f7d-a11f-211027da4986")
+	)
+	(wire
+		(pts
+			(xy 106.68 144.78) (xy 115.57 144.78)
 		)
 		(stroke
 			(width 0)
@@ -3335,23 +3688,33 @@
 	)
 	(wire
 		(pts
-			(xy 237.49 31.75) (xy 231.14 31.75)
+			(xy 24.13 63.5) (xy 24.13 66.04)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "65771d19-a283-4c78-9726-ed4d62ef8bab")
+		(uuid "5a3a65f7-d92b-494a-b780-5d223732b19f")
 	)
 	(wire
 		(pts
-			(xy 200.66 48.26) (xy 207.01 48.26)
+			(xy 54.61 116.84) (xy 54.61 119.38)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "67e6fdac-1927-4dae-9150-2dcfaebfdfa5")
+		(uuid "5d8869cd-e9e9-40ce-b5f7-42fb49e8a41e")
+	)
+	(wire
+		(pts
+			(xy 39.37 78.74) (xy 24.13 78.74)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "61469c4f-204d-4707-b04c-586c568a3337")
 	)
 	(wire
 		(pts
@@ -3365,6 +3728,16 @@
 	)
 	(wire
 		(pts
+			(xy 24.13 119.38) (xy 24.13 121.92)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6be9edcf-9ea6-4b70-94f3-99d23faf6851")
+	)
+	(wire
+		(pts
 			(xy 214.63 66.04) (xy 214.63 68.58)
 		)
 		(stroke
@@ -3372,6 +3745,26 @@
 			(type default)
 		)
 		(uuid "6bf36e85-5d69-4128-b533-fb983d27c1a7")
+	)
+	(wire
+		(pts
+			(xy 54.61 109.22) (xy 54.61 106.68)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6e97a594-81dc-4764-9f36-f2b4c9b2e365")
+	)
+	(wire
+		(pts
+			(xy 186.69 149.86) (xy 184.15 149.86)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "71a8c219-7e79-46a7-a8eb-069271b6235d")
 	)
 	(wire
 		(pts
@@ -3385,27 +3778,27 @@
 	)
 	(wire
 		(pts
-			(xy 194.31 43.18) (xy 194.31 48.26)
+			(xy 39.37 116.84) (xy 39.37 119.38)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "74f48533-a49a-4ba7-926c-3d98224cf56d")
+		(uuid "73487652-2f3b-4e6c-80aa-c27204e04584")
 	)
 	(wire
 		(pts
-			(xy 207.01 43.18) (xy 207.01 48.26)
+			(xy 39.37 106.68) (xy 54.61 106.68)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "7cbd4a55-01c7-4228-a52c-0d1684a7255b")
+		(uuid "7b6b8645-48d2-44e4-948f-91ba98936ae6")
 	)
 	(wire
 		(pts
-			(xy 113.03 153.67) (xy 113.03 151.13)
+			(xy 113.03 156.21) (xy 113.03 149.86)
 		)
 		(stroke
 			(width 0)
@@ -3415,13 +3808,13 @@
 	)
 	(wire
 		(pts
-			(xy 224.79 48.26) (xy 231.14 48.26)
+			(xy 24.13 106.68) (xy 39.37 106.68)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "7d558863-0c06-4df6-b9d7-52e9a4eeaae1")
+		(uuid "7de13a76-dc78-4e43-b6a8-f83f3f1b67d2")
 	)
 	(wire
 		(pts
@@ -3435,6 +3828,16 @@
 	)
 	(wire
 		(pts
+			(xy 184.15 149.86) (xy 181.61 149.86)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "8a2949bf-e819-4d9a-9168-7cceb85160e3")
+	)
+	(wire
+		(pts
 			(xy 195.58 66.04) (xy 200.66 66.04)
 		)
 		(stroke
@@ -3445,33 +3848,53 @@
 	)
 	(wire
 		(pts
-			(xy 231.14 48.26) (xy 231.14 50.8)
+			(xy 181.61 152.4) (xy 184.15 152.4)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "91c77595-f336-46bb-8d34-a1bd76e7d278")
+		(uuid "993bbe26-cbe2-48e8-99c5-16f9eccf4e3b")
 	)
 	(wire
 		(pts
-			(xy 115.57 142.24) (xy 115.57 140.97)
+			(xy 54.61 78.74) (xy 39.37 78.74)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "9b5345ce-206e-40dc-8dd3-0bb5459540fb")
+		(uuid "a15a0b2f-68fb-4444-affe-15b557793981")
 	)
 	(wire
 		(pts
-			(xy 200.66 30.48) (xy 200.66 31.75)
+			(xy 24.13 66.04) (xy 24.13 68.58)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "9e48aee9-04c3-4ced-bc54-6c1efd535d94")
+		(uuid "a17ef1ce-8b75-4ffd-8af5-db2fcc87a912")
+	)
+	(wire
+		(pts
+			(xy 54.61 76.2) (xy 54.61 78.74)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a369fb87-5686-48b9-90dc-5ca47740266a")
+	)
+	(wire
+		(pts
+			(xy 24.13 78.74) (xy 24.13 81.28)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a7ed4599-cea4-45a2-8cc0-c6e87ba6dbc7")
 	)
 	(wire
 		(pts
@@ -3495,16 +3918,6 @@
 	)
 	(wire
 		(pts
-			(xy 224.79 31.75) (xy 224.79 35.56)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "af55af7a-327e-446b-846a-32aeb22be7c4")
-	)
-	(wire
-		(pts
 			(xy 114.3 48.26) (xy 118.11 48.26)
 		)
 		(stroke
@@ -3515,7 +3928,7 @@
 	)
 	(wire
 		(pts
-			(xy 111.76 137.16) (xy 111.76 140.97)
+			(xy 111.76 137.16) (xy 111.76 139.7)
 		)
 		(stroke
 			(width 0)
@@ -3535,57 +3948,27 @@
 	)
 	(wire
 		(pts
-			(xy 181.61 152.4) (xy 184.15 152.4)
+			(xy 186.69 156.21) (xy 186.69 149.86)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "bbd7669e-e453-40e3-90f3-d12ea113c291")
+		(uuid "bc86a1fc-745d-482d-a7f4-39dc6a639e94")
 	)
 	(wire
 		(pts
-			(xy 181.61 149.86) (xy 184.15 149.86)
+			(xy 39.37 106.68) (xy 39.37 109.22)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "c130ec52-b545-4997-ab93-0aecbd109e77")
+		(uuid "c693d89e-76ac-4e6e-986e-9cb948282dbd")
 	)
 	(wire
 		(pts
-			(xy 200.66 48.26) (xy 200.66 50.8)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "c9a0c7cb-b3ef-4ba3-8ced-b73b48ef01f2")
-	)
-	(wire
-		(pts
-			(xy 115.57 147.32) (xy 115.57 146.05)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "caa33737-1f88-4fda-9dae-8fb01fea5cd0")
-	)
-	(wire
-		(pts
-			(xy 200.66 31.75) (xy 194.31 31.75)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "ccc6ace4-631f-4f79-af12-5fb027c3ee30")
-	)
-	(wire
-		(pts
-			(xy 115.57 146.05) (xy 115.57 144.78)
+			(xy 115.57 144.78) (xy 115.57 147.32)
 		)
 		(stroke
 			(width 0)
@@ -3595,33 +3978,23 @@
 	)
 	(wire
 		(pts
-			(xy 237.49 31.75) (xy 237.49 35.56)
+			(xy 24.13 106.68) (xy 24.13 109.22)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "d5324195-99ee-40ef-95b7-159a26fed094")
+		(uuid "de98e935-5d6a-4e48-ba80-7e7aaf4adf62")
 	)
 	(wire
 		(pts
-			(xy 207.01 31.75) (xy 207.01 35.56)
+			(xy 24.13 116.84) (xy 24.13 119.38)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "d8f73f9b-b26d-4ddf-a06d-77ae74530db7")
-	)
-	(wire
-		(pts
-			(xy 237.49 43.18) (xy 237.49 48.26)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "e332ada9-81d6-436a-a398-f62778b72e9d")
+		(uuid "e32258fa-49c4-441a-84cd-20e392b177be")
 	)
 	(wire
 		(pts
@@ -3645,53 +4018,13 @@
 	)
 	(wire
 		(pts
-			(xy 194.31 31.75) (xy 194.31 35.56)
+			(xy 115.57 149.86) (xy 115.57 152.4)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "e9d77a42-8460-4021-8f39-f91e3907cbe9")
-	)
-	(wire
-		(pts
-			(xy 224.79 43.18) (xy 224.79 48.26)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "eee440e1-87aa-4b1d-a5d4-746afb5b7536")
-	)
-	(wire
-		(pts
-			(xy 184.15 152.4) (xy 184.15 153.67)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "f4e4e291-4401-481d-b51d-2845aaee6cd4")
-	)
-	(wire
-		(pts
-			(xy 231.14 31.75) (xy 224.79 31.75)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "f6212a05-2c31-41c4-8a30-bce5aa7fa12a")
-	)
-	(wire
-		(pts
-			(xy 231.14 30.48) (xy 231.14 31.75)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "fba6d4e4-f1e2-4ab8-bb09-1f94ecec24e5")
+		(uuid "eb8f30c2-35c5-4f34-a6fb-2efc99dfd43c")
 	)
 	(global_label "BBAI_TRIG"
 		(shape input)
@@ -3805,6 +4138,199 @@
 	)
 	(symbol
 		(lib_id "power:GND")
+		(at 186.69 156.21 0)
+		(mirror y)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "010dbaa6-3c2b-48f7-bd38-e40fc0f28e28")
+		(property "Reference" "#PWR031"
+			(at 186.69 162.56 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 186.69 161.29 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 186.69 156.21 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 186.69 156.21 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 186.69 156.21 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "11db3097-90dc-4173-ada5-717a5fa811d7")
+		)
+		(instances
+			(project "Automative_Hexapod"
+				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/34b09aed-df58-4a48-9644-db85eade86b6"
+					(reference "#PWR031")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "automative_hexapod:Ceramic_Cap_1206_22uF_10V")
+		(at 39.37 113.03 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "1105b87f-8bc2-499f-9424-d94c9e6aaeef")
+		(property "Reference" "C10"
+			(at 32.766 113.03 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" "22uF"
+			(at 42.672 108.966 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Footprint" "automative_hexapod:Ceramic_Cap_1206"
+			(at 34.29 117.094 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 34.29 116.586 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "20%, 1206 (3216 Metric)"
+			(at 33.782 115.824 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value 2" "10V"
+			(at 42.672 111.506 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(color 0 132 132 1)
+				)
+				(justify right)
+			)
+		)
+		(property "Value 3" "1206"
+			(at 42.672 114.046 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(color 0 132 132 1)
+				)
+				(justify right)
+			)
+		)
+		(property "Value 4" "20%"
+			(at 42.672 116.586 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(color 0 132 132 1)
+				)
+				(justify right)
+			)
+		)
+		(property "Supply Name" "Thegioiic"
+			(at 34.29 115.57 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply Part Number" " Tụ Gốm 1206 22uF 10V"
+			(at 33.782 115.57 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply URL" "https://www.Thegioiic.com/tu-gom-1206-22uf-10v"
+			(at 34.29 116.84 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "f904b67a-b174-453b-97f9-c68be9f9bbd5")
+		)
+		(pin "2"
+			(uuid "ed67009b-3d9d-4c23-a642-fdb59dd0ea62")
+		)
+		(instances
+			(project "Automative_Hexapod"
+				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/34b09aed-df58-4a48-9644-db85eade86b6"
+					(reference "C10")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
 		(at 214.63 68.58 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -3813,7 +4339,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "29200fa9-c428-4bb0-b07c-55cdb9eace43")
-		(property "Reference" "#PWR011"
+		(property "Reference" "#PWR032"
 			(at 214.63 74.93 0)
 			(effects
 				(font
@@ -3863,7 +4389,199 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/34b09aed-df58-4a48-9644-db85eade86b6"
-					(reference "#PWR011")
+					(reference "#PWR032")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "automative_hexapod:Ceramic_Cap_1206_22uF_10V")
+		(at 24.13 113.03 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "2d2b4b69-b80c-4805-9866-413976191819")
+		(property "Reference" "C8"
+			(at 17.526 113.03 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" "22uF"
+			(at 27.432 108.966 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Footprint" "automative_hexapod:Ceramic_Cap_1206"
+			(at 19.05 117.094 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 19.05 116.586 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "20%, 1206 (3216 Metric)"
+			(at 18.542 115.824 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value 2" "10V"
+			(at 27.432 111.506 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(color 0 132 132 1)
+				)
+				(justify right)
+			)
+		)
+		(property "Value 3" "1206"
+			(at 27.432 114.046 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(color 0 132 132 1)
+				)
+				(justify right)
+			)
+		)
+		(property "Value 4" "20%"
+			(at 27.432 116.586 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(color 0 132 132 1)
+				)
+				(justify right)
+			)
+		)
+		(property "Supply Name" "Thegioiic"
+			(at 19.05 115.57 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply Part Number" " Tụ Gốm 1206 22uF 10V"
+			(at 18.542 115.57 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply URL" "https://www.Thegioiic.com/tu-gom-1206-22uf-10v"
+			(at 19.05 116.84 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "887c10c8-67a2-49af-9b03-ed4195d1e563")
+		)
+		(pin "2"
+			(uuid "b5a1da05-f886-436e-9a82-3c4ab3b816d4")
+		)
+		(instances
+			(project ""
+				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/34b09aed-df58-4a48-9644-db85eade86b6"
+					(reference "C8")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 24.13 121.92 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "2fb41df6-9227-4bf0-9f80-8b414b7b85c0")
+		(property "Reference" "#PWR027"
+			(at 24.13 128.27 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 24.13 127 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 24.13 121.92 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 24.13 121.92 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 24.13 121.92 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "f5a123c0-d924-4f48-88b8-580af084a44e")
+		)
+		(instances
+			(project "Automative_Hexapod"
+				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/34b09aed-df58-4a48-9644-db85eade86b6"
+					(reference "#PWR027")
 					(unit 1)
 				)
 			)
@@ -3877,18 +4595,17 @@
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "48cf938f-2a62-4a6a-9458-2e122c845fd9")
-		(property "Reference" "R18"
-			(at 191.77 59.69 0)
+		(property "Reference" "R7"
+			(at 191.77 62.738 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 			)
 		)
-		(property "Value" "1K/1%/1/8W"
-			(at 191.77 62.23 0)
+		(property "Value" "1K"
+			(at 189.992 68.326 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3922,7 +4639,7 @@
 				(hide yes)
 			)
 		)
-		(property "Supply name" "thegioiic"
+		(property "Supply Name" "Thegioiic"
 			(at 192.024 69.342 0)
 			(effects
 				(font
@@ -3931,7 +4648,7 @@
 				(hide yes)
 			)
 		)
-		(property "Supply part number" "Điện Trở 1 KOhm 0805 1%"
+		(property "Supply Part Number" "Điện Trở 1 KOhm 0805 1%"
 			(at 192.278 69.342 0)
 			(effects
 				(font
@@ -3940,13 +4657,40 @@
 				(hide yes)
 			)
 		)
-		(property "Supply URL" "https://www.thegioiic.com/dien-tro-1-kohm-0805-1-"
+		(property "Supply URL" "https://www.Thegioiic.com/dien-tro-1-kohm-0805-1-"
 			(at 191.77 69.596 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(hide yes)
+			)
+		)
+		(property "Value 2" "1/8W"
+			(at 191.516 70.104 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(color 0 132 132 1)
+				)
+			)
+		)
+		(property "Value 3" "0805"
+			(at 191.262 71.882 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(color 0 132 132 1)
+				)
+			)
+		)
+		(property "Value 4" "1%"
+			(at 190.246 73.66 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(color 0 132 132 1)
+				)
 			)
 		)
 		(pin "2"
@@ -3958,23 +4702,23 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/34b09aed-df58-4a48-9644-db85eade86b6"
-					(reference "R18")
+					(reference "R7")
 					(unit 1)
 				)
 			)
 		)
 	)
 	(symbol
-		(lib_id "automative_hexapod:Ceramic_Cap_0805_10uF_16V")
-		(at 194.31 39.37 90)
+		(lib_id "automative_hexapod:Ceramic_Cap_1206_22uF_25V")
+		(at 24.13 72.39 90)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(uuid "589ac73e-e4d4-4f4e-a5e1-0cee96b57298")
-		(property "Reference" "C1"
-			(at 196.596 39.37 90)
+		(uuid "4eac26a1-2e65-4471-9a1b-3b049f32eeb4")
+		(property "Reference" "C7"
+			(at 18.034 72.39 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3982,8 +4726,8 @@
 				(justify right)
 			)
 		)
-		(property "Value" "10uF/16V"
-			(at 195.072 42.164 90)
+		(property "Value" "22uF"
+			(at 27.432 68.58 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3991,8 +4735,8 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "automative_hexapod:Ceramic_Cap_0805"
-			(at 189.23 43.434 0)
+		(property "Footprint" "automative_hexapod:Ceramic_Cap_1206"
+			(at 19.05 76.454 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4001,7 +4745,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 189.23 42.926 0)
+			(at 19.05 75.946 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4009,8 +4753,8 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "10%, 0805 (2012 Metric)"
-			(at 188.722 42.164 0)
+		(property "Description" "20%, 1206 (3216 Metric)"
+			(at 18.542 75.184 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4018,8 +4762,38 @@
 				(hide yes)
 			)
 		)
-		(property "Supply name" "Thegioiic"
-			(at 189.23 41.91 0)
+		(property "Value 2" "25V"
+			(at 27.432 71.12 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(color 0 132 132 1)
+				)
+				(justify right)
+			)
+		)
+		(property "Value 3" "1206"
+			(at 27.432 73.66 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(color 0 132 132 1)
+				)
+				(justify right)
+			)
+		)
+		(property "Value 4" "20%"
+			(at 27.432 76.2 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(color 0 132 132 1)
+				)
+				(justify right)
+			)
+		)
+		(property "Supply Name" "Thegioiic"
+			(at 19.05 74.93 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4027,8 +4801,8 @@
 				(hide yes)
 			)
 		)
-		(property "Supply part number" "Tụ Gốm 0805 10uF 16V"
-			(at 188.722 41.91 0)
+		(property "Supply Part Number" "Tụ Gốm 1206 22uF 25V"
+			(at 18.542 74.93 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4036,25 +4810,151 @@
 				(hide yes)
 			)
 		)
-		(property "Supply URL" "https://www.thegioiic.com/tu-gom-0805-10uf-16v"
-			(at 189.23 43.18 0)
+		(property "Supply URL" "https://www.Thegioiic.com/tu-gom-1206-22uf-25v"
+			(at 19.05 76.2 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(hide yes)
 			)
-		)
-		(pin "1"
-			(uuid "93cfba85-107d-4ca7-a07d-ad52a58598d2")
 		)
 		(pin "2"
-			(uuid "e6b6c8c6-85ad-4211-90aa-45ab5b4360e8")
+			(uuid "f5700d4c-8fde-4e76-96dd-6d317e88f036")
+		)
+		(pin "1"
+			(uuid "d2a4f195-22f3-49e4-8c22-82a89045fe28")
+		)
+		(instances
+			(project ""
+				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/34b09aed-df58-4a48-9644-db85eade86b6"
+					(reference "C7")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "automative_hexapod:Ceramic_Cap_1206_22uF_25V")
+		(at 39.37 72.39 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "569bfd61-ed83-469d-bbec-6d1ba9a3a88c")
+		(property "Reference" "C9"
+			(at 33.528 72.39 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" "22uF"
+			(at 42.672 68.58 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Footprint" "automative_hexapod:Ceramic_Cap_1206"
+			(at 34.29 76.454 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 34.29 75.946 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "20%, 1206 (3216 Metric)"
+			(at 33.782 75.184 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value 2" "25V"
+			(at 42.672 71.12 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(color 0 132 132 1)
+				)
+				(justify right)
+			)
+		)
+		(property "Value 3" "1206"
+			(at 42.672 73.66 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(color 0 132 132 1)
+				)
+				(justify right)
+			)
+		)
+		(property "Value 4" "20%"
+			(at 42.672 76.2 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(color 0 132 132 1)
+				)
+				(justify right)
+			)
+		)
+		(property "Supply Name" "Thegioiic"
+			(at 34.29 74.93 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply Part Number" "Tụ Gốm 1206 22uF 25V"
+			(at 33.782 74.93 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply URL" "https://www.Thegioiic.com/tu-gom-1206-22uf-25v"
+			(at 34.29 76.2 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "f4cd8259-d41c-4542-a129-16cca0474c32")
+		)
+		(pin "1"
+			(uuid "6514ff97-c9e4-400a-9d1c-d440ff3532ad")
 		)
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/34b09aed-df58-4a48-9644-db85eade86b6"
-					(reference "C1")
+					(reference "C9")
 					(unit 1)
 				)
 			)
@@ -4062,7 +4962,7 @@
 	)
 	(symbol
 		(lib_id "power:+3.3V")
-		(at 231.14 30.48 0)
+		(at 24.13 104.14 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -4070,8 +4970,8 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "5c3a0a05-f207-464e-a2bf-473b5234d4ba")
-		(property "Reference" "#PWR018"
-			(at 231.14 34.29 0)
+		(property "Reference" "#PWR026"
+			(at 24.13 107.95 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4080,7 +4980,7 @@
 			)
 		)
 		(property "Value" "+3.3V"
-			(at 231.14 25.4 0)
+			(at 24.13 99.06 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4088,7 +4988,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 231.14 30.48 0)
+			(at 24.13 104.14 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4097,7 +4997,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 231.14 30.48 0)
+			(at 24.13 104.14 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4106,7 +5006,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
-			(at 231.14 30.48 0)
+			(at 24.13 104.14 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4120,41 +5020,41 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/34b09aed-df58-4a48-9644-db85eade86b6"
-					(reference "#PWR018")
+					(reference "#PWR026")
 					(unit 1)
 				)
 			)
 		)
 	)
 	(symbol
-		(lib_id "automative_hexapod:Ceramic_Cap_0805_100nF_50V")
-		(at 207.01 39.37 90)
+		(lib_id "automative_hexapod:Ceramic_Cap_1206_100nF_50V")
+		(at 54.61 113.03 270)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(uuid "6358333b-af71-44d6-8ea9-1a9da1771e75")
-		(property "Reference" "C2"
-			(at 209.804 39.37 90)
+		(uuid "6207fe51-f399-480b-9ff5-e56b12cce3f7")
+		(property "Reference" "C12"
+			(at 48.514 113.03 90)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify right)
+				(justify left)
 			)
 		)
-		(property "Value" "100nF/50V"
-			(at 208.026 42.164 90)
+		(property "Value" "100nF"
+			(at 58.42 109.22 90)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify right)
+				(justify left)
 			)
 		)
-		(property "Footprint" "automative_hexapod:Ceramic_Cap_0805"
-			(at 201.93 43.434 0)
+		(property "Footprint" "automative_hexapod:Ceramic_Cap_1206"
+			(at 59.69 108.966 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4163,7 +5063,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 201.93 42.926 0)
+			(at 59.69 109.474 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4171,8 +5071,8 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "10%, 0805 (2012 Metric)"
-			(at 201.422 42.164 0)
+		(property "Description" "10%, 1206 (3216 Metric)"
+			(at 60.198 110.236 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4180,8 +5080,38 @@
 				(hide yes)
 			)
 		)
-		(property "Supply name" "Thegioiic"
-			(at 201.93 41.91 0)
+		(property "Value 2" "50V"
+			(at 58.42 111.76 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(color 0 132 132 1)
+				)
+				(justify left)
+			)
+		)
+		(property "Value 3" "1206"
+			(at 58.42 114.3 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(color 0 132 132 1)
+				)
+				(justify left)
+			)
+		)
+		(property "Value 4" "10%"
+			(at 58.42 116.84 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(color 0 132 132 1)
+				)
+				(justify left)
+			)
+		)
+		(property "Supply Name" "Thegioiic"
+			(at 59.69 110.49 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4189,8 +5119,8 @@
 				(hide yes)
 			)
 		)
-		(property "Supply part number" "Tụ Gốm 0805 100nF (0.1uF) 50V"
-			(at 201.422 41.91 0)
+		(property "Supply Part Number" " Tụ Gốm 1206 100nF (0.1uF) 50V"
+			(at 60.198 110.49 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4198,8 +5128,8 @@
 				(hide yes)
 			)
 		)
-		(property "Supply URL" "https://www.thegioiic.com/tu-gom-0805-100nf-0-1uf-50v"
-			(at 201.93 43.18 0)
+		(property "Supply URL" "https://www.Thegioiic.com/tu-gom-1206-100nf-0-1uf-50v"
+			(at 59.69 109.22 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4208,15 +5138,15 @@
 			)
 		)
 		(pin "1"
-			(uuid "8b18042b-7434-4aaf-a9bb-f0d2de2b495c")
+			(uuid "c4d90327-7bce-48b1-a31f-a0eb77ec85ac")
 		)
 		(pin "2"
-			(uuid "a4453480-b54b-4db9-8055-120ebe8a5711")
+			(uuid "80f17f7a-40e3-4226-8171-1aa3e741793b")
 		)
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/34b09aed-df58-4a48-9644-db85eade86b6"
-					(reference "C2")
+					(reference "C12")
 					(unit 1)
 				)
 			)
@@ -4224,169 +5154,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 231.14 50.8 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "70a82f1e-0c36-4258-ad90-259e064051f3")
-		(property "Reference" "#PWR019"
-			(at 231.14 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "GND"
-			(at 231.14 55.88 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 231.14 50.8 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 231.14 50.8 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 231.14 50.8 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "fc43de79-8726-476e-b9a4-438cceb89793")
-		)
-		(instances
-			(project "Automative_Hexapod"
-				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/34b09aed-df58-4a48-9644-db85eade86b6"
-					(reference "#PWR019")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "automative_hexapod:Ceramic_Cap_0805_100nF_50V")
-		(at 237.49 39.37 90)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "8bda4171-4557-4091-aa59-6e4a88934f9a")
-		(property "Reference" "C4"
-			(at 240.284 39.37 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Value" "100nF/50V"
-			(at 238.506 42.164 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Footprint" "automative_hexapod:Ceramic_Cap_0805"
-			(at 232.41 43.434 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 232.41 42.926 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "10%, 0805 (2012 Metric)"
-			(at 231.902 42.164 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Supply name" "Thegioiic"
-			(at 232.41 41.91 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Supply part number" "Tụ Gốm 0805 100nF (0.1uF) 50V"
-			(at 231.902 41.91 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Supply URL" "https://www.thegioiic.com/tu-gom-0805-100nf-0-1uf-50v"
-			(at 232.41 43.18 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "a247110a-7bd8-4f27-be3f-bc460b83fdac")
-		)
-		(pin "2"
-			(uuid "dc3c1bb5-1bfd-46df-a73b-a7bab3d8a42e")
-		)
-		(instances
-			(project "Automative_Hexapod"
-				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/34b09aed-df58-4a48-9644-db85eade86b6"
-					(reference "C4")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:GND")
-		(at 200.66 50.8 0)
+		(at 24.13 81.28 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -4394,8 +5162,8 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "903747a4-8ead-4ee3-93ea-5de022d99af6")
-		(property "Reference" "#PWR02"
-			(at 200.66 57.15 0)
+		(property "Reference" "#PWR025"
+			(at 24.13 87.63 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4404,7 +5172,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 200.66 55.88 0)
+			(at 24.13 86.36 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4412,7 +5180,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 200.66 50.8 0)
+			(at 24.13 81.28 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4421,7 +5189,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 200.66 50.8 0)
+			(at 24.13 81.28 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4430,7 +5198,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 200.66 50.8 0)
+			(at 24.13 81.28 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4444,7 +5212,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/34b09aed-df58-4a48-9644-db85eade86b6"
-					(reference "#PWR02")
+					(reference "#PWR025")
 					(unit 1)
 				)
 			)
@@ -4452,7 +5220,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 113.03 153.67 0)
+		(at 113.03 156.21 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -4460,8 +5228,8 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "94d4b264-8f33-4aa5-9e44-e46a8c369063")
-		(property "Reference" "#PWR017"
-			(at 113.03 160.02 0)
+		(property "Reference" "#PWR030"
+			(at 113.03 162.56 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4470,7 +5238,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 113.03 158.75 0)
+			(at 113.03 161.29 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4478,7 +5246,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 113.03 153.67 0)
+			(at 113.03 156.21 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4487,7 +5255,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 113.03 153.67 0)
+			(at 113.03 156.21 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4496,7 +5264,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 113.03 153.67 0)
+			(at 113.03 156.21 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4510,7 +5278,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/34b09aed-df58-4a48-9644-db85eade86b6"
-					(reference "#PWR017")
+					(reference "#PWR030")
 					(unit 1)
 				)
 			)
@@ -4518,7 +5286,7 @@
 	)
 	(symbol
 		(lib_id "power:+3.3V")
-		(at 106.68 143.51 0)
+		(at 106.68 142.24 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -4526,8 +5294,8 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "a5dfd35a-8325-4ab6-9eaf-e13302c9dff6")
-		(property "Reference" "#PWR015"
-			(at 106.68 147.32 0)
+		(property "Reference" "#PWR028"
+			(at 106.68 146.05 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4536,7 +5304,7 @@
 			)
 		)
 		(property "Value" "+3.3V"
-			(at 106.68 138.43 0)
+			(at 106.68 137.16 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4544,7 +5312,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 106.68 143.51 0)
+			(at 106.68 142.24 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4553,7 +5321,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 106.68 143.51 0)
+			(at 106.68 142.24 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4562,7 +5330,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
-			(at 106.68 143.51 0)
+			(at 106.68 142.24 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4576,169 +5344,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/34b09aed-df58-4a48-9644-db85eade86b6"
-					(reference "#PWR015")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "automative_hexapod:Ceramic_Cap_0805_10uF_16V")
-		(at 224.79 39.37 90)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "b7bab444-c3f4-4873-aae4-38aa4a4bed27")
-		(property "Reference" "C3"
-			(at 227.076 39.37 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Value" "10uF/16V"
-			(at 225.552 42.164 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Footprint" "automative_hexapod:Ceramic_Cap_0805"
-			(at 219.71 43.434 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 219.71 42.926 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "10%, 0805 (2012 Metric)"
-			(at 219.202 42.164 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Supply name" "Thegioiic"
-			(at 219.71 41.91 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Supply part number" "Tụ Gốm 0805 10uF 16V"
-			(at 219.202 41.91 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Supply URL" "https://www.thegioiic.com/tu-gom-0805-10uf-16v"
-			(at 219.71 43.18 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "60963e81-527f-4e00-bf6f-492254f211f9")
-		)
-		(pin "2"
-			(uuid "fe16a8b2-e41a-4007-95df-712729a49e9d")
-		)
-		(instances
-			(project "Automative_Hexapod"
-				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/34b09aed-df58-4a48-9644-db85eade86b6"
-					(reference "C3")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:GND")
-		(at 184.15 153.67 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "b86c5711-bea1-4e53-bb1c-a302bb726e41")
-		(property "Reference" "#PWR046"
-			(at 184.15 160.02 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "GND"
-			(at 184.15 158.75 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 184.15 153.67 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 184.15 153.67 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 184.15 153.67 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "d3ab2da6-1a47-4451-bd5f-4c901e8409c9")
-		)
-		(instances
-			(project "Automative_Hexapod"
-				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/34b09aed-df58-4a48-9644-db85eade86b6"
-					(reference "#PWR046")
+					(reference "#PWR028")
 					(unit 1)
 				)
 			)
@@ -4753,7 +5359,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "b8fae5e4-2908-49f8-b02e-ff0963b7139d")
-		(property "Reference" "U1"
+		(property "Reference" "U2"
 			(at 125.73 30.48 0)
 			(effects
 				(font
@@ -5075,7 +5681,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/34b09aed-df58-4a48-9644-db85eade86b6"
-					(reference "U1")
+					(reference "U2")
 					(unit 1)
 				)
 			)
@@ -5083,7 +5689,7 @@
 	)
 	(symbol
 		(lib_id "power:+5V")
-		(at 200.66 30.48 0)
+		(at 24.13 63.5 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -5091,8 +5697,8 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "b97491ab-420e-469b-a5d4-959e14f4ab15")
-		(property "Reference" "#PWR01"
-			(at 200.66 34.29 0)
+		(property "Reference" "#PWR024"
+			(at 24.13 67.31 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5101,7 +5707,7 @@
 			)
 		)
 		(property "Value" "+5V"
-			(at 200.66 25.4 0)
+			(at 24.13 58.42 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5109,7 +5715,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 200.66 30.48 0)
+			(at 24.13 63.5 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5118,7 +5724,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 200.66 30.48 0)
+			(at 24.13 63.5 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5127,7 +5733,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+5V\""
-			(at 200.66 30.48 0)
+			(at 24.13 63.5 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5141,7 +5747,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/34b09aed-df58-4a48-9644-db85eade86b6"
-					(reference "#PWR01")
+					(reference "#PWR024")
 					(unit 1)
 				)
 			)
@@ -5157,7 +5763,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "db2069d0-f4cf-4b7b-bdc6-a3e9ddaa6a29")
-		(property "Reference" "#PWR016"
+		(property "Reference" "#PWR029"
 			(at 111.76 140.97 0)
 			(effects
 				(font
@@ -5207,7 +5813,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/34b09aed-df58-4a48-9644-db85eade86b6"
-					(reference "#PWR016")
+					(reference "#PWR029")
 					(unit 1)
 				)
 			)
@@ -5222,7 +5828,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "eaf8c73a-efb5-4e8e-a50c-49fa4e9a6776")
-		(property "Reference" "D1"
+		(property "Reference" "D6"
 			(at 205.486 59.944 0)
 			(effects
 				(font
@@ -5265,7 +5871,7 @@
 				(hide yes)
 			)
 		)
-		(property "Supply name" "Thegioiic"
+		(property "Supply Name" "Thegioiic"
 			(at 203.708 60.706 0)
 			(effects
 				(font
@@ -5274,7 +5880,7 @@
 				(hide yes)
 			)
 		)
-		(property "Supply part number" "LED Xanh Lá 0805 Dán SMD Trong Suốt"
+		(property "Supply Part Number" "LED Xanh Lá 0805 Dán SMD Trong Suốt"
 			(at 204.978 61.214 0)
 			(effects
 				(font
@@ -5283,8 +5889,17 @@
 				(hide yes)
 			)
 		)
-		(property "Supply URL" "https://www.thegioiic.com/led-xanh-la-0805-dan-smd-trong-suot"
+		(property "Supply URL" "https://www.Thegioiic.com/led-xanh-la-0805-dan-smd-trong-suot"
 			(at 203.708 60.706 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply Name" "Thegioiic"
+			(at 204.47 66.04 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5301,7 +5916,133 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/34b09aed-df58-4a48-9644-db85eade86b6"
-					(reference "D1")
+					(reference "D6")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "automative_hexapod:Ceramic_Cap_1206_100nF_50V")
+		(at 54.61 72.39 270)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "f0986276-a895-4cf1-9c09-9b1ecab90f1f")
+		(property "Reference" "C11"
+			(at 48.514 72.39 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "100nF"
+			(at 58.42 68.58 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "automative_hexapod:Ceramic_Cap_1206"
+			(at 59.69 68.326 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 59.69 68.834 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "10%, 1206 (3216 Metric)"
+			(at 60.198 69.596 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value 2" "50V"
+			(at 58.42 71.12 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(color 0 132 132 1)
+				)
+				(justify left)
+			)
+		)
+		(property "Value 3" "1206"
+			(at 58.42 73.66 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(color 0 132 132 1)
+				)
+				(justify left)
+			)
+		)
+		(property "Value 4" "10%"
+			(at 58.42 76.2 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(color 0 132 132 1)
+				)
+				(justify left)
+			)
+		)
+		(property "Supply Name" "Thegioiic"
+			(at 59.69 69.85 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply Part Number" " Tụ Gốm 1206 100nF (0.1uF) 50V"
+			(at 60.198 69.85 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply URL" "https://www.Thegioiic.com/tu-gom-1206-100nf-0-1uf-50v"
+			(at 59.69 68.58 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "323ab824-af54-46b7-8d0c-2a0084876ea1")
+		)
+		(pin "2"
+			(uuid "94261be1-c084-4df2-8a8c-41271677a265")
+		)
+		(instances
+			(project "Automative_Hexapod"
+				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/34b09aed-df58-4a48-9644-db85eade86b6"
+					(reference "C11")
 					(unit 1)
 				)
 			)
