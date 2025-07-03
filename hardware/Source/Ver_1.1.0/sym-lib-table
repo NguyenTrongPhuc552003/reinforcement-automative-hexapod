@@ -1,4 +1,0 @@
-(sym_lib_table
-  (version 7)
-  (lib (name "automative_hexapod")(type "KiCad")(uri "${KIPRJMOD}/../../Library/source/automative_hexapod.kicad_sym")(options "")(descr ""))
-)
