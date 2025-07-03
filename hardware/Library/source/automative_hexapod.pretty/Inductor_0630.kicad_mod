@@ -1,0 +1,233 @@
+(footprint "Inductor_0630"
+	(version 20241229)
+	(generator "pcbnew")
+	(generator_version "9.0")
+	(layer "F.Cu")
+	(descr "Inductor, APV, APH0630, 6.8x6.6x2.8mm, (http://en.apvind.com/public/upload/20240408/996aafa961154ed753e4983e7eb80fa7.pdf), generated with kicad-footprint-generator gen_inductor.py")
+	(tags "Inductor molded power shielded")
+	(property "Reference" "REF**"
+		(at 0 -4.3 0)
+		(layer "F.SilkS")
+		(uuid "16562773-f210-4b40-884f-8eacda660496")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Value" "L_APV_APH0630"
+		(at 0 4.3 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "05a75f5f-a0db-49b6-a7cf-8743664bd4c0")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "b09cd940-3c09-41e5-bda2-5d989f68ee32")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "c1aecf0f-1372-4035-8fbc-b23dfaae66a1")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr smd)
+	(fp_line
+		(start -3.66 -3.56)
+		(end -3.66 -2.01)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "d0865f98-62ff-4808-9019-1371e3938d55")
+	)
+	(fp_line
+		(start -3.66 -3.56)
+		(end 3.66 -3.56)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "f1c0ae7d-0ac6-4694-9343-02b594b8c678")
+	)
+	(fp_line
+		(start -3.66 3.56)
+		(end -3.66 2.01)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "e9d64458-624c-44d3-bdeb-b71a77290547")
+	)
+	(fp_line
+		(start -3.66 3.56)
+		(end 3.66 3.56)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "08ca1722-7242-4dad-b575-34959256b28f")
+	)
+	(fp_line
+		(start 3.66 -3.56)
+		(end 3.66 -2.01)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "ae740353-914c-4f5c-a61b-0f57dc1d9f6d")
+	)
+	(fp_line
+		(start 3.66 3.56)
+		(end 3.66 2.01)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "9dd37a2d-0b58-4b53-989a-1c962fd73f05")
+	)
+	(fp_line
+		(start -4.45 -3.55)
+		(end -4.45 3.55)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "ee4ebf7c-0fb6-469a-97c8-5cd5e415b0f1")
+	)
+	(fp_line
+		(start -4.45 3.55)
+		(end 4.45 3.55)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "c9659d80-386b-4514-b118-8c7297dba560")
+	)
+	(fp_line
+		(start 4.45 -3.55)
+		(end -4.45 -3.55)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "f19ce2a6-9244-4177-8ae0-e8eb4aaa5228")
+	)
+	(fp_line
+		(start 4.45 3.55)
+		(end 4.45 -3.55)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "487138eb-a23d-4e05-abd7-4f54291e643a")
+	)
+	(fp_line
+		(start -3.4 -3.3)
+		(end -3.4 3.3)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "64fbf53c-3179-4d29-b83c-0df6500786c0")
+	)
+	(fp_line
+		(start -3.4 3.3)
+		(end 3.4 3.3)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "88ee2a84-6bbd-44cb-bf44-e92d8dbfce65")
+	)
+	(fp_line
+		(start 3.4 -3.3)
+		(end -3.4 -3.3)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "82b2d530-3c2f-40b6-a369-fcb7c6817c7c")
+	)
+	(fp_line
+		(start 3.4 3.3)
+		(end 3.4 -3.3)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "e708e32c-e2b9-40ba-ab3c-b659b821ba26")
+	)
+	(fp_text user "${REFERENCE}"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(uuid "c4b5614b-cf0e-4fe3-a88b-5eb8c48dbe59")
+		(effects
+			(font
+				(size 0.783333 0.783333)
+				(thickness 0.1175)
+			)
+		)
+	)
+	(pad "1" smd roundrect
+		(at -3.025 0)
+		(size 2.35 3.5)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(roundrect_rratio 0.106383)
+		(uuid "852c2f6c-c9a1-429a-a6c9-19dbdab32b2b")
+	)
+	(pad "2" smd roundrect
+		(at 3.025 0)
+		(size 2.35 3.5)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(roundrect_rratio 0.106383)
+		(uuid "a63fce26-bf23-497a-b1d2-de917d39c4b7")
+	)
+	(embedded_fonts no)
+	(model "${KICAD9_3DMODEL_DIR}/Inductor_SMD.3dshapes/L_APV_APH0630.step"
+		(offset
+			(xyz 0 0 0)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 0)
+		)
+	)
+)
