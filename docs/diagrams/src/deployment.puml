@@ -13,7 +13,7 @@ skinparam ArrowColor #A80036
 node "BeagleBone AI" as sbc {
   frame "User Space" {
     artifact "Applications" as app {
-      artifact "hexapod_controller" #ADD8E6
+      artifact "hexapod_app" #ADD8E6
       artifact "test_servo"
       artifact "test_movement"
       artifact "test_balance"

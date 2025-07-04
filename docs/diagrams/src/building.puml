@@ -61,7 +61,7 @@ rectangle "Build Environment (Docker)" as build_env <<build>> {
         file "pca9685.ko" as pca_ko
         file "mpu6050.ko" as mpu_ko
         file "servo.ko" as servo_ko
-        file "hexapod_controller" as controller_bin
+        file "hexapod_app" as controller_bin
         file "pytd3_deploy" as td3_bin
         file "install.sh" as install_sh
     }

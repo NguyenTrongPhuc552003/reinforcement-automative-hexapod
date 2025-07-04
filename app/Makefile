@@ -44,7 +44,7 @@ COMMON_OBJS = $(COMMON_SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
 # Main program object and binary
 MAIN_OBJ = $(OBJ_DIR)/main.o
-MAIN_PROG = $(BIN_DIR)/hexapod_controller
+MAIN_PROG = $(BIN_DIR)/hexapod_app
 
 # All dependency files
 ALL_DEPS = $(DEPS) $(TEST_DEPS)
