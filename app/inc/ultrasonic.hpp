@@ -16,24 +16,34 @@ class UltrasonicSensor
 {
 public:
     /**
+     * @brief Sensor pinout definitions
+     * This structure defines the GPIO pins used for the ultrasonic sensor.
+     */
+    struct Pinout
+    {
+        static constexpr const char *TRIGGER_PIN = "P9_12"; ///< GPIO pin for trigger
+        static constexpr const char *ECHO_PIN = "P9_15";    ///< GPIO pin for echo
+    };
+
+    /**
      * @brief Sensor configuration structure
      */
     struct SensorConfig
     {
-        std::string triggerPin;  ///< GPIO pin for trigger (e.g., "P9_12")
-        std::string echoPin;     ///< GPIO pin for echo (e.g., "P9_14")
-        float maxDistance;       ///< Maximum detection distance in cm (default: 400.0)
-        float minDistance;       ///< Minimum detection distance in cm (default: 2.0)
-        int timeoutUs;           ///< Timeout for echo response in microseconds (default: 30000)
-        bool filteringEnabled;   ///< Enable measurement filtering (default: true)
-        int filterWindowSize;    ///< Size of moving average filter window (default: 5)
-        
+        std::string triggerPin; ///< GPIO pin for trigger (e.g., "P9_12")
+        std::string echoPin;    ///< GPIO pin for echo (e.g., "P9_14")
+        float maxDistance;      ///< Maximum detection distance in cm (default: 400.0)
+        float minDistance;      ///< Minimum detection distance in cm (default: 2.0)
+        int timeoutUs;          ///< Timeout for echo response in microseconds (default: 30000)
+        bool filteringEnabled;  ///< Enable measurement filtering (default: true)
+        int filterWindowSize;   ///< Size of moving average filter window (default: 5)
+
         /**
          * @brief Default constructor with sensible defaults
          */
-        SensorConfig() 
-            : triggerPin("P9_12"), echoPin("P9_14"), maxDistance(400.0f), 
-              minDistance(2.0f), timeoutUs(30000), filteringEnabled(true), 
+        SensorConfig()
+            : triggerPin(UltrasonicSensor::Pinout::TRIGGER_PIN), echoPin(UltrasonicSensor::Pinout::ECHO_PIN), maxDistance(400.0f),
+              minDistance(2.0f), timeoutUs(30000), filteringEnabled(true),
               filterWindowSize(5) {}
     };
 
@@ -42,12 +52,12 @@ public:
      */
     struct Measurement
     {
-        float distance;          ///< Distance in centimeters
-        bool valid;              ///< Whether the measurement is valid
+        float distance;                                           ///< Distance in centimeters
+        bool valid;                                               ///< Whether the measurement is valid
         std::chrono::high_resolution_clock::time_point timestamp; ///< When measurement was taken
-        float rawDistance;       ///< Unfiltered distance value
-        int echoTimeUs;          ///< Raw echo time in microseconds
-        
+        float rawDistance;                                        ///< Unfiltered distance value
+        int echoTimeUs;                                           ///< Raw echo time in microseconds
+
         /**
          * @brief Default constructor
          */
@@ -59,7 +69,7 @@ public:
      *
      * @param config Sensor configuration
      */
-    explicit UltrasonicSensor(const SensorConfig& config = SensorConfig());
+    explicit UltrasonicSensor(const SensorConfig &config = SensorConfig());
 
     /**
      * @brief Destroy the Ultrasonic Sensor object
@@ -109,7 +119,7 @@ public:
      * @return true if configuration updated successfully
      * @return false if configuration update failed
      */
-    void setConfig(const SensorConfig& config);
+    void setConfig(const SensorConfig &config);
 
     /**
      * @brief Enable or disable measurement filtering

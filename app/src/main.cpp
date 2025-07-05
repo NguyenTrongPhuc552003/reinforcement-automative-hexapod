@@ -58,8 +58,8 @@ int main(void)
     }
 
     perfMonitor.endFrame();
-    common::ErrorReporter::reportInfo("Main", "Initialization completed in " + 
-        common::StringUtils::formatNumber(perfMonitor.getAverageFrameTime()) + "ms");
+    common::ErrorReporter::reportInfo("Main", "Initialization completed in " +
+                                                  common::StringUtils::formatNumber(perfMonitor.getAverageFrameTime()) + "ms");
 
     // Run main application and check result
     perfMonitor.reset();
@@ -101,11 +101,14 @@ int main(void)
 
     // Final status report
     bool success = (result == application::ExecutionResult::SUCCESS ||
-                   result == application::ExecutionResult::TERMINATED_BY_USER);
-    
-    if (success) {
+                    result == application::ExecutionResult::TERMINATED_BY_USER);
+
+    if (success)
+    {
         common::ErrorReporter::reportInfo("Main", "Application completed successfully");
-    } else {
+    }
+    else
+    {
         common::ErrorReporter::reportError("Main", "Execution", "Application terminated with errors");
     }
 

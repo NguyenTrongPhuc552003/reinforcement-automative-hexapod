@@ -25,6 +25,8 @@
 #define HEXAPOD_IOCTL_GET_IMU _IOR(HEXAPOD_IOC_MAGIC, 2, struct hexapod_imu_data)
 #define HEXAPOD_IOCTL_CALIBRATE _IOW(HEXAPOD_IOC_MAGIC, 3, struct hexapod_calibration)
 #define HEXAPOD_IOCTL_CENTER_ALL _IO(HEXAPOD_IOC_MAGIC, 4)
+#define HEXAPOD_IOCTL_SET_SENSOR_TYPE _IOW(HEXAPOD_IOC_MAGIC, 5, int)
+#define HEXAPOD_IOCTL_GET_SENSOR_TYPE _IOR(HEXAPOD_IOC_MAGIC, 6, int)
 
 namespace hexapod
 {
@@ -488,6 +490,55 @@ namespace hexapod
         }
 
         return true;
+    }
+
+    // Sensor Type Control
+    bool Hexapod::setSensorType(SensorType sensor_type)
+    {
+        // Check if hexapod is initialized
+        if (!pImpl->initialized)
+        {
+            pImpl->setError(ErrorInfo::ErrorCode::NOT_INITIALIZED,
+                            ErrorCategory::PARAMETER,
+                            "Hexapod not initialized");
+            return false;
+        }
+
+        // Convert enum to integer
+        int sensor_type_int = static_cast<int>(sensor_type);
+
+        // Execute IOCTL command
+        return pImpl->executeIoctl(HEXAPOD_IOCTL_SET_SENSOR_TYPE,
+                                   &sensor_type_int,
+                                   "Failed to set sensor type");
+    }
+
+    bool Hexapod::getSensorType(SensorType &sensor_type) const
+    {
+        // Check if hexapod is initialized
+        if (!pImpl->initialized)
+        {
+            pImpl->setError(ErrorInfo::ErrorCode::NOT_INITIALIZED,
+                            ErrorCategory::PARAMETER,
+                            "Hexapod not initialized");
+            return false;
+        }
+
+        // Create variable to receive sensor type
+        int sensor_type_int;
+
+        // Execute IOCTL command
+        bool result = pImpl->executeIoctl(HEXAPOD_IOCTL_GET_SENSOR_TYPE,
+                                          &sensor_type_int,
+                                          "Failed to get sensor type");
+
+        // Convert integer to enum
+        if (result)
+        {
+            sensor_type = static_cast<SensorType>(sensor_type_int);
+        }
+
+        return result;
     }
 
     // Error handling

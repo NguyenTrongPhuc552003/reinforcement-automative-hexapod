@@ -47,10 +47,10 @@ bool test_forward_movement(Hexapod &hexapod, gait::Gait &gait_controller, double
 {
     // Mark hexapod as potentially unused since we only use gait_controller for movement
     (void)hexapod; // Suppress unused parameter warning
-    
-    common::ErrorReporter::reportInfo("Movement-Test", "Testing forward movement for " + 
-        common::StringUtils::formatDuration(duration) + " at speed " + 
-        common::StringUtils::formatNumber(speed, 1));
+
+    common::ErrorReporter::reportInfo("Movement-Test", "Testing forward movement for " +
+                                                           common::StringUtils::formatDuration(duration) + " at speed " +
+                                                           common::StringUtils::formatNumber(speed, 1));
 
     common::PerformanceMonitor perfMonitor;
     auto start_time = common::getCurrentTime();
@@ -59,14 +59,14 @@ bool test_forward_movement(Hexapod &hexapod, gait::Gait &gait_controller, double
     while (running.load() && common::getCurrentTime() < end_time)
     {
         perfMonitor.startFrame();
-        
+
         double current_time = common::getCurrentTime();
         if (!gait_controller.update(current_time, 0.0, speed)) // 0 degrees = forward
         {
             common::ErrorReporter::reportError("Movement-Test", "Gait Update", "Failed to update gait");
             return false;
         }
-        
+
         perfMonitor.endFrame();
 
         // Check for user abort
@@ -98,10 +98,10 @@ bool test_turn_movement(Hexapod &hexapod, gait::Gait &gait_controller, double di
 {
     // Mark hexapod as potentially unused since we only use gait_controller for movement
     (void)hexapod; // Suppress unused parameter warning
-    
+
     std::string direction_name = (direction > 0) ? "right" : "left";
-    common::ErrorReporter::reportInfo("Movement-Test", "Testing " + direction_name + " turn for " + 
-        common::StringUtils::formatDuration(duration));
+    common::ErrorReporter::reportInfo("Movement-Test", "Testing " + direction_name + " turn for " +
+                                                           common::StringUtils::formatDuration(duration));
 
     common::PerformanceMonitor perfMonitor;
     auto start_time = common::getCurrentTime();
@@ -110,14 +110,14 @@ bool test_turn_movement(Hexapod &hexapod, gait::Gait &gait_controller, double di
     while (running.load() && common::getCurrentTime() < end_time)
     {
         perfMonitor.startFrame();
-        
+
         double current_time = common::getCurrentTime();
         if (!gait_controller.update(current_time, direction, speed))
         {
             common::ErrorReporter::reportError("Movement-Test", "Gait Update", "Failed to update gait during turn");
             return false;
         }
-        
+
         perfMonitor.endFrame();
 
         // Check for user abort
@@ -141,12 +141,12 @@ bool test_figure_eight(Hexapod &hexapod, gait::Gait &gait_controller, double spe
 {
     // Mark hexapod as potentially unused since we only use gait_controller for movement
     (void)hexapod; // Suppress unused parameter warning
-    
+
     common::ErrorReporter::reportInfo("Movement-Test", "Testing figure-8 pattern");
 
     const double total_time = 16.0; // 8 seconds per circle
     const double half_time = total_time / 2.0;
-    
+
     common::PerformanceMonitor perfMonitor;
     auto start_time = common::getCurrentTime();
     auto end_time = start_time + total_time;
@@ -156,19 +156,19 @@ bool test_figure_eight(Hexapod &hexapod, gait::Gait &gait_controller, double spe
     while (running.load() && common::getCurrentTime() < end_time)
     {
         perfMonitor.startFrame();
-        
+
         double current_time = common::getCurrentTime();
         double elapsed = current_time - start_time;
-        
+
         // First half: turn right, second half: turn left
         double direction = (elapsed < half_time) ? 90.0 : -90.0;
-        
+
         if (!gait_controller.update(current_time, direction, speed))
         {
             common::ErrorReporter::reportError("Movement-Test", "Figure-8", "Failed to update gait");
             return false;
         }
-        
+
         perfMonitor.endFrame();
 
         // Show progress
@@ -197,12 +197,12 @@ bool test_square_pattern(Hexapod &hexapod, gait::Gait &gait_controller, double s
 {
     // Mark hexapod as potentially unused since we only use gait_controller for movement
     (void)hexapod; // Suppress unused parameter warning
-    
+
     common::ErrorReporter::reportInfo("Movement-Test", "Testing square movement pattern");
 
     const double side_duration = 3.0; // 3 seconds per side
     const double turn_duration = 2.0; // 2 seconds per turn
-    
+
     common::PerformanceMonitor perfMonitor;
     auto start_time = common::getCurrentTime();
 
@@ -234,8 +234,7 @@ bool test_square_pattern(Hexapod &hexapod, gait::Gait &gait_controller, double s
     }
 
     double total_elapsed = common::getCurrentTime() - start_time;
-    std::cout << "Square pattern completed in " << 
-        common::StringUtils::formatDuration(total_elapsed) << std::endl;
+    std::cout << "Square pattern completed in " << common::StringUtils::formatDuration(total_elapsed) << std::endl;
     return true;
 }
 
@@ -244,11 +243,11 @@ bool test_circle_pattern(Hexapod &hexapod, gait::Gait &gait_controller, double s
 {
     // Mark hexapod as potentially unused since we only use gait_controller for movement
     (void)hexapod; // Suppress unused parameter warning
-    
+
     common::ErrorReporter::reportInfo("Movement-Test", "Testing circular movement pattern");
 
     const double total_time = 10.0; // 10 seconds for full circle
-    
+
     common::PerformanceMonitor perfMonitor;
     auto start_time = common::getCurrentTime();
     auto end_time = start_time + total_time;
@@ -258,16 +257,16 @@ bool test_circle_pattern(Hexapod &hexapod, gait::Gait &gait_controller, double s
     while (running.load() && common::getCurrentTime() < end_time)
     {
         perfMonitor.startFrame();
-        
+
         double current_time = common::getCurrentTime();
-        
+
         // Constant turn rate for smooth circle
         if (!gait_controller.update(current_time, 45.0, speed)) // 45° turn rate
         {
             common::ErrorReporter::reportError("Movement-Test", "Circle", "Failed to update gait");
             return false;
         }
-        
+
         perfMonitor.endFrame();
 
         // Show progress
@@ -296,18 +295,16 @@ bool test_gait_comparison(Hexapod &hexapod, gait::Gait &gait_controller)
 {
     // Mark hexapod as potentially unused since we only use gait_controller for movement
     (void)hexapod; // Suppress unused parameter warning
-    
+
     common::ErrorReporter::reportInfo("Movement-Test", "Testing gait comparison");
 
     std::vector<gait::GaitType> gaits = {
         gait::GaitType::TRIPOD,
         gait::GaitType::WAVE,
-        gait::GaitType::RIPPLE
-    };
+        gait::GaitType::RIPPLE};
 
     std::vector<std::string> gait_names = {
-        "Tripod", "Wave", "Ripple"
-    };
+        "Tripod", "Wave", "Ripple"};
 
     const double test_duration = 5.0; // 5 seconds per gait
     const double speed = 0.6;
@@ -326,8 +323,8 @@ bool test_gait_comparison(Hexapod &hexapod, gait::Gait &gait_controller)
 
         if (!gait_controller.setParameters(params))
         {
-            common::ErrorReporter::reportError("Movement-Test", "Gait Setup", 
-                "Failed to set parameters for " + gait_names[i] + " gait");
+            common::ErrorReporter::reportError("Movement-Test", "Gait Setup",
+                                               "Failed to set parameters for " + gait_names[i] + " gait");
             continue;
         }
 
@@ -339,15 +336,15 @@ bool test_gait_comparison(Hexapod &hexapod, gait::Gait &gait_controller)
         while (running.load() && common::getCurrentTime() < end_time)
         {
             perfMonitor.startFrame();
-            
+
             double current_time = common::getCurrentTime();
             if (!gait_controller.update(current_time, 0.0, speed))
             {
-                common::ErrorReporter::reportError("Movement-Test", "Gait Update", 
-                    "Failed during " + gait_names[i] + " gait test");
+                common::ErrorReporter::reportError("Movement-Test", "Gait Update",
+                                                   "Failed during " + gait_names[i] + " gait test");
                 break;
             }
-            
+
             perfMonitor.endFrame();
 
             // Check for abort
@@ -377,9 +374,9 @@ bool test_stress_movement(Hexapod &hexapod, gait::Gait &gait_controller, double 
 {
     // Mark hexapod as potentially unused since we only use gait_controller for movement
     (void)hexapod; // Suppress unused parameter warning
-    
-    common::ErrorReporter::reportInfo("Movement-Test", "Running stress test for " + 
-        common::StringUtils::formatDuration(duration));
+
+    common::ErrorReporter::reportInfo("Movement-Test", "Running stress test for " +
+                                                           common::StringUtils::formatDuration(duration));
 
     common::PerformanceMonitor perfMonitor;
     auto start_time = common::getCurrentTime();
@@ -396,25 +393,25 @@ bool test_stress_movement(Hexapod &hexapod, gait::Gait &gait_controller, double 
     while (running.load() && common::getCurrentTime() < end_time)
     {
         perfMonitor.startFrame();
-        
+
         double current_time = common::getCurrentTime();
         double elapsed = current_time - start_time;
-        
+
         // Change direction every 3 seconds
         int cycle_index = (static_cast<int>(elapsed / 3.0)) % directions.size();
         double direction = directions[cycle_index];
-        
+
         // Vary speed between 0.3 and 0.8
         double speed = 0.3 + 0.5 * sin(elapsed * 0.5);
-        
+
         if (!gait_controller.update(current_time, direction, speed))
         {
             common::ErrorReporter::reportError("Movement-Test", "Stress Test", "Gait update failed");
             return false;
         }
-        
+
         perfMonitor.endFrame();
-        
+
         if (gait_controller.update(current_time, direction, speed))
         {
             successful_updates++;
@@ -424,7 +421,7 @@ bool test_stress_movement(Hexapod &hexapod, gait::Gait &gait_controller, double 
         // Show progress and current status
         if (static_cast<int>(elapsed) % 3 == 0) // Update every 3 seconds
         {
-            std::cout << "\rStress test: " << direction_names[cycle_index] 
+            std::cout << "\rStress test: " << direction_names[cycle_index]
                       << " at speed " << common::StringUtils::formatNumber(speed, 1)
                       << " (" << common::StringUtils::formatNumber((elapsed / duration) * 100, 0) << "%)" << std::flush;
         }
@@ -498,7 +495,8 @@ int main()
     common::PerformanceMonitor perfMonitor;
 
     // Setup terminal for immediate input using common utilities
-    if (!common::TerminalManager::setupImmediate()) {
+    if (!common::TerminalManager::setupImmediate())
+    {
         common::ErrorReporter::reportWarning("Movement-Test", "Failed to setup immediate terminal input");
     }
 
@@ -508,7 +506,7 @@ int main()
 
     // Initialize hexapod
     Hexapod hexapod;
-    
+
     perfMonitor.startFrame();
     if (!hexapod.init())
     {
@@ -519,7 +517,7 @@ int main()
     perfMonitor.endFrame();
 
     common::ErrorReporter::reportInfo("Movement-Test", "Hexapod initialized successfully in " +
-        common::StringUtils::formatNumber(perfMonitor.getAverageFrameTime()) + "ms");
+                                                           common::StringUtils::formatNumber(perfMonitor.getAverageFrameTime()) + "ms");
 
     // Initialize gait controller
     gait::Gait gait_controller;
@@ -554,7 +552,7 @@ int main()
     {
         std::cout << "Enter command (h for help): ";
         char command;
-        
+
         if (common::TerminalManager::readChar(command))
         {
             switch (command)
@@ -564,7 +562,7 @@ int main()
                 gait_controller.centerLegs();
                 break;
 
-            case '2': // Backward movement
+            case '2':                                                                // Backward movement
                 test_forward_movement(hexapod, gait_controller, 5.0, current_speed); // Use 180° direction
                 gait_controller.centerLegs();
                 break;

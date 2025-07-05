@@ -9,7 +9,7 @@
 #include <time.h>
 #include <iostream>
 #include "controller.hpp"
-#include "sharpsensor.hpp" // Replace ultrasonic.hpp with sharpsensor.hpp
+#include "ultrasonic.hpp"
 
 namespace controller
 {
@@ -36,22 +36,14 @@ namespace controller
               gaitType(gait::GaitType::TRIPOD),
               state(ControllerState::IDLE),
               terminalConfigured(false),
-              m_irSensorEnabled(false)
+              m_ultrasonicEnabled(false),
+              m_ultrasonicInitialized(false),
+              m_lastDistanceReading(0.0),
+              m_obstacleThreshold(30.0), // 30cm obstacle threshold
+              m_slowdownThreshold(50.0), // 50cm slowdown threshold
+              m_lastReadingTime(0.0)
         {
             clock_gettime(CLOCK_MONOTONIC, &lastUpdate);
-
-            // Create IR distance sensor with default ADC input
-            m_irSensor = std::make_unique<SharpSensor>("in_voltage0_raw");
-            if (!m_irSensor->init())
-            {
-                std::cerr << "Warning: IR distance sensor initialization failed" << std::endl;
-                m_irSensorEnabled = false;
-            }
-            else
-            {
-                std::cout << "IR distance sensor initialized successfully" << std::endl;
-                m_irSensorEnabled = true;
-            }
         }
 
         /**
@@ -61,6 +53,12 @@ namespace controller
          */
         ~ControllerImpl()
         {
+            // Clean up ultrasonic sensor if initialized
+            if (m_ultrasonicInitialized && m_ultrasonicSensor)
+            {
+                m_ultrasonicSensor->cleanup();
+            }
+
             // Restore terminal settings if modified
             if (terminalConfigured)
             {
@@ -69,6 +67,180 @@ namespace controller
 
             // Safety: make sure robot is in a stable pose when destructed
             hexapod.centerAll();
+        }
+
+        /**
+         * @brief Initialize ultrasonic sensor with retry logic
+         *
+         * @return true if sensor was initialized successfully
+         * @return false if sensor initialization failed
+         */
+        bool initializeUltrasonicSensor()
+        {
+            try
+            {
+                // Create ultrasonic sensor instance
+                m_ultrasonicSensor = std::make_unique<UltrasonicSensor>();
+
+                if (!m_ultrasonicSensor)
+                {
+                    std::cerr << "Failed to create ultrasonic sensor instance" << std::endl;
+                    return false;
+                }
+
+                // Initialize with retry logic
+                const int maxRetries = 3;
+                for (int retry = 0; retry < maxRetries; retry++)
+                {
+                    if (m_ultrasonicSensor->init())
+                    {
+                        m_ultrasonicInitialized = true;
+                        m_ultrasonicEnabled = true;
+                        std::cout << "Ultrasonic distance sensor initialized successfully" << std::endl;
+
+                        // Test initial reading
+                        double testDistance = m_ultrasonicSensor->measure().distance; // Get distance measurement
+                        if (testDistance >= 0)
+                        {
+                            std::cout << "Initial distance reading: " << testDistance << " cm" << std::endl;
+                            m_lastDistanceReading = testDistance;
+                            m_lastReadingTime = getCurrentTime();
+                            return true;
+                        }
+                        else
+                        {
+                            std::cerr << "Warning: Initial distance reading failed" << std::endl;
+                        }
+                        return true;
+                    }
+
+                    std::cerr << "Ultrasonic sensor initialization attempt " << (retry + 1) << " failed" << std::endl;
+                    if (retry < maxRetries - 1)
+                    {
+                        std::cout << "Retrying ultrasonic sensor initialization in 500ms..." << std::endl;
+                        usleep(500000); // 500ms delay
+                    }
+                }
+
+                std::cerr << "Warning: Ultrasonic distance sensor initialization failed after "
+                          << maxRetries << " attempts" << std::endl;
+                m_ultrasonicEnabled = false;
+                return false;
+            }
+            catch (const std::exception &e)
+            {
+                std::cerr << "Exception during ultrasonic sensor initialization: " << e.what() << std::endl;
+                m_ultrasonicEnabled = false;
+                return false;
+            }
+        }
+
+        /**
+         * @brief Get current time in seconds
+         *
+         * @return double Current time in seconds
+         */
+        double getCurrentTime() const
+        {
+            struct timespec ts;
+            clock_gettime(CLOCK_MONOTONIC, &ts);
+            return ts.tv_sec + (ts.tv_nsec / 1.0e9);
+        }
+
+        /**
+         * @brief Read distance from ultrasonic sensor with error handling
+         *
+         * @return double Distance in cm, or -1.0 if reading failed
+         */
+        double readUltrasonicDistance()
+        {
+            if (!m_ultrasonicEnabled || !m_ultrasonicInitialized || !m_ultrasonicSensor)
+            {
+                return -1.0;
+            }
+
+            try
+            {
+                double distance = m_ultrasonicSensor->measure().distance; // Get distance measurement
+                double currentTime = getCurrentTime();
+
+                if (distance >= 0)
+                {
+                    // Valid reading
+                    m_lastDistanceReading = distance;
+                    m_lastReadingTime = currentTime;
+                    return distance;
+                }
+                else
+                {
+                    // Invalid reading - use last valid reading if recent enough
+                    if ((currentTime - m_lastReadingTime) < 2.0) // 2 second timeout
+                    {
+                        return m_lastDistanceReading;
+                    }
+                    else
+                    {
+                        return -1.0; // Reading too old
+                    }
+                }
+            }
+            catch (const std::exception &e)
+            {
+                std::cerr << "Exception reading ultrasonic sensor: " << e.what() << std::endl;
+                return -1.0;
+            }
+        }
+
+        /**
+         * @brief Process obstacle avoidance based on ultrasonic readings
+         *
+         * @param distance Current distance reading in cm
+         * @return true if movement should continue normally
+         * @return false if movement should be stopped/modified
+         */
+        bool processObstacleAvoidance(double distance)
+        {
+            if (distance < 0)
+            {
+                // No valid distance reading - continue normally
+                return true;
+            }
+
+            // Check for immediate obstacle (stop and back up)
+            if (distance < m_obstacleThreshold)
+            {
+                std::cout << "Obstacle detected at " << distance << "cm - stopping and backing up" << std::endl;
+
+                // Stop current movement
+                state = ControllerState::IDLE;
+
+                // Set reverse direction for short backup
+                direction = 180.0;            // Backward
+                speed = std::min(speed, 0.3); // Slow speed for safety
+                state = ControllerState::WALKING;
+
+                return false; // Movement was modified
+            }
+            // Check for approaching obstacle (slow down)
+            else if (distance < m_slowdownThreshold)
+            {
+                // Reduce speed proportionally to distance
+                double speedFactor = (distance - m_obstacleThreshold) / (m_slowdownThreshold - m_obstacleThreshold);
+                speedFactor = std::max(0.2, std::min(1.0, speedFactor)); // Clamp between 0.2 and 1.0
+
+                speed = speed * speedFactor;
+
+                if (debug)
+                {
+                    std::cout << "Obstacle approaching at " << distance
+                              << "cm - reducing speed to " << (speed * 100) << "%" << std::endl;
+                }
+
+                return true; // Continue with modified speed
+            }
+
+            // No obstacle - continue normally
+            return true;
         }
 
         /**
@@ -87,6 +259,13 @@ namespace controller
             {
                 std::cerr << "Warning: Failed to configure terminal for immediate input" << std::endl;
                 // Continue anyway - it's not critical for operation
+            }
+
+            // Initialize ultrasonic sensor
+            if (!initializeUltrasonicSensor())
+            {
+                std::cerr << "Warning: Ultrasonic sensor not available - obstacle avoidance disabled" << std::endl;
+                // Continue without ultrasonic sensor
             }
 
             // Initialize gait controller with default parameters
@@ -215,12 +394,51 @@ namespace controller
                 state = ControllerState::IDLE;
                 return hexapod.centerAll();
 
-            // IR sensor toggle
-            case 'u':
-                m_irSensorEnabled = !m_irSensorEnabled;
-                std::cout << "IR distance sensing "
-                          << (m_irSensorEnabled ? "enabled" : "disabled")
-                          << std::endl;
+            // Ultrasonic sensor controls
+            case 'u': // Toggle ultrasonic sensor
+                if (m_ultrasonicInitialized)
+                {
+                    m_ultrasonicEnabled = !m_ultrasonicEnabled;
+                    std::cout << "Ultrasonic distance sensing "
+                              << (m_ultrasonicEnabled ? "enabled" : "disabled")
+                              << std::endl;
+                }
+                else
+                {
+                    std::cout << "Ultrasonic sensor not initialized - attempting re-initialization..." << std::endl;
+                    if (initializeUltrasonicSensor())
+                    {
+                        std::cout << "Ultrasonic sensor re-initialized successfully" << std::endl;
+                    }
+                    else
+                    {
+                        std::cout << "Ultrasonic sensor re-initialization failed" << std::endl;
+                    }
+                }
+                return true;
+
+            case 'o': // Test ultrasonic sensor reading
+                if (m_ultrasonicEnabled && m_ultrasonicInitialized)
+                {
+                    double distance = readUltrasonicDistance();
+                    if (distance >= 0)
+                    {
+                        std::cout << "Distance reading: " << distance << " cm" << std::endl;
+                    }
+                    else
+                    {
+                        std::cout << "Failed to read distance from ultrasonic sensor" << std::endl;
+                    }
+                }
+                else
+                {
+                    std::cout << "Ultrasonic sensor not available" << std::endl;
+                }
+                return true;
+
+            case 'r': // Show obstacle thresholds
+                std::cout << "Current thresholds - Obstacle: " << m_obstacleThreshold
+                          << "cm, Slowdown: " << m_slowdownThreshold << "cm" << std::endl;
                 return true;
 
             default:
@@ -258,6 +476,22 @@ namespace controller
             // Track update result
             bool result = true;
 
+            // Process ultrasonic sensor data if enabled and in walking state
+            if (m_ultrasonicEnabled && m_ultrasonicInitialized &&
+                (state == ControllerState::WALKING || state == ControllerState::ROTATING))
+            {
+                double distance = readUltrasonicDistance();
+                if (distance >= 0)
+                {
+                    // Process obstacle avoidance
+                    if (!processObstacleAvoidance(distance))
+                    {
+                        // Obstacle avoidance modified movement - may need to update gait
+                        result = gait.update(now.tv_sec + now.tv_nsec / 1.0e9, direction, speed) && result;
+                    }
+                }
+            }
+
             // Apply balance adjustments if enabled (in any state)
             if (balanceConfig.enabled)
             {
@@ -286,27 +520,6 @@ namespace controller
                         result = applyTilt(); // Use applyTilt to apply height changes
                     }
                     break;
-                }
-            }
-
-            // Process IR distance sensor data if enabled
-            if (m_irSensorEnabled)
-            {
-                float distance = m_irSensor->readDistanceCm();
-                if (distance > 0)
-                {
-                    // Adjust behavior based on distance
-                    if (distance < 20) // Within 20cm
-                    {
-                        // Stop and back up if too close
-                        state = ControllerState::IDLE;
-                        direction = 180.0; // Back up
-                    }
-                    else if (distance < 50) // Within 50cm
-                    {
-                        // Slow down and prepare to turn
-                        speed = std::min(speed, 0.3);
-                    }
                 }
             }
 
@@ -532,6 +745,22 @@ namespace controller
             ss << "\nCurrent Speed: " << speed;
             ss << "\nCurrent Height: " << height;
 
+            // Add ultrasonic sensor status
+            ss << "\nUltrasonic Sensor: ";
+            if (m_ultrasonicInitialized)
+            {
+                ss << (m_ultrasonicEnabled ? "Enabled" : "Disabled");
+                ss << " (Threshold: " << m_obstacleThreshold << "cm)";
+                if (m_ultrasonicEnabled)
+                {
+                    ss << " (Last reading: " << m_lastDistanceReading << "cm)";
+                }
+            }
+            else
+            {
+                ss << "Not initialized";
+            }
+
             return ss.str();
         }
 
@@ -548,6 +777,16 @@ namespace controller
 
             std::cout << "Controller communication test: OK" << std::endl;
             std::cout << "Communication latency: 2ms" << std::endl;
+
+            // Test ultrasonic sensor communication
+            if (m_ultrasonicInitialized)
+            {
+                std::cout << "Ultrasonic sensor: " << (m_ultrasonicEnabled ? "OK" : "Disabled") << std::endl;
+            }
+            else
+            {
+                std::cout << "Ultrasonic sensor: Not initialized" << std::endl;
+            }
 
             return true;
         }
@@ -596,9 +835,14 @@ namespace controller
         // Balance settings
         BalanceConfig balanceConfig;
 
-        // Ultrasonic sensor replaced with IR distance sensor
-        std::unique_ptr<SharpSensor> m_irSensor;
-        bool m_irSensorEnabled;
+        // Ultrasonic sensor members
+        std::unique_ptr<UltrasonicSensor> m_ultrasonicSensor; ///< Ultrasonic sensor instance
+        bool m_ultrasonicEnabled;                             ///< Whether ultrasonic sensing is enabled
+        bool m_ultrasonicInitialized;                         ///< Whether ultrasonic sensor was successfully initialized
+        double m_lastDistanceReading;                         ///< Last valid distance reading in cm
+        double m_obstacleThreshold;                           ///< Distance threshold for obstacle detection in cm
+        double m_slowdownThreshold;                           ///< Distance threshold for speed reduction in cm
+        double m_lastReadingTime;                             ///< Time of last valid reading
 
         /**
          * @brief Calculate tilt angles from accelerometer data
