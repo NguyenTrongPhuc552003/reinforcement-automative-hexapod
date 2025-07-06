@@ -41,9 +41,18 @@ namespace controller
               m_lastDistanceReading(0.0),
               m_obstacleThreshold(30.0), // 30cm obstacle threshold
               m_slowdownThreshold(50.0), // 50cm slowdown threshold
-              m_lastReadingTime(0.0)
+              m_lastReadingTime(0.0),
+              m_currentSensorType(hexapod::SensorType::AUTO) // Default to auto-detect
         {
             clock_gettime(CLOCK_MONOTONIC, &lastUpdate);
+
+            // Initialize with auto-detect sensor mode
+            hexapod::SensorType detectedSensor;
+            if (hexapod.getSensorType(detectedSensor))
+            {
+                m_currentSensorType = detectedSensor;
+                std::cout << "Detected IMU sensor: " << getSensorTypeName(m_currentSensorType) << std::endl;
+            }
         }
 
         /**
@@ -313,6 +322,26 @@ namespace controller
         }
 
         /**
+         * @brief Read accelerometer data and calculate tilt angles
+         *
+         * @param roll Output roll angle in degrees
+         * @param pitch Output pitch angle in degrees
+         */
+        void readAccelerometerAndCalculateTilt(double &roll, double &pitch)
+        {
+            hexapod::ImuData imuData;
+            if (hexapod.getImuData(imuData))
+            {
+                // Calculate tilt angles based on current sensor type
+                calculateTilt(imuData, roll, pitch);
+            }
+            else
+            {
+                roll = pitch = 0.0; // Default to zero if reading fails
+            }
+        }
+
+        /**
          * @brief Process keyboard input command
          *
          * @param key Input key character
@@ -439,6 +468,23 @@ namespace controller
             case 'r': // Show obstacle thresholds
                 std::cout << "Current thresholds - Obstacle: " << m_obstacleThreshold
                           << "cm, Slowdown: " << m_slowdownThreshold << "cm" << std::endl;
+                return true;
+
+            // IMU sensor controls
+            case 'x': // Switch to MPU6050
+                switchImuSensor(hexapod::SensorType::MPU6050);
+                return true;
+
+            case 'c': // Switch to ADXL345
+                switchImuSensor(hexapod::SensorType::ADXL345);
+                return true;
+
+            case 't': // Toggle auto-detect
+                switchImuSensor(hexapod::SensorType::AUTO);
+                return true;
+
+            case 'p': // Display IMU info
+                displaySensorInfo();
                 return true;
 
             default:
@@ -844,6 +890,102 @@ namespace controller
         double m_slowdownThreshold;                           ///< Distance threshold for speed reduction in cm
         double m_lastReadingTime;                             ///< Time of last valid reading
 
+        // Current IMU sensor type
+        hexapod::SensorType m_currentSensorType;
+
+        /**
+         * @brief Get a human-readable name for a sensor type
+         *
+         * @param type The sensor type
+         * @return const char* Human-readable sensor name
+         */
+        const char *getSensorTypeName(hexapod::SensorType type) const
+        {
+            switch (type)
+            {
+            case hexapod::SensorType::MPU6050:
+                return "MPU6050 6-axis IMU";
+            case hexapod::SensorType::ADXL345:
+                return "ADXL345 3-axis Accelerometer";
+            case hexapod::SensorType::AUTO:
+                return "Auto-detect";
+            default:
+                return "Unknown sensor";
+            }
+        }
+
+        /**
+         * @brief Switch to a specific IMU sensor
+         *
+         * @param sensorType The sensor type to switch to
+         * @return true if switch successful
+         * @return false if switch failed
+         */
+        bool switchImuSensor(hexapod::SensorType sensorType)
+        {
+            if (hexapod.setSensorType(sensorType))
+            {
+                // Update local cache of current sensor
+                hexapod.getSensorType(m_currentSensorType);
+                std::cout << "Switched to " << getSensorTypeName(m_currentSensorType) << std::endl;
+
+                // Display information about the new sensor
+                displaySensorInfo();
+                return true;
+            }
+
+            std::cerr << "Failed to switch sensor: " << hexapod.getLastErrorMessage() << std::endl;
+            return false;
+        }
+
+        /**
+         * @brief Display information about the current IMU sensor
+         */
+        void displaySensorInfo()
+        {
+            hexapod::ImuData imuData;
+            if (hexapod.getImuData(imuData))
+            {
+                std::cout << "\n=== IMU Sensor Information ===\n";
+                std::cout << "Sensor Type: " << getSensorTypeName(m_currentSensorType) << std::endl;
+
+                // Display feature information
+                std::cout << "Features: ";
+                if (m_currentSensorType == hexapod::SensorType::MPU6050)
+                {
+                    std::cout << "Accelerometer (X,Y,Z) and Gyroscope (X,Y,Z)" << std::endl;
+                }
+                else if (m_currentSensorType == hexapod::SensorType::ADXL345)
+                {
+                    std::cout << "Accelerometer (X,Y,Z) only" << std::endl;
+                }
+
+                // Show current readings
+                std::cout << "Current Readings:" << std::endl;
+                std::cout << "  Accel: X=" << std::setw(6) << imuData.getAccelX() << "g, "
+                          << "Y=" << std::setw(6) << imuData.getAccelY() << "g, "
+                          << "Z=" << std::setw(6) << imuData.getAccelZ() << "g" << std::endl;
+
+                // Only show gyro for MPU6050
+                if (m_currentSensorType == hexapod::SensorType::MPU6050)
+                {
+                    std::cout << "  Gyro:  X=" << std::setw(6) << imuData.getGyroX() << "°/s, "
+                              << "Y=" << std::setw(6) << imuData.getGyroY() << "°/s, "
+                              << "Z=" << std::setw(6) << imuData.getGyroZ() << "°/s" << std::endl;
+                }
+
+                // Calculate and show tilt
+                double roll, pitch;
+                calculateTilt(imuData, roll, pitch);
+                std::cout << "  Tilt:  Roll=" << std::setw(6) << std::fixed << std::setprecision(2) << roll << "°, "
+                          << "Pitch=" << std::setw(6) << pitch << "°" << std::endl;
+            }
+            else
+            {
+                std::cerr << "Failed to read sensor data" << std::endl;
+            }
+        }
+
         /**
          * @brief Calculate tilt angles from accelerometer data
          *
@@ -853,144 +995,86 @@ namespace controller
          */
         void calculateTilt(const hexapod::ImuData &imu_data, double &roll, double &pitch)
         {
-            // Conversion for accessing accelerometer data in g units
+            // Get accelerometer data in g units using the sensor's conversion
             double ax = imu_data.getAccelX();
             double ay = imu_data.getAccelY();
             double az = imu_data.getAccelZ();
 
-            // Calculate roll and pitch in degrees
-            roll = atan2(ay, az) * 180.0 / M_PI;
-            pitch = atan2(-ax, sqrt(ay * ay + az * az)) * 180.0 / M_PI;
+            // Calculate roll (rotation around X axis) and pitch (rotation around Y axis)
+            if (m_currentSensorType == hexapod::SensorType::ADXL345)
+            {
+                // ADXL345 might have different axis orientation than MPU6050
+                // Adjust calculations if needed based on mounting orientation
+                roll = atan2(ay, az) * 180.0 / M_PI;
+                pitch = atan2(-ax, sqrt(ay * ay + az * az)) * 180.0 / M_PI;
+
+                // Apply low-pass filtering for ADXL345 (which lacks gyro for complementary filtering)
+                static double lastRoll = 0.0;
+                static double lastPitch = 0.0;
+                const double filterFactor = 0.8; // Higher = more filtering (0-1)
+
+                roll = lastRoll * filterFactor + roll * (1.0 - filterFactor);
+                pitch = lastPitch * filterFactor + pitch * (1.0 - filterFactor);
+
+                lastRoll = roll;
+                lastPitch = pitch;
+            }
+            else
+            {
+                // Standard MPU6050 calculations
+                roll = atan2(ay, az) * 180.0 / M_PI;
+                pitch = atan2(-ax, sqrt(ay * ay + az * az)) * 180.0 / M_PI;
+
+                // If gyro data is available, we could implement complementary filter
+                // Not implemented here as we're focusing on making both sensors work
+            }
         }
 
         /**
-         * @brief Apply balance adjustments to leg positions
+         * @brief Apply balance adjustments based on tilt angles
          *
-         * @param roll Current roll angle in degrees
-         * @param pitch Current pitch angle in degrees
-         * @return true if adjustments were successful
-         * @return false if adjustments failed
+         * @param roll Roll angle in degrees
+         * @param pitch Pitch angle in degrees
+         * @return true if balance adjustments succeeded
+         * @return false if balance adjustments failed
          */
         bool applyBalanceAdjustments(double roll, double pitch)
         {
-            // Apply deadzone - ignore small tilts
-            if (fabs(roll) < balanceConfig.deadzone)
-                roll = 0;
-            if (fabs(pitch) < balanceConfig.deadzone)
-                pitch = 0;
-
-            // Cap maximum adjustment
-            roll = std::max(-balanceConfig.max_tilt_adjustment,
-                            std::min(balanceConfig.max_tilt_adjustment, roll));
-            pitch = std::max(-balanceConfig.max_tilt_adjustment,
-                             std::min(balanceConfig.max_tilt_adjustment, pitch));
-
-            // Scale by response factor
-            roll *= balanceConfig.response_factor;
-            pitch *= balanceConfig.response_factor;
-
-            // No need to adjust if tilt is negligible
-            if (fabs(roll) < 0.1 && fabs(pitch) < 0.1)
+            if (!balanceConfig.enabled)
                 return true;
 
-            // Current leg positions - used when combining with gait
-            std::vector<kinematics::Point3D> legPositions(hexapod::Config::NUM_LEGS);
-            std::vector<hexapod::LegPosition> currentAngles(hexapod::Config::NUM_LEGS);
-
-            // Get current leg positions if we're in walking state
-            if (state == ControllerState::WALKING || state == ControllerState::ROTATING)
+            // Apply deadzone to reduce jitter
+            if (std::abs(roll) < balanceConfig.deadzone && std::abs(pitch) < balanceConfig.deadzone)
             {
-                for (int leg = 0; leg < hexapod::Config::NUM_LEGS; leg++)
+                // Reset any previous tilt adjustments if we're in the deadzone
+                if (tiltX != 0.0 || tiltY != 0.0)
                 {
-                    hexapod::LegPosition angles;
-                    if (hexapod.getLegPosition(leg, angles))
-                    {
-                        currentAngles[leg] = angles;
-                        kinematics::Point3D pos;
-                        if (kinematics::Kinematics::getInstance().forwardKinematics(angles, pos))
-                        {
-                            legPositions[leg] = pos;
-                        }
-                    }
+                    tiltX = tiltY = 0.0;
+                    return hexapod.centerAll();
                 }
+                return true;
             }
 
-            // Loop through each leg to calculate and apply adjustments
-            bool success = true;
-            for (int leg = 0; leg < hexapod::Config::NUM_LEGS; leg++)
-            {
-                // Define base position for this leg
-                double baseX, baseY, baseZ = -120.0; // Default base height
+            // Scale response factor
+            double responseScale = balanceConfig.response_factor;
+            
+            // Calculate counter-tilt (negative because we want to counteract the tilt)
+            // Clamp to maximum adjustment range
+            double adjustX = -pitch * responseScale;
+            double adjustY = -roll * responseScale;
+            
+            // Limit adjustments to maximum allowed range
+            adjustX = std::max(-balanceConfig.max_tilt_adjustment, 
+                     std::min(balanceConfig.max_tilt_adjustment, adjustX));
+            adjustY = std::max(-balanceConfig.max_tilt_adjustment, 
+                     std::min(balanceConfig.max_tilt_adjustment, adjustY));
 
-                // If we're in walking state, use current positions as base
-                if (state == ControllerState::WALKING || state == ControllerState::ROTATING)
-                {
-                    baseX = legPositions[leg].x;
-                    baseY = legPositions[leg].y;
-                    baseZ = legPositions[leg].z;
-                }
-                else
-                {
-                    // Default leg positions when standing
-                    switch (leg)
-                    {
-                    case 0: // Front right
-                        baseX = 100.0;
-                        baseY = 100.0;
-                        break;
-                    case 1: // Middle right
-                        baseX = 0.0;
-                        baseY = 120.0;
-                        break;
-                    case 2: // Rear right
-                        baseX = -100.0;
-                        baseY = 100.0;
-                        break;
-                    case 3: // Front left
-                        baseX = 100.0;
-                        baseY = -100.0;
-                        break;
-                    case 4: // Middle left
-                        baseX = 0.0;
-                        baseY = -120.0;
-                        break;
-                    case 5: // Rear left
-                        baseX = -100.0;
-                        baseY = -100.0;
-                        break;
-                    }
-                }
+            // Apply the calculated tilt
+            tiltX = adjustX;
+            tiltY = adjustY;
 
-                // Calculate leg height adjustment based on tilt
-                double zAdjustment = sin(roll * M_PI / 180.0) * baseY -
-                                     sin(pitch * M_PI / 180.0) * baseX;
-
-                // Apply adjustment to position - create a tilted plane
-                kinematics::Point3D targetPos(baseX, baseY, baseZ + zAdjustment);
-
-                // Use inverse kinematics to get joint angles
-                hexapod::LegPosition legPos;
-                legPos.leg_num = leg;
-
-                if (kinematics::Kinematics::getInstance().inverseKinematics(targetPos, legPos))
-                {
-                    // Apply the calculated position
-                    if (!hexapod.setLegPosition(leg, legPos))
-                    {
-                        if (debug)
-                            std::cerr << "Failed to set position for leg " << leg << std::endl;
-                        success = false;
-                    }
-                }
-                else
-                {
-                    if (debug)
-                        std::cerr << "Inverse kinematics failed for leg " << leg << std::endl;
-                    success = false;
-                }
-            }
-
-            return success;
+            // Use the existing tilt application function
+            return applyTilt();
         }
 
         /**
@@ -1018,7 +1102,12 @@ namespace controller
         }
 
         /**
-         * @brief Handle balance logic in update method
+         * @brief Update controller state
+         *
+         * Should be called regularly to maintain movement patterns and state transitions
+         *
+         * @return true if update was successful
+         * @return false if update failed
          */
         bool updateBalance()
         {
@@ -1148,6 +1237,22 @@ namespace controller
     BalanceConfig Controller::getBalanceConfig() const
     {
         return pImpl->balanceConfig;
+    }
+
+    // Implement the IMU sensor control methods
+    void Controller::switchImuSensor(hexapod::SensorType sensorType)
+    {
+        pImpl->switchImuSensor(sensorType);
+    }
+
+    hexapod::SensorType Controller::getCurrentImuSensor() const
+    {
+        return pImpl->m_currentSensorType;
+    }
+
+    void Controller::displayImuInfo() const
+    {
+        pImpl->displaySensorInfo();
     }
 
 } // namespace controller

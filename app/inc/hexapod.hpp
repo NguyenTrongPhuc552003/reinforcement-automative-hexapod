@@ -146,18 +146,30 @@ namespace hexapod
         uint8_t sensor_type; ///< Which sensor provided the data
 
         // Helper methods to convert raw data to physical units
-        float getAccelX() const { return accel_x / 16384.0f; } ///< Convert to g's
-        float getAccelY() const { return accel_y / 16384.0f; } ///< Convert to g's
-        float getAccelZ() const { return accel_z / 16384.0f; } ///< Convert to g's
-        float getGyroX() const { return gyro_x / 65.5f; }      ///< Convert to degrees/second
-        float getGyroY() const { return gyro_y / 65.5f; }      ///< Convert to degrees/second
-        float getGyroZ() const { return gyro_z / 65.5f; }      ///< Convert to degrees/second
+        float getAccelX() const
+        {
+            return accel_x / (getSensorType() == SensorType::ADXL345 ? 256.0f : 16384.0f);
+        } ///< Convert to g's
+
+        float getAccelY() const
+        {
+            return accel_y / (getSensorType() == SensorType::ADXL345 ? 256.0f : 16384.0f);
+        } ///< Convert to g's
+
+        float getAccelZ() const
+        {
+            return accel_z / (getSensorType() == SensorType::ADXL345 ? 256.0f : 16384.0f);
+        } ///< Convert to g's
+
+        float getGyroX() const { return gyro_x / 65.5f; } ///< Convert to degrees/second
+        float getGyroY() const { return gyro_y / 65.5f; } ///< Convert to degrees/second
+        float getGyroZ() const { return gyro_z / 65.5f; } ///< Convert to degrees/second
 
         /**
          * @brief Check if gyroscope data is available
          * @return true if sensor provides gyroscope data
          */
-        bool hasGyro() const { return sensor_type == static_cast<uint8_t>(SensorType::MPU6050); }
+        bool hasGyro() const { return getSensorType() == SensorType::MPU6050; }
 
         /**
          * @brief Get the sensor type that provided this data

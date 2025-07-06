@@ -243,6 +243,29 @@ namespace controller
          */
         bool testServoConnectivity() const;
 
+        //--------------------------------------------------------------------------
+        // IMU Sensor Control
+        //--------------------------------------------------------------------------
+
+        /**
+         * @brief Switch to a specific IMU sensor
+         *
+         * @param sensorType The sensor type to switch to
+         */
+        void switchImuSensor(hexapod::SensorType sensorType);
+
+        /**
+         * @brief Get the current active IMU sensor
+         *
+         * @return SensorType Currently active sensor
+         */
+        hexapod::SensorType getCurrentImuSensor() const;
+
+        /**
+         * @brief Display information about the current IMU sensor
+         */
+        void displayImuInfo() const;
+
     private:
         /**
          * @brief Implementation pointer (PIMPL idiom)
