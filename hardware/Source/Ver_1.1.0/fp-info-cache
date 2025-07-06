@@ -1,4 +1,4 @@
-25651874363461120
+25651875025528483
 Audio_Module
 Reverb_BTDR-1H
 Digital Reverberation Unit, http://www.belton.co.kr/inc/downfile.php?seq=17&file=pdf (footprint from http://www.uk-electronic.de/PDF/BTDR-1.pdf)
@@ -102716,21 +102716,21 @@ JST-XH-SMD-2-2.54mm
 
 0
 4
-2
+3
 automative_hexapod
 JST-XH-SMD-3-2.54mm
 
 
 0
 5
-3
+4
 automative_hexapod
 JST-XH-SMD-4-2.54mm
 
 
 0
 6
-4
+5
 automative_hexapod
 JST_PH_B3B-PH-K_1x03_P2.00mm_Vertical
 JST PH series connector, B3B-PH-K (http://www.jst-mfg.com/product/pdf/eng/ePH.pdf), generated with kicad-footprint-generator
