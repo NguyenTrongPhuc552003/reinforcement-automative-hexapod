@@ -64,7 +64,8 @@ int main()
     common::PerformanceMonitor initMonitor;
 
     // Setup terminal for immediate input using common utilities
-    if (!common::TerminalManager::setupImmediate()) {
+    if (!common::TerminalManager::setupImmediate())
+    {
         common::ErrorReporter::reportWarning("MPU6050-Test", "Failed to setup immediate terminal input");
     }
 
@@ -75,19 +76,20 @@ int main()
 
     std::cout << "MPU6050 Test - Press Ctrl+C to exit" << std::endl;
     std::cout << "================================" << std::endl;
-    std::cout << "Note: MPU6050 sensor automatically wakes from sleep mode when needed\n" << std::endl;
+    std::cout << "Note: MPU6050 sensor automatically wakes from sleep mode when needed\n"
+              << std::endl;
 
     while (!initialized && retries-- > 0)
     {
         common::ErrorReporter::reportInfo("MPU6050-Test", "Initializing hexapod hardware (attempt " + std::to_string(3 - retries) + ")");
-        
+
         initMonitor.startFrame();
         if (hexapod.init())
         {
             initialized = true;
             initMonitor.endFrame();
             common::ErrorReporter::reportInfo("MPU6050-Test", "Hexapod initialized successfully in " +
-                common::StringUtils::formatNumber(initMonitor.getAverageFrameTime()) + "ms");
+                                                                  common::StringUtils::formatNumber(initMonitor.getAverageFrameTime()) + "ms");
         }
         else
         {
@@ -116,13 +118,14 @@ int main()
     double last_stats_time = common::getCurrentTime();
 
     std::cout << "\nReading IMU data..." << std::endl;
-    std::cout << "Press 'q' to quit, 's' to show statistics\n" << std::endl;
+    std::cout << "Press 'q' to quit, 's' to show statistics\n"
+              << std::endl;
 
     while (running.load())
     {
         ImuData imuData;
         char key;
-        
+
         perfMonitor.startFrame();
         double start_time = common::getCurrentTime();
 
@@ -144,7 +147,7 @@ int main()
         bool success = hexapod.getImuData(imuData);
         double now = common::getCurrentTime();
         double elapsed = now - start_time;
-        
+
         perfMonitor.endFrame();
         total_reads++;
 
@@ -156,12 +159,12 @@ int main()
 
             // Print formatted IMU data using common string utilities
             std::cout << "\rAccel: X=" << std::showpos << std::setw(6)
-                      << common::StringUtils::formatNumber(imuData.getAccelX(), 2) << "g Y=" << std::setw(6) 
+                      << common::StringUtils::formatNumber(imuData.getAccelX(), 2) << "g Y=" << std::setw(6)
                       << common::StringUtils::formatNumber(imuData.getAccelY(), 2)
-                      << "g Z=" << std::setw(6) << common::StringUtils::formatNumber(imuData.getAccelZ(), 2) 
-                      << "g | Gyro: X=" << std::setw(7) << common::StringUtils::formatNumber(imuData.getGyroX(), 1) 
+                      << "g Z=" << std::setw(6) << common::StringUtils::formatNumber(imuData.getAccelZ(), 2)
+                      << "g | Gyro: X=" << std::setw(7) << common::StringUtils::formatNumber(imuData.getGyroX(), 1)
                       << "° Y=" << std::setw(7) << common::StringUtils::formatNumber(imuData.getGyroY(), 1)
-                      << "° Z=" << std::setw(7) << common::StringUtils::formatNumber(imuData.getGyroZ(), 1) 
+                      << "° Z=" << std::setw(7) << common::StringUtils::formatNumber(imuData.getGyroZ(), 1)
                       << "°/s" << std::flush;
             last_successful_read = now;
             successful_reads++;

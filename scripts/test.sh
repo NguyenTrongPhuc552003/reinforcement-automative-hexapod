@@ -73,7 +73,7 @@ case "$COMMAND" in
         echo "Test starting at $(date)" > "$LOG_FILE"
 
         # Test app with basic movements
-        remote_exec "cd $REMOTE_DIR && ./hexapod_controller"
+        remote_exec "cd $REMOTE_DIR && ./hexapod_app"
         if [ $? -ne 0 ]; then
             echo -e "${RED}Application tests failed${NC}"
             exit 1
@@ -163,7 +163,7 @@ case "$COMMAND" in
 
     status)
         echo -e "${YELLOW}Checking hexapod system status...${NC}"
-        remote_exec "cd $REMOTE_DIR && ./hexapod_controller --status"
+        remote_exec "cd $REMOTE_DIR && ./hexapod_app --status"
         exit $?
         ;;
 

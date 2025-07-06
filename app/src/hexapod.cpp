@@ -25,6 +25,8 @@
 #define HEXAPOD_IOCTL_GET_IMU _IOR(HEXAPOD_IOC_MAGIC, 2, struct hexapod_imu_data)
 #define HEXAPOD_IOCTL_CALIBRATE _IOW(HEXAPOD_IOC_MAGIC, 3, struct hexapod_calibration)
 #define HEXAPOD_IOCTL_CENTER_ALL _IO(HEXAPOD_IOC_MAGIC, 4)
+#define HEXAPOD_IOCTL_SET_SENSOR_TYPE _IOW(HEXAPOD_IOC_MAGIC, 5, int)
+#define HEXAPOD_IOCTL_GET_SENSOR_TYPE _IOR(HEXAPOD_IOC_MAGIC, 6, int)
 
 namespace hexapod
 {
@@ -62,6 +64,17 @@ namespace hexapod
         uint8_t leg_num;
         struct hexapod_leg_joint offsets;
     };
+
+    // ADXL345 scaling factors - add after the hexapod_imu_data struct
+    namespace SensorScaling
+    {
+        // MPU6050 scaling factors (existing values)
+        constexpr float MPU6050_ACCEL_SCALE = 16384.0f; // LSB/g
+        constexpr float MPU6050_GYRO_SCALE = 65.5f;     // LSB/(deg/s)
+
+        // ADXL345 scaling factors
+        constexpr float ADXL345_ACCEL_SCALE = 256.0f; // LSB/g (in ±2g range)
+    }
 
     //==============================================================================
     // Utility Functions
@@ -372,31 +385,23 @@ namespace hexapod
     // IMU Data Access
     bool Hexapod::getImuData(ImuData &data) const
     {
-        // Parameter validation
         if (!pImpl->initialized)
         {
-            const_cast<HexapodImpl *>(pImpl.get())->setError(ErrorInfo::ErrorCode::NOT_INITIALIZED, ErrorCategory::PARAMETER, "Hexapod not initialized");
+            pImpl->setError(ErrorInfo::ErrorCode::NOT_INITIALIZED,
+                            ErrorCategory::PARAMETER,
+                            "Hexapod not initialized");
             return false;
         }
 
-        if (pImpl->fd < 0)
-        {
-            const_cast<HexapodImpl *>(pImpl.get())->setError(ErrorInfo::ErrorCode::BAD_FILE, ErrorCategory::SYSTEM, "Invalid file descriptor");
-            return false;
-        }
-
-        // Create kernel-compatible structure
         struct hexapod_imu_data kernel_data;
-
-        // Request data via IOCTL
-        int ret = ioctl(pImpl->fd, HEXAPOD_IOCTL_GET_IMU, &kernel_data);
-        if (ret < 0)
+        if (ioctl(pImpl->fd, HEXAPOD_IOCTL_GET_IMU, &kernel_data) < 0)
         {
-            const_cast<HexapodImpl *>(pImpl.get())->setError(ErrorInfo::ErrorCode::COMM_ERROR, ErrorCategory::COMMUNICATION, std::string("Failed to get IMU data: ") + strerror(errno));
+            pImpl->setError(errno, ErrorCategory::COMMUNICATION,
+                            "Failed to get IMU data");
             return false;
         }
 
-        // Copy data to output parameter
+        // Copy data from kernel structure
         data.accel_x = kernel_data.accel_x;
         data.accel_y = kernel_data.accel_y;
         data.accel_z = kernel_data.accel_z;
@@ -404,8 +409,15 @@ namespace hexapod
         data.gyro_y = kernel_data.gyro_y;
         data.gyro_z = kernel_data.gyro_z;
 
-        // Cache data
-        pImpl->imu_data = data;
+        // Get current sensor type to set the right scaling factors
+        SensorType sensor_type;
+        if (!getSensorType(sensor_type))
+        {
+            // Default to MPU6050 if we can't determine sensor type
+            sensor_type = SensorType::MPU6050;
+        }
+        data.sensor_type = static_cast<uint8_t>(sensor_type);
+
         return true;
     }
 
@@ -488,6 +500,55 @@ namespace hexapod
         }
 
         return true;
+    }
+
+    // Sensor Type Control
+    bool Hexapod::setSensorType(SensorType sensor_type)
+    {
+        // Check if hexapod is initialized
+        if (!pImpl->initialized)
+        {
+            pImpl->setError(ErrorInfo::ErrorCode::NOT_INITIALIZED,
+                            ErrorCategory::PARAMETER,
+                            "Hexapod not initialized");
+            return false;
+        }
+
+        // Convert enum to integer
+        int sensor_type_int = static_cast<int>(sensor_type);
+
+        // Execute IOCTL command
+        return pImpl->executeIoctl(HEXAPOD_IOCTL_SET_SENSOR_TYPE,
+                                   &sensor_type_int,
+                                   "Failed to set sensor type");
+    }
+
+    bool Hexapod::getSensorType(SensorType &sensor_type) const
+    {
+        // Check if hexapod is initialized
+        if (!pImpl->initialized)
+        {
+            pImpl->setError(ErrorInfo::ErrorCode::NOT_INITIALIZED,
+                            ErrorCategory::PARAMETER,
+                            "Hexapod not initialized");
+            return false;
+        }
+
+        // Create variable to receive sensor type
+        int sensor_type_int;
+
+        // Execute IOCTL command
+        bool result = pImpl->executeIoctl(HEXAPOD_IOCTL_GET_SENSOR_TYPE,
+                                          &sensor_type_int,
+                                          "Failed to get sensor type");
+
+        // Convert integer to enum
+        if (result)
+        {
+            sensor_type = static_cast<SensorType>(sensor_type_int);
+        }
+
+        return result;
     }
 
     // Error handling

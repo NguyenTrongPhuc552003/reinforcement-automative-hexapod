@@ -111,5 +111,9 @@ wheels/
 *.egg
 
 # Hardware
-hardware/source/Automative_Hexapod/Automative_Hexapod-backups
+**/Automative_Hexapod-backups
 **/~Automative_Hexapod.kicad_pcb.lck
+**/~Automative_Hexapod.kicad_sch.lck
+**/Test_IR_Distance-backups
+**/~Test_IR_Distance.kicad_pcb.lck
+**/~Test_IR_Distance.kicad_sch.lck

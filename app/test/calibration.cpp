@@ -46,7 +46,7 @@ void show_calibration(const std::vector<calibration::Calibration> &calibrations)
     std::cout << "===========================\n";
     std::cout << "Leg | Hip  | Knee | Ankle\n";
     std::cout << "----+------+------+------\n";
-    
+
     for (const auto &cal : calibrations)
     {
         std::cout << std::setw(3) << static_cast<int>(cal.leg_num) << " | "
@@ -82,8 +82,8 @@ bool run_calibration_wizard(hexapod::Hexapod &hexapod, std::vector<calibration::
 
         if (!hexapod.setLegPosition(leg, neutral))
         {
-            common::ErrorReporter::reportError("Calibration-Test", "Leg Movement", 
-                "Failed to move leg " + std::to_string(leg) + " to neutral position");
+            common::ErrorReporter::reportError("Calibration-Test", "Leg Movement",
+                                               "Failed to move leg " + std::to_string(leg) + " to neutral position");
             continue;
         }
 
@@ -123,7 +123,7 @@ bool run_calibration_wizard(hexapod::Hexapod &hexapod, std::vector<calibration::
         if (hexapod.setCalibration(leg, cal.hip_offset, cal.knee_offset, cal.ankle_offset))
         {
             std::cout << "Applied calibration to leg " << leg << std::endl;
-            
+
             // Test the calibrated leg
             if (hexapod.setLegPosition(leg, neutral))
             {
@@ -131,14 +131,14 @@ bool run_calibration_wizard(hexapod::Hexapod &hexapod, std::vector<calibration::
             }
             else
             {
-                common::ErrorReporter::reportWarning("Calibration-Test", 
-                    "Test movement failed for leg " + std::to_string(leg));
+                common::ErrorReporter::reportWarning("Calibration-Test",
+                                                     "Test movement failed for leg " + std::to_string(leg));
             }
         }
         else
         {
-            common::ErrorReporter::reportError("Calibration-Test", "Calibration Apply", 
-                "Failed to apply calibration to leg " + std::to_string(leg));
+            common::ErrorReporter::reportError("Calibration-Test", "Calibration Apply",
+                                               "Failed to apply calibration to leg " + std::to_string(leg));
         }
 
         std::cout << "Press Enter to continue to next leg...";
@@ -156,32 +156,42 @@ bool test_leg_movement(hexapod::Hexapod &hexapod, int leg_num)
     common::ErrorReporter::reportInfo("Calibration-Test", "Testing movement for leg " + std::to_string(leg_num));
 
     std::vector<hexapod::LegPosition> test_positions;
-    
+
     // Create test positions
     for (int i = 0; i < 5; i++)
     {
         hexapod::LegPosition pos;
         pos.leg_num = leg_num;
-        
+
         switch (i)
         {
         case 0: // Neutral
-            pos.setHip(0); pos.setKnee(0); pos.setAnkle(0);
+            pos.setHip(0);
+            pos.setKnee(0);
+            pos.setAnkle(0);
             break;
         case 1: // Hip forward
-            pos.setHip(30); pos.setKnee(0); pos.setAnkle(0);
+            pos.setHip(30);
+            pos.setKnee(0);
+            pos.setAnkle(0);
             break;
         case 2: // Hip backward
-            pos.setHip(-30); pos.setKnee(0); pos.setAnkle(0);
+            pos.setHip(-30);
+            pos.setKnee(0);
+            pos.setAnkle(0);
             break;
         case 3: // Knee bend
-            pos.setHip(0); pos.setKnee(45); pos.setAnkle(0);
+            pos.setHip(0);
+            pos.setKnee(45);
+            pos.setAnkle(0);
             break;
         case 4: // Ankle flex
-            pos.setHip(0); pos.setKnee(0); pos.setAnkle(30);
+            pos.setHip(0);
+            pos.setKnee(0);
+            pos.setAnkle(30);
             break;
         }
-        
+
         test_positions.push_back(pos);
     }
 
@@ -191,7 +201,7 @@ bool test_leg_movement(hexapod::Hexapod &hexapod, int leg_num)
     for (size_t i = 0; i < test_positions.size(); i++)
     {
         std::cout << "Moving to test position " << (i + 1) << "..." << std::flush;
-        
+
         perfMonitor.startFrame();
         bool result = hexapod.setLegPosition(leg_num, test_positions[i]);
         perfMonitor.endFrame();
@@ -204,8 +214,8 @@ bool test_leg_movement(hexapod::Hexapod &hexapod, int leg_num)
         else
         {
             std::cout << " FAILED" << std::endl;
-            common::ErrorReporter::reportError("Calibration-Test", "Movement Test", 
-                hexapod.getLastErrorMessage());
+            common::ErrorReporter::reportError("Calibration-Test", "Movement Test",
+                                               hexapod.getLastErrorMessage());
             success = false;
         }
 
@@ -232,7 +242,7 @@ void edit_calibration_values(std::vector<calibration::Calibration> &calibrations
 {
     int leg_num;
     std::cout << "Enter leg number (0-" << (hexapod::Config::NUM_LEGS - 1) << "): ";
-    
+
     if (!(std::cin >> leg_num) || !common::Validator::validateLegNumber(leg_num))
     {
         common::ErrorReporter::reportError("Calibration-Test", "Input", "Invalid leg number");
@@ -240,14 +250,14 @@ void edit_calibration_values(std::vector<calibration::Calibration> &calibrations
     }
 
     auto &cal = calibrations[leg_num];
-    
+
     std::cout << "Current calibration for leg " << leg_num << ":\n";
     std::cout << "  Hip: " << cal.hip_offset << "°\n";
     std::cout << "  Knee: " << cal.knee_offset << "°\n";
     std::cout << "  Ankle: " << cal.ankle_offset << "°\n\n";
 
     int new_value;
-    
+
     std::cout << "New hip offset (-30 to 30, current " << cal.hip_offset << "): ";
     if (std::cin >> new_value)
     {
@@ -278,7 +288,8 @@ int main()
     common::PerformanceMonitor perfMonitor;
 
     // Setup terminal for immediate input using common utilities
-    if (!common::TerminalManager::setupImmediate()) {
+    if (!common::TerminalManager::setupImmediate())
+    {
         common::ErrorReporter::reportWarning("Calibration-Test", "Failed to setup immediate terminal input");
     }
 
@@ -288,7 +299,7 @@ int main()
 
     // Initialize hexapod
     hexapod::Hexapod hexapod;
-    
+
     perfMonitor.startFrame();
     if (!hexapod.init())
     {
@@ -299,7 +310,7 @@ int main()
     perfMonitor.endFrame();
 
     common::ErrorReporter::reportInfo("Calibration-Test", "Hexapod initialized successfully in " +
-        common::StringUtils::formatNumber(perfMonitor.getAverageFrameTime()) + "ms");
+                                                              common::StringUtils::formatNumber(perfMonitor.getAverageFrameTime()) + "ms");
 
     // Initialize calibration data
     std::vector<calibration::Calibration> calibrations = calibration::CalibrationManager::getDefaultCalibration();
@@ -330,7 +341,7 @@ int main()
     {
         std::cout << "Enter command (h for help): ";
         char command;
-        
+
         if (common::TerminalManager::readChar(command))
         {
             switch (command)
@@ -340,7 +351,7 @@ int main()
                 std::cout << "\nEnter filename (or press Enter for default): ";
                 std::string filename;
                 std::getline(std::cin, filename);
-                
+
                 if (calibration::CalibrationManager::loadCalibration(calibrations, filename))
                 {
                     current_filename = filename.empty() ? calibration::CalibrationManager::getDefaultCalibrationPath() : filename;
@@ -358,7 +369,7 @@ int main()
                 std::cout << "\nEnter filename (or press Enter for default): ";
                 std::string filename;
                 std::getline(std::cin, filename);
-                
+
                 if (calibration::CalibrationManager::saveCalibration(calibrations, filename))
                 {
                     current_filename = filename.empty() ? calibration::CalibrationManager::getDefaultCalibrationPath() : filename;
@@ -385,7 +396,7 @@ int main()
             {
                 std::cout << "Applying calibration to hexapod..." << std::endl;
                 common::ProgressBar::display(0, hexapod::Config::NUM_LEGS, 30, "Applying");
-                
+
                 if (calibration::CalibrationManager::applyCalibration(hexapod, calibrations))
                 {
                     common::ProgressBar::display(hexapod::Config::NUM_LEGS, hexapod::Config::NUM_LEGS, 30, "Complete");

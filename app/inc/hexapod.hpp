@@ -122,25 +122,60 @@ namespace hexapod
     };
 
     /**
+     * @brief Sensor types supported by the system
+     */
+    enum class SensorType : uint8_t
+    {
+        MPU6050 = 0, ///< MPU6050 6-axis IMU
+        ADXL345 = 1, ///< ADXL345 3-axis accelerometer
+        AUTO = 2     ///< Auto-detect available sensor
+    };
+
+    /**
      * @brief IMU data class - compatible with kernel's hexapod_imu_data
      */
     class ImuData
     {
     public:
-        int16_t accel_x; ///< Raw X-axis acceleration
-        int16_t accel_y; ///< Raw Y-axis acceleration
-        int16_t accel_z; ///< Raw Z-axis acceleration
-        int16_t gyro_x;  ///< Raw X-axis angular velocity
-        int16_t gyro_y;  ///< Raw Y-axis angular velocity
-        int16_t gyro_z;  ///< Raw Z-axis angular velocity
+        int16_t accel_x;     ///< Raw X-axis acceleration
+        int16_t accel_y;     ///< Raw Y-axis acceleration
+        int16_t accel_z;     ///< Raw Z-axis acceleration
+        int16_t gyro_x;      ///< Raw X-axis angular velocity (0 for ADXL345)
+        int16_t gyro_y;      ///< Raw Y-axis angular velocity (0 for ADXL345)
+        int16_t gyro_z;      ///< Raw Z-axis angular velocity (0 for ADXL345)
+        uint8_t sensor_type; ///< Which sensor provided the data
 
         // Helper methods to convert raw data to physical units
-        float getAccelX() const { return accel_x / 16384.0f; } ///< Convert to g's
-        float getAccelY() const { return accel_y / 16384.0f; } ///< Convert to g's
-        float getAccelZ() const { return accel_z / 16384.0f; } ///< Convert to g's
-        float getGyroX() const { return gyro_x / 65.5f; }      ///< Convert to degrees/second
-        float getGyroY() const { return gyro_y / 65.5f; }      ///< Convert to degrees/second
-        float getGyroZ() const { return gyro_z / 65.5f; }      ///< Convert to degrees/second
+        float getAccelX() const
+        {
+            return accel_x / (getSensorType() == SensorType::ADXL345 ? 256.0f : 16384.0f);
+        } ///< Convert to g's
+
+        float getAccelY() const
+        {
+            return accel_y / (getSensorType() == SensorType::ADXL345 ? 256.0f : 16384.0f);
+        } ///< Convert to g's
+
+        float getAccelZ() const
+        {
+            return accel_z / (getSensorType() == SensorType::ADXL345 ? 256.0f : 16384.0f);
+        } ///< Convert to g's
+
+        float getGyroX() const { return gyro_x / 65.5f; } ///< Convert to degrees/second
+        float getGyroY() const { return gyro_y / 65.5f; } ///< Convert to degrees/second
+        float getGyroZ() const { return gyro_z / 65.5f; } ///< Convert to degrees/second
+
+        /**
+         * @brief Check if gyroscope data is available
+         * @return true if sensor provides gyroscope data
+         */
+        bool hasGyro() const { return getSensorType() == SensorType::MPU6050; }
+
+        /**
+         * @brief Get the sensor type that provided this data
+         * @return SensorType enum value
+         */
+        SensorType getSensorType() const { return static_cast<SensorType>(sensor_type); }
     };
 
     /**
@@ -306,6 +341,24 @@ namespace hexapod
          * @return false if data retrieval failed (check getLastError())
          */
         bool getImuData(ImuData &data) const;
+
+        /**
+         * @brief Set the active sensor type
+         *
+         * @param sensor_type Type of sensor to use
+         * @return true if sensor type was set successfully
+         * @return false if sensor type change failed
+         */
+        bool setSensorType(SensorType sensor_type);
+
+        /**
+         * @brief Get the current active sensor type
+         *
+         * @param[out] sensor_type Current sensor type
+         * @return true if query was successful
+         * @return false if query failed
+         */
+        bool getSensorType(SensorType &sensor_type) const;
 
         //--------------------------------------------------------------------------
         // Calibration

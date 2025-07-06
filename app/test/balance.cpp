@@ -43,8 +43,8 @@ static void print_menu()
 // Test IMU sensor readings
 bool test_imu_readings(hexapod::Hexapod &hexapod, double duration)
 {
-    common::ErrorReporter::reportInfo("Balance-Test", "Testing IMU readings for " + 
-        common::StringUtils::formatDuration(duration));
+    common::ErrorReporter::reportInfo("Balance-Test", "Testing IMU readings for " +
+                                                          common::StringUtils::formatDuration(duration));
 
     common::PerformanceMonitor perfMonitor;
     auto start_time = common::getCurrentTime();
@@ -60,23 +60,23 @@ bool test_imu_readings(hexapod::Hexapod &hexapod, double duration)
     while (running.load() && common::getCurrentTime() < end_time)
     {
         perfMonitor.startFrame();
-        
+
         hexapod::ImuData imuData;
         if (hexapod.getImuData(imuData))
         {
             successful_reads++;
-            
+
             // Calculate roll and pitch from accelerometer data
             double ax = imuData.getAccelX();
             double ay = imuData.getAccelY();
             double az = imuData.getAccelZ();
-            
+
             double roll = atan2(ay, az) * 180.0 / M_PI;
             double pitch = atan2(-ax, sqrt(ay * ay + az * az)) * 180.0 / M_PI;
-            
+
             roll_readings.push_back(roll);
             pitch_readings.push_back(pitch);
-            
+
             // Display real-time data
             std::cout << "\rRoll: " << std::setw(6) << common::StringUtils::formatNumber(roll, 1) << "°"
                       << " Pitch: " << std::setw(6) << common::StringUtils::formatNumber(pitch, 1) << "°"
@@ -88,7 +88,7 @@ bool test_imu_readings(hexapod::Hexapod &hexapod, double duration)
         {
             std::cerr << "\rIMU read failed: " << hexapod.getLastErrorMessage() << std::flush;
         }
-        
+
         perfMonitor.endFrame();
         total_reads++;
 
@@ -128,11 +128,11 @@ bool test_imu_readings(hexapod::Hexapod &hexapod, double duration)
         pitch_std = sqrt(pitch_std / pitch_readings.size());
 
         std::cout << "\nIMU Statistics:" << std::endl;
-        std::cout << "  Success rate: " << common::StringUtils::formatNumber((successful_reads * 100.0) / total_reads, 1) 
+        std::cout << "  Success rate: " << common::StringUtils::formatNumber((successful_reads * 100.0) / total_reads, 1)
                   << "% (" << successful_reads << "/" << total_reads << ")" << std::endl;
-        std::cout << "  Roll: avg=" << common::StringUtils::formatNumber(roll_avg, 1) << "° std=" 
+        std::cout << "  Roll: avg=" << common::StringUtils::formatNumber(roll_avg, 1) << "° std="
                   << common::StringUtils::formatNumber(roll_std, 2) << "°" << std::endl;
-        std::cout << "  Pitch: avg=" << common::StringUtils::formatNumber(pitch_avg, 1) << "° std=" 
+        std::cout << "  Pitch: avg=" << common::StringUtils::formatNumber(pitch_avg, 1) << "° std="
                   << common::StringUtils::formatNumber(pitch_std, 2) << "°" << std::endl;
     }
 
@@ -142,12 +142,12 @@ bool test_imu_readings(hexapod::Hexapod &hexapod, double duration)
 // Test balance adjustments
 bool test_balance_adjustments(controller::Controller &controller, double duration)
 {
-    common::ErrorReporter::reportInfo("Balance-Test", "Testing balance adjustments for " + 
-        common::StringUtils::formatDuration(duration));
+    common::ErrorReporter::reportInfo("Balance-Test", "Testing balance adjustments for " +
+                                                          common::StringUtils::formatDuration(duration));
 
     // Enable balance mode
     controller.setBalanceEnabled(true);
-    
+
     common::PerformanceMonitor perfMonitor;
     auto start_time = common::getCurrentTime();
     auto end_time = start_time + duration;
@@ -158,13 +158,13 @@ bool test_balance_adjustments(controller::Controller &controller, double duratio
     while (running.load() && common::getCurrentTime() < end_time)
     {
         perfMonitor.startFrame();
-        
+
         if (!controller.update())
         {
             common::ErrorReporter::reportError("Balance-Test", "Controller Update", "Failed to update controller");
             return false;
         }
-        
+
         perfMonitor.endFrame();
 
         // Show progress
@@ -197,14 +197,14 @@ bool test_manual_tilt(controller::Controller &controller)
     common::ErrorReporter::reportInfo("Balance-Test", "Running manual tilt test");
 
     std::vector<std::pair<double, double>> test_tilts = {
-        {0.0, 0.0},    // Center
-        {10.0, 0.0},   // Forward tilt
-        {-10.0, 0.0},  // Backward tilt
-        {0.0, 10.0},   // Right tilt
-        {0.0, -10.0},  // Left tilt
-        {5.0, 5.0},    // Forward-right
-        {-5.0, -5.0},  // Backward-left
-        {0.0, 0.0}     // Return to center
+        {0.0, 0.0},   // Center
+        {10.0, 0.0},  // Forward tilt
+        {-10.0, 0.0}, // Backward tilt
+        {0.0, 10.0},  // Right tilt
+        {0.0, -10.0}, // Left tilt
+        {5.0, 5.0},   // Forward-right
+        {-5.0, -5.0}, // Backward-left
+        {0.0, 0.0}    // Return to center
     };
 
     std::cout << "Testing manual tilt positions..." << std::endl;
@@ -216,12 +216,12 @@ bool test_manual_tilt(controller::Controller &controller)
         double tiltX = test_tilts[i].first;
         double tiltY = test_tilts[i].second;
 
-        std::cout << "Setting tilt: X=" << common::StringUtils::formatNumber(tiltX, 1) 
+        std::cout << "Setting tilt: X=" << common::StringUtils::formatNumber(tiltX, 1)
                   << "° Y=" << common::StringUtils::formatNumber(tiltY, 1) << "°..." << std::flush;
 
         perfMonitor.startFrame();
         controller.setTilt(tiltX, tiltY);
-        
+
         // Update controller to apply the tilt
         for (int j = 0; j < 10; j++) // Allow time for tilt to be applied
         {
@@ -259,13 +259,13 @@ bool test_response_sensitivity(controller::Controller &controller)
     common::ErrorReporter::reportInfo("Balance-Test", "Testing response sensitivity");
 
     std::vector<double> response_factors = {0.2, 0.5, 0.8, 1.0};
-    
+
     std::cout << "Testing different response sensitivity levels..." << std::endl;
 
     for (double factor : response_factors)
     {
         std::cout << "Testing response factor: " << common::StringUtils::formatNumber(factor, 1) << std::endl;
-        
+
         controller.setBalanceResponseFactor(factor);
         controller.setBalanceEnabled(true);
 
@@ -306,13 +306,13 @@ bool test_deadzone_calibration(controller::Controller &controller)
     common::ErrorReporter::reportInfo("Balance-Test", "Testing deadzone calibration");
 
     std::vector<double> deadzone_values = {0.5, 1.0, 2.0, 5.0};
-    
+
     std::cout << "Testing different deadzone values..." << std::endl;
 
     for (double deadzone : deadzone_values)
     {
         std::cout << "Testing deadzone: " << common::StringUtils::formatNumber(deadzone, 1) << "°" << std::endl;
-        
+
         controller.setBalanceDeadzone(deadzone);
         controller.setBalanceEnabled(true);
 
@@ -341,11 +341,11 @@ bool test_deadzone_calibration(controller::Controller &controller)
 // Balance stress test
 bool test_balance_stress(controller::Controller &controller, double duration)
 {
-    common::ErrorReporter::reportInfo("Balance-Test", "Running balance stress test for " + 
-        common::StringUtils::formatDuration(duration));
+    common::ErrorReporter::reportInfo("Balance-Test", "Running balance stress test for " +
+                                                          common::StringUtils::formatDuration(duration));
 
     controller.setBalanceEnabled(true);
-    
+
     common::PerformanceMonitor perfMonitor;
     auto start_time = common::getCurrentTime();
     auto end_time = start_time + duration;
@@ -359,13 +359,13 @@ bool test_balance_stress(controller::Controller &controller, double duration)
     while (running.load() && common::getCurrentTime() < end_time)
     {
         perfMonitor.startFrame();
-        
+
         if (controller.update())
         {
             successful_updates++;
         }
         total_updates++;
-        
+
         perfMonitor.endFrame();
 
         // Show progress every 100 updates
@@ -392,7 +392,7 @@ bool test_balance_stress(controller::Controller &controller, double duration)
     std::cout << "Stress test results:" << std::endl;
     std::cout << "  Total updates: " << total_updates << std::endl;
     std::cout << "  Successful: " << successful_updates << std::endl;
-    std::cout << "  Success rate: " << common::StringUtils::formatNumber((successful_updates * 100.0) / total_updates, 1) 
+    std::cout << "  Success rate: " << common::StringUtils::formatNumber((successful_updates * 100.0) / total_updates, 1)
               << "%" << std::endl;
 
     return (successful_updates * 100.0) / total_updates > 95.0; // 95% success rate threshold
@@ -405,7 +405,7 @@ void show_balance_status(controller::Controller &controller)
     std::cout << "=====================" << std::endl;
 
     auto config = controller.getBalanceConfig();
-    
+
     std::cout << "Balance mode: " << (controller.isBalanceEnabled() ? "ENABLED" : "disabled") << std::endl;
     std::cout << "Response factor: " << common::StringUtils::formatNumber(config.response_factor, 2) << std::endl;
     std::cout << "Deadzone: " << common::StringUtils::formatNumber(config.deadzone, 1) << "°" << std::endl;
@@ -422,7 +422,8 @@ int main()
     common::PerformanceMonitor perfMonitor;
 
     // Setup terminal for immediate input using common utilities
-    if (!common::TerminalManager::setupImmediate()) {
+    if (!common::TerminalManager::setupImmediate())
+    {
         common::ErrorReporter::reportWarning("Balance-Test", "Failed to setup immediate terminal input");
     }
 
@@ -432,7 +433,7 @@ int main()
 
     // Initialize hexapod
     hexapod::Hexapod hexapod;
-    
+
     perfMonitor.startFrame();
     if (!hexapod.init())
     {
@@ -443,7 +444,7 @@ int main()
     perfMonitor.endFrame();
 
     common::ErrorReporter::reportInfo("Balance-Test", "Hexapod initialized successfully in " +
-        common::StringUtils::formatNumber(perfMonitor.getAverageFrameTime()) + "ms");
+                                                          common::StringUtils::formatNumber(perfMonitor.getAverageFrameTime()) + "ms");
 
     // Initialize controller
     controller::Controller controller(hexapod);
@@ -468,7 +469,7 @@ int main()
     {
         std::cout << "Enter command (h for help): ";
         char command;
-        
+
         if (common::TerminalManager::readChar(command))
         {
             switch (command)
@@ -485,9 +486,9 @@ int main()
             {
                 std::cout << "Continuous balance mode activated. Tilt the robot to see adjustments." << std::endl;
                 std::cout << "Press any key to stop..." << std::endl;
-                
+
                 controller.setBalanceEnabled(true);
-                
+
                 while (running.load())
                 {
                     if (!controller.update())
@@ -495,16 +496,16 @@ int main()
                         common::ErrorReporter::reportError("Balance-Test", "Continuous Mode", "Controller update failed");
                         break;
                     }
-                    
+
                     char key;
                     if (common::TerminalManager::readChar(key))
                     {
                         break;
                     }
-                    
+
                     common::sleepMs(20);
                 }
-                
+
                 controller.setBalanceEnabled(false);
                 std::cout << "Continuous balance mode stopped" << std::endl;
                 break;

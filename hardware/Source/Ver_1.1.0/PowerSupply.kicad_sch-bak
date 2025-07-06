@@ -1,0 +1,6036 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "d90c1ea1-73d8-41fc-b9a6-bd60c13b831f")
+	(paper "A4")
+	(title_block
+		(title "Power Supply")
+		(date "2025-06-30")
+	)
+	(lib_symbols
+		(symbol "automative_hexapod:Fuse_1808"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "F"
+				(at 0 2.032 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "Fuse"
+				(at 0 -1.905 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" "automative_hexapod:FUSE_SMD_1808"
+				(at 4.064 -5.588 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "~"
+				(at 0 -5.588 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Value 2" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value 3" "1808"
+				(at 0.254 -3.556 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+						(color 0 132 132 1)
+					)
+				)
+			)
+			(property "Value 4" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Supply Name" "Thegioiic"
+				(at 0.254 -5.842 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Supply Part Number" "Đế Cầu Chì 1808 Dán SMD"
+				(at 1.016 -5.588 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Supply URL" "https://www.Thegioiic.com/de-cau-chi-1808-dan-smd"
+				(at 1.016 -5.588 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "Fuse_1808"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "Fuse_1808_0_1"
+				(polyline
+					(pts
+						(xy -2.54 0) (xy 2.54 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(rectangle
+					(start 2.54 -0.762)
+					(end -2.54 0.762)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "Fuse_1808_1_1"
+				(pin passive line
+					(at -3.81 0 0)
+					(length 1.27)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 3.81 0 180)
+					(length 1.27)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "automative_hexapod:KF120-4-V Domino"
+			(pin_names
+				(offset 1.016)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "J"
+				(at 0 5.08 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "Connector"
+				(at 6.858 2.032 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" "automative_hexapod:TerminalBlock_Phoenix_MKDS-1,5-4-5.08_1x04_P5.08mm_Horizontal"
+				(at -0.762 -10.16 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "150V 6A"
+				(at 1.524 -10.16 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Value 2" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value 3" "KF120 2.54mm"
+				(at 9.398 -0.508 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+						(color 0 132 132 1)
+					)
+				)
+			)
+			(property "Value 4" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Supply Name" "Thegioiic"
+				(at -2.032 -10.16 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Supply Part Number" " KF120-4-V Domino 4 Chân Thẳng 2.54mm 150V 6A Hàn PCB"
+				(at 2.286 -10.16 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Supply URL" "https://www.Thegioiic.com/kf120-4-v-domino-4-chan-thang-2-54mm-150v-6a-han-pcb"
+				(at 2.286 -10.16 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "KF120-4-V Domino"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "KF120-4-V Domino_1_1"
+				(polyline
+					(pts
+						(xy -1.27 2.54) (xy -0.508 2.54)
+					)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -1.27 0) (xy -0.508 0)
+					)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -1.27 -2.54) (xy -0.508 -2.54)
+					)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -1.27 -5.08) (xy -0.508 -5.08)
+					)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(arc
+					(start 0 2.032)
+					(mid -0.5058 2.54)
+					(end 0 3.048)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(arc
+					(start 0 -0.508)
+					(mid -0.5058 0)
+					(end 0 0.508)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(arc
+					(start 0 -3.048)
+					(mid -0.5058 -2.54)
+					(end 0 -2.032)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(arc
+					(start 0 -5.588)
+					(mid -0.5058 -5.08)
+					(end 0 -4.572)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin passive line
+					(at -5.08 2.54 0)
+					(length 3.81)
+					(name "Pin_1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -5.08 0 0)
+					(length 3.81)
+					(name "Pin_2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -5.08 -2.54 0)
+					(length 3.81)
+					(name "Pin_3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -5.08 -5.08 0)
+					(length 3.81)
+					(name "Pin_4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "automative_hexapod:LED_0805"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 1.016)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "D"
+				(at 0 2.54 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "LED_0805"
+				(at 0 -2.794 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" "automative_hexapod:LED_0805"
+				(at -3.81 5.08 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at -9.906 5.08 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Light emitting diode"
+				(at 0.254 4.826 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Supply Name" "Thegioiic"
+				(at -0.762 5.334 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Supply Part Number" "LED Xanh Lá 0805 Dán SMD Trong Suốt"
+				(at 0.508 4.826 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Supply URL" "https://www.Thegioiic.com/led-xanh-la-0805-dan-smd-trong-suot"
+				(at -0.762 5.334 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "LED diode"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "LED* LED_SMD:* LED_THT:*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "LED_0805_0_1"
+				(polyline
+					(pts
+						(xy -1.27 1.27) (xy -1.27 -1.27) (xy 1.27 0) (xy -1.27 1.27)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 1.27 1.27) (xy 1.27 -1.27)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 1.27 0) (xy -1.27 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 1.778 0.762) (xy 3.302 2.286) (xy 2.54 2.286) (xy 3.302 2.286) (xy 3.302 1.524)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 3.048 0.762) (xy 4.572 2.286) (xy 3.81 2.286) (xy 4.572 2.286) (xy 4.572 1.524)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "LED_0805_1_1"
+				(pin passive line
+					(at -3.81 0 0)
+					(length 2.54)
+					(name "A"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 3.81 0 180)
+					(length 2.54)
+					(name "K"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "automative_hexapod:MTS-102-C3"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0.254)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "SW"
+				(at -2.54 5.334 0)
+				(effects
+					(font
+						(size 1.524 1.524)
+					)
+				)
+			)
+			(property "Value" "MTS-102-C3"
+				(at 11.43 -2.794 0)
+				(effects
+					(font
+						(size 1.524 1.524)
+					)
+				)
+			)
+			(property "Footprint" "automative_hexapod:MTS-102-C3"
+				(at 1.778 14.478 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+						(italic yes)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0.762 -8.89 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+						(italic yes)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Value 2" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value 3" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value 4" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Supply Name" "Thegioiic"
+				(at 2.032 14.224 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Supply Part Number" "MTS-102-C3 Công Tắc Toggle ON-ON Gạt Giữ 3 Chân Cong 6A 125VAC"
+				(at 3.302 13.716 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Supply URL" "https://www.Thegioiic.com/mts-102-c3-cong-tac-toggle-on-on-gat-giu-3-chan-cong-6a-125vac"
+				(at 3.302 13.716 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "MTS-102-C3"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "MTS-103_JCV"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "MTS-102-C3_0_1"
+				(polyline
+					(pts
+						(xy -2.54 2.54) (xy 2.54 2.54)
+					)
+					(stroke
+						(width 0.127)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -2.54 0) (xy 0 0)
+					)
+					(stroke
+						(width 0.127)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -2.54 -2.54) (xy 2.54 -2.54)
+					)
+					(stroke
+						(width 0.127)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(circle
+					(center 0.3175 0)
+					(radius 0.3048)
+					(stroke
+						(width 0.127)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0.635 0) (xy 3.302 -1.778)
+					)
+					(stroke
+						(width 0.127)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 2.54 2.54) (xy 2.54 1.27)
+					)
+					(stroke
+						(width 0.127)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin unspecified line
+					(at -5.08 2.54 0)
+					(length 2.54)
+					(name "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin unspecified line
+					(at -5.08 0 0)
+					(length 2.54)
+					(name "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin unspecified line
+					(at -5.08 -2.54 0)
+					(length 2.54)
+					(name "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin unspecified line
+					(at 1.27 -6.35 90)
+					(length 2.54)
+					(name "SH"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "SH"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(symbol "MTS-102-C3_1_1"
+				(rectangle
+					(start -3.81 3.81)
+					(end 3.81 -3.81)
+					(stroke
+						(width 0)
+						(type solid)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(polyline
+					(pts
+						(xy 2.54 -2.54) (xy 2.54 -1.27)
+					)
+					(stroke
+						(width 0.127)
+						(type solid)
+					)
+					(fill
+						(type background)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "automative_hexapod:Pin Connector"
+			(pin_names
+				(offset 1.016)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "J"
+				(at 0 2.54 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "Pin Connector"
+				(at 7.62 -0.508 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" "automative_hexapod:Connector-Pin"
+				(at 0.762 -8.89 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "~"
+				(at 2.032 -8.89 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Value 2" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value 3" "~"
+				(at 6.096 -2.286 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+						(color 0 132 132 1)
+					)
+				)
+			)
+			(property "Value 4" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Supply Name" "~"
+				(at 2.032 -8.89 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Supply Part Number" "~"
+				(at 0 -8.89 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Supply URL" "~"
+				(at 0 -8.89 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "Pin Connector"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "Pin Connector_1_1"
+				(polyline
+					(pts
+						(xy -1.27 0) (xy -0.508 0)
+					)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -1.27 -2.54) (xy -0.508 -2.54)
+					)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(arc
+					(start 0 -0.508)
+					(mid -0.5058 0)
+					(end 0 0.508)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(arc
+					(start 0 -3.048)
+					(mid -0.5058 -2.54)
+					(end 0 -2.032)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin passive line
+					(at -5.08 0 0)
+					(length 3.81)
+					(name "Pin_1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -5.08 -2.54 0)
+					(length 3.81)
+					(name "Pin_2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "automative_hexapod:Res_10.5K_0805_1%"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "R"
+				(at 0 2.54 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "10.5kOhm"
+				(at 0.508 -3.556 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" "automative_hexapod:Res_0805"
+				(at 0.254 5.842 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 2.54 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Res_10.5K_0805_1%"
+				(at 0.508 5.334 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Value 2" "1/8W"
+				(at -1.524 -5.334 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+						(color 0 132 132 1)
+					)
+				)
+			)
+			(property "Value 3" "0805"
+				(at -1.778 -7.112 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+						(color 0 132 132 1)
+					)
+				)
+			)
+			(property "Value 4" "1%"
+				(at -2.794 -8.89 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+						(color 0 132 132 1)
+					)
+				)
+			)
+			(property "Supply Name" "Thegioiic"
+				(at -0.508 5.588 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Supply Part Number" "Điện Trở 10.5 KOhm 0805 1%"
+				(at 0.762 5.588 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Supply URL" "https://www.Thegioiic.com/dien-tro-10-5-kohm-0805-1-"
+				(at 0.254 5.334 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "Res_10.5K_0805_1%"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "Res_10.5K_0805_1%_0_1"
+				(polyline
+					(pts
+						(xy -2.286 0) (xy -2.54 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -2.286 0) (xy -1.905 1.016) (xy -1.524 0) (xy -1.143 -1.016) (xy -0.762 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0.762 0) (xy 1.143 1.016) (xy 1.524 0) (xy 1.905 -1.016) (xy 2.286 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 2.286 0) (xy 2.54 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "Res_10.5K_0805_1%_1_1"
+				(polyline
+					(pts
+						(xy -0.762 0) (xy -0.381 1.016) (xy 0 0) (xy 0.381 -1.016) (xy 0.762 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin passive line
+					(at -3.81 0 0)
+					(length 1.27)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 3.81 0 180)
+					(length 1.27)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "automative_hexapod:Res_2K_0805_1%"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "R"
+				(at 0 2.54 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "2kOhm"
+				(at 0.508 -3.556 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" "automative_hexapod:Res_0805"
+				(at 2.794 6.858 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 2.54 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Res_2K_0805_1%"
+				(at 0 6.604 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Value 2" "1/8W"
+				(at 0 -5.334 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+						(color 0 132 132 1)
+					)
+				)
+			)
+			(property "Value 3" "0805"
+				(at -0.254 -7.112 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+						(color 0 132 132 1)
+					)
+				)
+			)
+			(property "Value 4" "1%"
+				(at -1.27 -8.89 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+						(color 0 132 132 1)
+					)
+				)
+			)
+			(property "Supply Name" "Thegioiic"
+				(at 0.254 6.35 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Supply Part Number" "Điện Trở 2 KOhm 0805 1%"
+				(at 3.302 6.604 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Supply URL" "https://www.Thegioiic.com/dien-tro-2-kohm-0805-1-"
+				(at 2.794 6.35 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "Res_2K_0805_1%"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "Res_2K_0805_1%_0_1"
+				(polyline
+					(pts
+						(xy -2.286 0) (xy -2.54 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -2.286 0) (xy -1.905 1.016) (xy -1.524 0) (xy -1.143 -1.016) (xy -0.762 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0.762 0) (xy 1.143 1.016) (xy 1.524 0) (xy 1.905 -1.016) (xy 2.286 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 2.286 0) (xy 2.54 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "Res_2K_0805_1%_1_1"
+				(polyline
+					(pts
+						(xy -0.762 0) (xy -0.381 1.016) (xy 0 0) (xy 0.381 -1.016) (xy 0.762 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin passive line
+					(at -3.81 0 0)
+					(length 1.27)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 3.81 0 180)
+					(length 1.27)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "automative_hexapod:Res_5.6K_0805_1%"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "R"
+				(at 0 2.54 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "5.6kOhm"
+				(at 1.27 -3.556 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" "automative_hexapod:Res_0805"
+				(at 2.794 6.858 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 2.54 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Res_5.6K_0805_1%"
+				(at 0 6.604 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Value 2" "1/8W"
+				(at 0 -5.334 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+						(color 0 132 132 1)
+					)
+				)
+			)
+			(property "Value 3" "0805"
+				(at -0.254 -7.112 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+						(color 0 132 132 1)
+					)
+				)
+			)
+			(property "Value 4" "1%"
+				(at -1.27 -8.89 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+						(color 0 132 132 1)
+					)
+				)
+			)
+			(property "Supply Name" "Thegioiic"
+				(at 0.254 6.35 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Supply Part Number" "Điện Trở 5.6 KOhm 0805 1%"
+				(at 3.302 6.604 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Supply URL" "https://www.Thegioiic.com/dien-tro-5-6-kohm-0805-1-"
+				(at 2.794 6.35 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "Res_5.6K_0805_1%"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "Res_5.6K_0805_1%_0_1"
+				(polyline
+					(pts
+						(xy -2.286 0) (xy -2.54 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -2.286 0) (xy -1.905 1.016) (xy -1.524 0) (xy -1.143 -1.016) (xy -0.762 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0.762 0) (xy 1.143 1.016) (xy 1.524 0) (xy 1.905 -1.016) (xy 2.286 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 2.286 0) (xy 2.54 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "Res_5.6K_0805_1%_1_1"
+				(polyline
+					(pts
+						(xy -0.762 0) (xy -0.381 1.016) (xy 0 0) (xy 0.381 -1.016) (xy 0.762 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin passive line
+					(at -3.81 0 0)
+					(length 1.27)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 3.81 0 180)
+					(length 1.27)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "automative_hexapod:TPS54331DR"
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "U"
+				(at 1.27 16.51 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "TPS54331DR"
+				(at 13.97 16.51 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" "automative_hexapod:SOIC-8"
+				(at 0.762 -21.844 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "http://www.ti.com/lit/ds/symlink/tps54336a.pdf"
+				(at 11.684 -21.336 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "4.5V to 28V Input, 3A, Synchronous Step-Down Converter with Eco-mode(tm)"
+				(at 9.652 -21.082 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Supply Name" "Thegioiic"
+				(at -11.176 -22.098 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Supply Part Number" "TPS54331DR IC Điều Chỉnh Giảm Áp 3A 8-SOIC"
+				(at -2.54 -22.606 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Supply URL" "https://Thegioiic.com/tps54331dr-ic-dieu-chinh-giam-ap-3a-8-soic"
+				(at 4.572 -22.352 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Value 2" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value 3" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value 4" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "Step-Down DC-DC Switching Regulator"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "TI*SO*PowerPAD*ThermalVias*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "TPS54331DR_1_1"
+				(rectangle
+					(start 0 15.24)
+					(end 20.32 0)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(pin power_in line
+					(at -2.54 12.7 0)
+					(length 2.54)
+					(name "VIN"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at -2.54 10.16 0)
+					(length 2.54)
+					(name "GND"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "7"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin output line
+					(at -2.54 5.08 0)
+					(length 2.54)
+					(name "EN"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin output line
+					(at -2.54 2.54 0)
+					(length 2.54)
+					(name "COMP"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "6"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at 7.62 -2.54 90)
+					(length 2.54)
+					(name "SS"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin output line
+					(at 22.86 12.7 180)
+					(length 2.54)
+					(name "BOOT"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin output line
+					(at 22.86 7.62 180)
+					(length 2.54)
+					(name "PH"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "8"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at 22.86 2.54 180)
+					(length 2.54)
+					(name "VSENSE"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "5"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "power:+3.3V"
+			(power)
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "#PWR"
+				(at 0 -3.81 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Value" "+3.3V"
+				(at 0 3.556 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Power symbol creates a global label with name \"+3.3V\""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "global power"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "+3.3V_0_1"
+				(polyline
+					(pts
+						(xy -0.762 1.27) (xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 2.54) (xy 0.762 1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 0) (xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "+3.3V_1_1"
+				(pin power_in line
+					(at 0 0 90)
+					(length 0)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "power:+5V"
+			(power)
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "#PWR"
+				(at 0 -3.81 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Value" "+5V"
+				(at 0 3.556 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Power symbol creates a global label with name \"+5V\""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "global power"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "+5V_0_1"
+				(polyline
+					(pts
+						(xy -0.762 1.27) (xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 2.54) (xy 0.762 1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 0) (xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "+5V_1_1"
+				(pin power_in line
+					(at 0 0 90)
+					(length 0)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "power:+BATT"
+			(power)
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "#PWR"
+				(at 0 -3.81 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Value" "+BATT"
+				(at 0 3.556 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Power symbol creates a global label with name \"+BATT\""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "global power battery"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "+BATT_0_1"
+				(polyline
+					(pts
+						(xy -0.762 1.27) (xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 2.54) (xy 0.762 1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 0) (xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "+BATT_1_1"
+				(pin power_in line
+					(at 0 0 90)
+					(length 0)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "power:GND"
+			(power)
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "#PWR"
+				(at 0 -6.35 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Value" "GND"
+				(at 0 -3.81 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "global power"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "GND_0_1"
+				(polyline
+					(pts
+						(xy 0 0) (xy 0 -1.27) (xy 1.27 -1.27) (xy 0 -2.54) (xy -1.27 -1.27) (xy 0 -1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "GND_1_1"
+				(pin power_in line
+					(at 0 0 270)
+					(length 0)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "power:VCC"
+			(power)
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "#PWR"
+				(at 0 -3.81 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Value" "VCC"
+				(at 0 3.556 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Power symbol creates a global label with name \"VCC\""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "global power"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "VCC_0_1"
+				(polyline
+					(pts
+						(xy -0.762 1.27) (xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 2.54) (xy 0.762 1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 0) (xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "VCC_1_1"
+				(pin power_in line
+					(at 0 0 90)
+					(length 0)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "power:Vdrive"
+			(power)
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "#PWR"
+				(at 0 -3.81 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Value" "Vdrive"
+				(at 0 3.556 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Power symbol creates a global label with name \"Vdrive\""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "global power"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "Vdrive_0_1"
+				(polyline
+					(pts
+						(xy -0.762 1.27) (xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 2.54) (xy 0.762 1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 0) (xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "Vdrive_1_1"
+				(pin power_in line
+					(at 0 0 90)
+					(length 0)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+	)
+	(junction
+		(at 236.22 116.84)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "14a82437-fb7a-4ebb-947c-d4ec7f6ac61a")
+	)
+	(junction
+		(at 236.22 139.7)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "98199b61-ebe7-4523-a89a-57b79754b33a")
+	)
+	(junction
+		(at 236.22 147.32)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "a5f66522-cca2-4abb-9126-fbc1480db7b5")
+	)
+	(junction
+		(at 236.22 109.22)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "c00252cb-0a56-4478-b6c2-f64dcbfbe316")
+	)
+	(no_connect
+		(at 200.66 128.27)
+		(uuid "d7e1e407-171c-4a45-8ba0-baad23323cfd")
+	)
+	(wire
+		(pts
+			(xy 236.22 144.78) (xy 238.76 144.78)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0113bdc5-1701-494f-af1e-203a41ef3cd3")
+	)
+	(wire
+		(pts
+			(xy 101.6 114.3) (xy 101.6 116.84)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "013e15e4-a24f-49c8-976b-a3186f5f7aa0")
+	)
+	(wire
+		(pts
+			(xy 127 114.3) (xy 127 116.84)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0171fdf1-eb36-4008-9836-cd2c21bb686d")
+	)
+	(wire
+		(pts
+			(xy 236.22 114.3) (xy 238.76 114.3)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "09c7a1bb-8548-4d7f-972f-92f2bd13295b")
+	)
+	(wire
+		(pts
+			(xy 236.22 111.76) (xy 238.76 111.76)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "11c211dd-8df9-40db-bf65-878a7c137544")
+	)
+	(wire
+		(pts
+			(xy 236.22 142.24) (xy 236.22 139.7)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "1567f0be-1344-434f-98f6-43627931abe0")
+	)
+	(wire
+		(pts
+			(xy 236.22 116.84) (xy 236.22 114.3)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "1a2640f2-8da1-4a6d-840f-873f3d7a85ee")
+	)
+	(wire
+		(pts
+			(xy 182.88 114.3) (xy 187.96 114.3)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "29339595-7b3a-4037-8cb6-35b3ac9c811a")
+	)
+	(wire
+		(pts
+			(xy 194.31 138.43) (xy 194.31 135.89)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "35c7ee33-3e47-4640-9dbc-4a1ab2d675d0")
+	)
+	(wire
+		(pts
+			(xy 194.31 135.89) (xy 189.23 135.89)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "36232895-2721-44d8-93ca-6ba6b85f8cbe")
+	)
+	(wire
+		(pts
+			(xy 236.22 147.32) (xy 238.76 147.32)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "38b7d2af-cb21-4f07-8187-67b617c34d96")
+	)
+	(wire
+		(pts
+			(xy 76.2 124.46) (xy 76.2 129.54)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3d7672f3-6bdd-4b25-85ee-12e333700d22")
+	)
+	(wire
+		(pts
+			(xy 201.93 114.3) (xy 195.58 114.3)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4537fdce-ed7e-44d6-bf8b-6188680fd35d")
+	)
+	(wire
+		(pts
+			(xy 236.22 147.32) (xy 236.22 144.78)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4c471834-8c05-4fda-b32a-bfdd7dafb7c2")
+	)
+	(wire
+		(pts
+			(xy 236.22 119.38) (xy 236.22 116.84)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4d280e6a-1f8a-4092-969f-d3d7fb888f1e")
+	)
+	(wire
+		(pts
+			(xy 236.22 109.22) (xy 238.76 109.22)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "51e7e5e2-6223-48de-b730-6eb0a515cb64")
+	)
+	(wire
+		(pts
+			(xy 236.22 107.95) (xy 236.22 109.22)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "5b2bddba-3fa7-44e2-8780-cccaddfdadd6")
+	)
+	(wire
+		(pts
+			(xy 195.58 129.54) (xy 195.58 130.81)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6f076e8c-98ee-4c18-b710-b2d945ca7577")
+	)
+	(wire
+		(pts
+			(xy 50.8 114.3) (xy 50.8 116.84)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "7314d648-9f1d-40a3-9682-bd16ba76f9e0")
+	)
+	(wire
+		(pts
+			(xy 238.76 142.24) (xy 236.22 142.24)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "74a78167-a053-4f8c-805d-92733c38fe12")
+	)
+	(wire
+		(pts
+			(xy 127 124.46) (xy 127 129.54)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "85ec5fa2-bd92-4725-98ee-a32dcfe4d0bf")
+	)
+	(wire
+		(pts
+			(xy 236.22 139.7) (xy 236.22 138.43)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "8b826953-8a76-4119-a586-1bc8ade2897c")
+	)
+	(wire
+		(pts
+			(xy 101.6 124.46) (xy 101.6 129.54)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "95d2489a-b81a-42be-8328-83ccb1c55794")
+	)
+	(wire
+		(pts
+			(xy 101.6 137.16) (xy 101.6 139.7)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a0102605-1806-49a6-9ed5-cfd4036ec57c")
+	)
+	(wire
+		(pts
+			(xy 76.2 137.16) (xy 76.2 139.7)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a1a57626-3eb2-4af3-825c-0d0ebe9a2abd")
+	)
+	(wire
+		(pts
+			(xy 236.22 149.86) (xy 236.22 147.32)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "aff1788e-3b39-4c0a-a129-c799e1123e25")
+	)
+	(wire
+		(pts
+			(xy 236.22 109.22) (xy 236.22 111.76)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b1cbf156-dd5e-4100-b614-697484b577e4")
+	)
+	(wire
+		(pts
+			(xy 182.88 111.76) (xy 182.88 114.3)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "bcbd62a8-1622-4b6d-adda-780541c1ac84")
+	)
+	(wire
+		(pts
+			(xy 207.01 138.43) (xy 207.01 137.16)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "bed27695-8da0-4353-b2ab-c02d016c901c")
+	)
+	(wire
+		(pts
+			(xy 189.23 133.35) (xy 200.66 133.35)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c07d6b0d-9247-402f-8432-8567243d8886")
+	)
+	(wire
+		(pts
+			(xy 195.58 130.81) (xy 200.66 130.81)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c24f9e4e-edbf-4f4f-a92d-d803faa0ef3a")
+	)
+	(wire
+		(pts
+			(xy 50.8 124.46) (xy 50.8 129.54)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c307b29a-ceb6-46f2-adc0-1e0fa5bc8241")
+	)
+	(wire
+		(pts
+			(xy 201.93 111.76) (xy 201.93 114.3)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ceff9c99-3d69-4a3b-a02d-d2f6757f0f13")
+	)
+	(wire
+		(pts
+			(xy 127 137.16) (xy 127 139.7)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d1f7fdb3-eb0d-4728-99da-c02839e3e8ca")
+	)
+	(wire
+		(pts
+			(xy 50.8 137.16) (xy 50.8 139.7)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "da084ea6-c53d-44cb-a3e6-7e2c7adfc092")
+	)
+	(wire
+		(pts
+			(xy 238.76 139.7) (xy 236.22 139.7)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ee5613a2-fe13-4bef-a896-6c16dd8eec57")
+	)
+	(wire
+		(pts
+			(xy 236.22 116.84) (xy 238.76 116.84)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f8bcdba8-3891-4c94-bf38-4b46176af2d3")
+	)
+	(wire
+		(pts
+			(xy 76.2 114.3) (xy 76.2 116.84)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "fa243e5b-a06b-48fc-81fd-48df8df02230")
+	)
+	(symbol
+		(lib_id "power:+BATT")
+		(at 50.8 114.3 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "0719b84b-3b27-40ae-b49a-c80b11c224af")
+		(property "Reference" "#PWR01"
+			(at 50.8 118.11 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+BATT"
+			(at 50.8 109.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 50.8 114.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 50.8 114.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+BATT\""
+			(at 50.8 114.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "f07f328f-89b2-40e4-865a-a894063cdc41")
+		)
+		(instances
+			(project "Automative_Hexapod"
+				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/e9a15bf3-25b5-4588-8308-b7d586974115"
+					(reference "#PWR01")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "automative_hexapod:Res_2K_0805_1%")
+		(at 127 133.35 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "10593723-93de-4b6a-8cdf-9e62168930a1")
+		(property "Reference" "R4"
+			(at 121.158 133.35 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" "2kOhm"
+			(at 129.286 129.54 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Footprint" "automative_hexapod:Res_0805"
+			(at 120.142 130.556 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 124.46 133.35 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Res_2K_0805_1%"
+			(at 120.396 133.35 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value 2" "1/8W"
+			(at 129.286 132.08 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(color 0 132 132 1)
+				)
+				(justify right)
+			)
+		)
+		(property "Value 3" "0805"
+			(at 129.286 134.62 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(color 0 132 132 1)
+				)
+				(justify right)
+			)
+		)
+		(property "Value 4" "1%"
+			(at 129.286 137.16 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(color 0 132 132 1)
+				)
+				(justify right)
+			)
+		)
+		(property "Supply Name" "Thegioiic"
+			(at 120.65 133.096 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply Part Number" "Điện Trở 2 KOhm 0805 1%"
+			(at 120.396 130.048 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply URL" "https://www.Thegioiic.com/dien-tro-2-kohm-0805-1-"
+			(at 120.65 130.556 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "b363a28b-3070-46a0-be55-680ba534b087")
+		)
+		(pin "2"
+			(uuid "a1e2e151-9512-47d5-8693-4e3344488672")
+		)
+		(instances
+			(project "Automative_Hexapod"
+				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/e9a15bf3-25b5-4588-8308-b7d586974115"
+					(reference "R4")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "automative_hexapod:Res_10.5K_0805_1%")
+		(at 50.8 133.35 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "129cf5d0-235c-43ad-be56-65e70831dde7")
+		(property "Reference" "R1"
+			(at 45.212 133.35 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" "10.5kOhm"
+			(at 53.34 129.54 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Footprint" "automative_hexapod:Res_0805"
+			(at 44.958 133.096 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 48.26 133.35 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Res_10.5K_0805_1%"
+			(at 45.466 132.842 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value 2" "1/8W"
+			(at 53.34 132.08 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(color 0 132 132 1)
+				)
+				(justify right)
+			)
+		)
+		(property "Value 3" "0805"
+			(at 53.34 134.62 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(color 0 132 132 1)
+				)
+				(justify right)
+			)
+		)
+		(property "Value 4" "1%"
+			(at 53.34 137.16 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(color 0 132 132 1)
+				)
+				(justify right)
+			)
+		)
+		(property "Supply Name" "Thegioiic"
+			(at 45.212 133.858 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply Part Number" "Điện Trở 10.5 KOhm 0805 1%"
+			(at 45.212 132.588 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply URL" "https://www.Thegioiic.com/dien-tro-10-5-kohm-0805-1-"
+			(at 45.466 133.096 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "53cece8e-9390-4f4d-94b2-c11a63e09b0a")
+		)
+		(pin "2"
+			(uuid "cd3773be-e12f-4e1b-9f63-8de388490e46")
+		)
+		(instances
+			(project "Automative_Hexapod"
+				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/e9a15bf3-25b5-4588-8308-b7d586974115"
+					(reference "R1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "automative_hexapod:Res_5.6K_0805_1%")
+		(at 101.6 133.35 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "32d32615-e61e-42a9-a2b7-e3c50441b84b")
+		(property "Reference" "R3"
+			(at 95.758 133.35 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" "5.6kOhm"
+			(at 104.14 129.54 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Footprint" "automative_hexapod:Res_0805"
+			(at 94.742 130.556 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 99.06 133.35 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Res_5.6K_0805_1%"
+			(at 94.996 133.35 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value 2" "1/8W"
+			(at 104.14 132.08 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(color 0 132 132 1)
+				)
+				(justify right)
+			)
+		)
+		(property "Value 3" "0805"
+			(at 104.14 134.62 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(color 0 132 132 1)
+				)
+				(justify right)
+			)
+		)
+		(property "Value 4" "1%"
+			(at 104.14 137.16 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(color 0 132 132 1)
+				)
+				(justify right)
+			)
+		)
+		(property "Supply Name" "Thegioiic"
+			(at 95.25 133.096 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply Part Number" "Điện Trở 5.6 KOhm 0805 1%"
+			(at 94.996 130.048 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply URL" "https://www.Thegioiic.com/dien-tro-5-6-kohm-0805-1-"
+			(at 95.25 130.556 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "d08e8ada-4343-4c71-a568-f80a52b1bd1b")
+		)
+		(pin "1"
+			(uuid "0dd0f9ff-3230-439b-a297-edb6a6ea07b1")
+		)
+		(instances
+			(project ""
+				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/e9a15bf3-25b5-4588-8308-b7d586974115"
+					(reference "R3")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 207.01 138.43 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "42faead7-8ffd-41f1-998a-91e6871e151a")
+		(property "Reference" "#PWR03"
+			(at 207.01 144.78 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 207.01 143.51 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 207.01 138.43 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 207.01 138.43 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 207.01 138.43 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "d8b6c259-75da-45fb-98c8-93bf86a4503d")
+		)
+		(instances
+			(project "Automative_Hexapod"
+				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/e9a15bf3-25b5-4588-8308-b7d586974115"
+					(reference "#PWR03")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 101.6 139.7 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "4695490f-ded7-4793-b4a0-352b5f1bb294")
+		(property "Reference" "#PWR08"
+			(at 101.6 146.05 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 101.6 144.78 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 101.6 139.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 101.6 139.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 101.6 139.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "592f396c-cc92-4f21-9328-3261557fbbc9")
+		)
+		(instances
+			(project "Automative_Hexapod"
+				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/e9a15bf3-25b5-4588-8308-b7d586974115"
+					(reference "#PWR08")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:VCC")
+		(at 76.2 114.3 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "507cfd7a-c3aa-4709-a778-ef7e3849fbd6")
+		(property "Reference" "#PWR05"
+			(at 76.2 118.11 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "VCC"
+			(at 76.2 109.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 76.2 114.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 76.2 114.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"VCC\""
+			(at 76.2 114.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "a19cf67f-fabf-4389-b44c-a3117da0fbe7")
+		)
+		(instances
+			(project "Automative_Hexapod"
+				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/e9a15bf3-25b5-4588-8308-b7d586974115"
+					(reference "#PWR05")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "automative_hexapod:Pin Connector")
+		(at 184.15 133.35 0)
+		(mirror y)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "663744f3-d839-4482-9634-c246d4f03ef5")
+		(property "Reference" "J1"
+			(at 182.88 132.0799 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "Pin Connector"
+			(at 182.88 134.6199 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "automative_hexapod:Connector-Pin"
+			(at 183.388 142.24 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 184.15 133.35 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "~"
+			(at 182.118 142.24 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value 2" "~"
+			(at 182.88 136.525 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value 3" "~"
+			(at 182.88 137.795 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(color 0 132 132 1)
+				)
+				(justify left)
+			)
+		)
+		(property "Value 4" "~"
+			(at 184.15 133.35 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply Name" "~"
+			(at 182.118 142.24 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply Part Number" "~"
+			(at 184.15 142.24 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply URL" "~"
+			(at 184.15 142.24 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "22a3cee2-385c-4e35-8256-a3f4c4bdc76f")
+		)
+		(pin "2"
+			(uuid "fa429005-da6f-49f4-8919-45b5ace6cbc6")
+		)
+		(instances
+			(project ""
+				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/e9a15bf3-25b5-4588-8308-b7d586974115"
+					(reference "J1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 236.22 149.86 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "6c0d9962-d7ba-4235-9016-c6407bb99b77")
+		(property "Reference" "#PWR023"
+			(at 236.22 156.21 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 236.22 154.94 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 236.22 149.86 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 236.22 149.86 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 236.22 149.86 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "20e268d0-3897-4458-a0a7-d7133e2ef69f")
+		)
+		(instances
+			(project "Automative_Hexapod"
+				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/e9a15bf3-25b5-4588-8308-b7d586974115"
+					(reference "#PWR023")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "automative_hexapod:MTS-102-C3")
+		(at 205.74 130.81 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "74f70d1e-84e5-4377-ac2b-8845d4df8c83")
+		(property "Reference" "SW1"
+			(at 210.82 127.6349 0)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "MTS-102-C3"
+			(at 210.82 130.1749 0)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "automative_hexapod:MTS-102-C3"
+			(at 207.518 116.332 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 206.502 139.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 205.74 130.81 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value 2" "~"
+			(at 210.82 132.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value 3" "~"
+			(at 210.82 133.35 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value 4" "~"
+			(at 210.82 134.62 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Supply Name" "Thegioiic"
+			(at 207.772 116.586 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply Part Number" "MTS-102-C3 Công Tắc Toggle ON-ON Gạt Giữ 3 Chân Cong 6A 125VAC"
+			(at 209.042 117.094 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply URL" "https://www.Thegioiic.com/mts-102-c3-cong-tac-toggle-on-on-gat-giu-3-chan-cong-6a-125vac"
+			(at 209.042 117.094 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "dda86d24-75fe-4ca7-a6c8-66e7d51c8c61")
+		)
+		(pin "SH"
+			(uuid "5e66a97f-4b82-415d-82ee-86e3df0bdfa7")
+		)
+		(pin "1"
+			(uuid "39c27eea-7172-4e96-bcf4-63ac24105109")
+		)
+		(pin "3"
+			(uuid "cd6a96d5-97f3-4f9e-b3ae-912b5510fffc")
+		)
+		(instances
+			(project ""
+				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/e9a15bf3-25b5-4588-8308-b7d586974115"
+					(reference "SW1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 194.31 138.43 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "8593a8d3-fa8a-47e3-8620-479dc4e311e1")
+		(property "Reference" "#PWR015"
+			(at 194.31 144.78 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 194.31 143.51 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 194.31 138.43 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 194.31 138.43 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 194.31 138.43 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "29a643ed-9c1a-462f-a59b-3919823ea4cc")
+		)
+		(instances
+			(project "Automative_Hexapod"
+				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/e9a15bf3-25b5-4588-8308-b7d586974115"
+					(reference "#PWR015")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "automative_hexapod:LED_0805")
+		(at 101.6 120.65 270)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "8f8b33c5-b10c-4308-9eb1-cf7c3b3208ff")
+		(property "Reference" "D3"
+			(at 96.774 120.65 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "5V"
+			(at 104.902 120.65 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "automative_hexapod:LED_0805"
+			(at 106.68 116.84 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 106.68 110.744 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Light emitting diode"
+			(at 106.426 120.904 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply Name" "Thegioiic"
+			(at 106.934 119.888 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply Part Number" "LED Xanh Lá 0805 Dán SMD Trong Suốt"
+			(at 106.426 121.158 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply URL" "https://www.Thegioiic.com/led-xanh-la-0805-dan-smd-trong-suot"
+			(at 106.934 119.888 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply Name" "Thegioiic"
+			(at 101.6 120.65 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "631022d4-12e0-4078-8f5f-be2a99a39e53")
+		)
+		(pin "2"
+			(uuid "dd42ee54-6ea5-4fa5-acac-efa224ef2c04")
+		)
+		(instances
+			(project ""
+				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/e9a15bf3-25b5-4588-8308-b7d586974115"
+					(reference "D3")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "automative_hexapod:KF120-4-V Domino")
+		(at 243.84 142.24 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "932acc1e-d081-49e4-aee4-679f2857e68a")
+		(property "Reference" "J3"
+			(at 245.11 140.3349 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "Connector"
+			(at 245.11 142.8749 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "automative_hexapod:TerminalBlock_Phoenix_MKDS-1,5-4-5.08_1x04_P5.08mm_Horizontal"
+			(at 243.078 152.4 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 243.84 142.24 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "150V 6A"
+			(at 245.364 152.4 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value 2" "~"
+			(at 245.11 144.78 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value 3" "KF120 2.54mm"
+			(at 245.11 146.6849 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(color 0 132 132 1)
+				)
+				(justify left)
+			)
+		)
+		(property "Value 4" "~"
+			(at 243.84 142.24 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply Name" "Thegioiic"
+			(at 241.808 152.4 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply Part Number" " KF120-4-V Domino 4 Chân Thẳng 2.54mm 150V 6A Hàn PCB"
+			(at 246.126 152.4 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply URL" "https://www.Thegioiic.com/kf120-4-v-domino-4-chan-thang-2-54mm-150v-6a-han-pcb"
+			(at 246.126 152.4 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "d3e825af-162b-4c0a-8e04-1522ed0c58ee")
+		)
+		(pin "2"
+			(uuid "c15ebd6f-6295-4ad0-930f-0d0e2fa6d2ec")
+		)
+		(pin "3"
+			(uuid "448784ea-2a1b-4253-ab73-f645ef622c07")
+		)
+		(pin "4"
+			(uuid "33154eef-adba-43ac-b3d9-6339a0cd07da")
+		)
+		(instances
+			(project "Automative_Hexapod"
+				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/e9a15bf3-25b5-4588-8308-b7d586974115"
+					(reference "J3")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 50.8 139.7 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "9ba17675-76af-4138-8f2e-ba74fa5e1c31")
+		(property "Reference" "#PWR02"
+			(at 50.8 146.05 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 50.8 144.78 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 50.8 139.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 50.8 139.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 50.8 139.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "7fd458ca-b8c5-49c8-8b9d-5224718ae07c")
+		)
+		(instances
+			(project "Automative_Hexapod"
+				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/e9a15bf3-25b5-4588-8308-b7d586974115"
+					(reference "#PWR02")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "automative_hexapod:TPS54331DR")
+		(at 138.43 45.72 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "9d2689ae-006b-4093-a8bf-6b03b34d47d2")
+		(property "Reference" "U5"
+			(at 148.59 22.86 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "TPS54331DR"
+			(at 148.59 25.4 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "automative_hexapod:SOIC-8"
+			(at 139.192 67.564 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "http://www.ti.com/lit/ds/symlink/tps54336a.pdf"
+			(at 150.114 67.056 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "4.5V to 28V Input, 3A, Synchronous Step-Down Converter with Eco-mode(tm)"
+			(at 148.082 66.802 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply Name" "Thegioiic"
+			(at 127.254 67.818 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply Part Number" "TPS54331DR IC Điều Chỉnh Giảm Áp 3A 8-SOIC"
+			(at 135.89 68.326 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply URL" "https://Thegioiic.com/tps54331dr-ic-dieu-chinh-giam-ap-3a-8-soic"
+			(at 143.002 68.072 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value 2" "~"
+			(at 148.59 27.94 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value 3" "~"
+			(at 148.59 29.21 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value 4" "~"
+			(at 148.59 30.48 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "6"
+			(uuid "acec578f-7dc8-4174-b1bf-90431cc60e63")
+		)
+		(pin "4"
+			(uuid "0b9b34b2-ddf2-4ea9-9e8c-99e0f9915429")
+		)
+		(pin "5"
+			(uuid "6b83e790-bb38-4235-9825-20c1bedc25db")
+		)
+		(pin "2"
+			(uuid "844ce3fe-451d-4788-84f3-777ba99c7368")
+		)
+		(pin "8"
+			(uuid "19e22e33-6a79-4d38-ba00-5a4a4b25aab1")
+		)
+		(pin "7"
+			(uuid "d484c1f8-4a6b-4fb2-a71b-b5df65f8c70a")
+		)
+		(pin "1"
+			(uuid "2a176f6d-fbf9-4121-b7ac-96dcea8c6b16")
+		)
+		(pin "3"
+			(uuid "5ed6eda2-c0bb-4e00-b2a2-ae7e0a080e29")
+		)
+		(instances
+			(project ""
+				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/e9a15bf3-25b5-4588-8308-b7d586974115"
+					(reference "U5")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+5V")
+		(at 101.6 114.3 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "9d6e9a37-976d-49ab-9090-7e3fab8648c9")
+		(property "Reference" "#PWR07"
+			(at 101.6 118.11 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+5V"
+			(at 101.6 109.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 101.6 114.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 101.6 114.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+5V\""
+			(at 101.6 114.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "5e91f22e-b31e-4d32-8c37-235ab58aff6e")
+		)
+		(instances
+			(project "Automative_Hexapod"
+				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/e9a15bf3-25b5-4588-8308-b7d586974115"
+					(reference "#PWR07")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "automative_hexapod:Fuse_1808")
+		(at 191.77 114.3 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "aa27febe-678d-4d8e-a2ec-f38693ebd975")
+		(property "Reference" "F1"
+			(at 191.77 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "Fuse"
+			(at 191.77 106.68 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "automative_hexapod:FUSE_SMD_1808"
+			(at 195.834 119.888 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 191.77 114.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "~"
+			(at 191.77 119.888 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value 2" "~"
+			(at 191.77 109.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value 3" "1808"
+			(at 191.77 110.49 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(color 0 132 132 1)
+				)
+			)
+		)
+		(property "Value 4" "~"
+			(at 191.77 114.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply Name" "Thegioiic"
+			(at 192.024 120.142 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply Part Number" "Đế Cầu Chì 1808 Dán SMD"
+			(at 192.786 119.888 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply URL" "https://www.Thegioiic.com/de-cau-chi-1808-dan-smd"
+			(at 192.786 119.888 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "018a070c-c8ce-489e-bd37-8f94f80738b5")
+		)
+		(pin "2"
+			(uuid "a62142c7-9f1f-4e1f-8f3b-b20fdc8c2e55")
+		)
+		(instances
+			(project ""
+				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/e9a15bf3-25b5-4588-8308-b7d586974115"
+					(reference "F1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 127 139.7 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "ad5a9e38-fcd5-4ba8-841e-24f51eb7091a")
+		(property "Reference" "#PWR010"
+			(at 127 146.05 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 127 144.78 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 127 139.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 127 139.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 127 139.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "0f725e3e-7f7c-4781-a889-fb6a14d89776")
+		)
+		(instances
+			(project "Automative_Hexapod"
+				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/e9a15bf3-25b5-4588-8308-b7d586974115"
+					(reference "#PWR010")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+3.3V")
+		(at 127 114.3 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "af47dbb4-ab3e-405a-bf8e-a77b5541e39c")
+		(property "Reference" "#PWR09"
+			(at 127 118.11 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3.3V"
+			(at 127 109.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 127 114.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 127 114.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
+			(at 127 114.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "2ee68879-6601-40f0-93af-2ab99c5f7a69")
+		)
+		(instances
+			(project "Automative_Hexapod"
+				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/e9a15bf3-25b5-4588-8308-b7d586974115"
+					(reference "#PWR09")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "automative_hexapod:LED_0805")
+		(at 76.2 120.65 270)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "b0a27b5a-8945-4da0-b942-4d1f7af98a19")
+		(property "Reference" "D2"
+			(at 71.12 120.65 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "PIN"
+			(at 80.01 120.65 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "automative_hexapod:LED_0805"
+			(at 81.28 116.84 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 81.28 110.744 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Light emitting diode"
+			(at 81.026 120.904 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply Name" "Thegioiic"
+			(at 81.534 119.888 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply Part Number" "LED Xanh Lá 0805 Dán SMD Trong Suốt"
+			(at 81.026 121.158 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply URL" "https://www.Thegioiic.com/led-xanh-la-0805-dan-smd-trong-suot"
+			(at 81.534 119.888 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "2cb6fd6f-1ceb-4169-b553-bc054991eee4")
+		)
+		(pin "2"
+			(uuid "0cfeeb90-d332-4a69-b053-534d3015b9a7")
+		)
+		(instances
+			(project "Automative_Hexapod"
+				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/e9a15bf3-25b5-4588-8308-b7d586974115"
+					(reference "D2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:VCC")
+		(at 182.88 111.76 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "bc1ec3ed-4cac-4596-b712-0f9a1bf70764")
+		(property "Reference" "#PWR014"
+			(at 182.88 115.57 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "VCC"
+			(at 182.88 106.68 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 182.88 111.76 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 182.88 111.76 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"VCC\""
+			(at 182.88 111.76 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "cc61d2d6-2e10-4939-9bdc-10dfbafd2f90")
+		)
+		(instances
+			(project "Automative_Hexapod"
+				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/e9a15bf3-25b5-4588-8308-b7d586974115"
+					(reference "#PWR014")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "automative_hexapod:KF120-4-V Domino")
+		(at 243.84 111.76 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "bdba5cf4-126e-4775-9d99-6416e58f5527")
+		(property "Reference" "J2"
+			(at 245.11 109.8549 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "Connector"
+			(at 245.11 112.3949 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "automative_hexapod:TerminalBlock_Phoenix_MKDS-1,5-4-5.08_1x04_P5.08mm_Horizontal"
+			(at 243.078 121.92 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 243.84 111.76 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "150V 6A"
+			(at 245.364 121.92 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value 2" "~"
+			(at 245.11 114.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value 3" "KF120 2.54mm"
+			(at 245.11 116.2049 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(color 0 132 132 1)
+				)
+				(justify left)
+			)
+		)
+		(property "Value 4" "~"
+			(at 243.84 111.76 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply Name" "Thegioiic"
+			(at 241.808 121.92 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply Part Number" " KF120-4-V Domino 4 Chân Thẳng 2.54mm 150V 6A Hàn PCB"
+			(at 246.126 121.92 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply URL" "https://www.Thegioiic.com/kf120-4-v-domino-4-chan-thang-2-54mm-150v-6a-han-pcb"
+			(at 246.126 121.92 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "aca0477c-c4d5-45e4-a41d-70353cc95f3a")
+		)
+		(pin "2"
+			(uuid "37288541-5cc5-4e0d-b29b-b93ad9b35588")
+		)
+		(pin "3"
+			(uuid "90254930-c9fb-4dc0-b66f-9f42350b7bba")
+		)
+		(pin "4"
+			(uuid "9e4b9144-b34e-4259-9c17-998a5e32891a")
+		)
+		(instances
+			(project ""
+				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/e9a15bf3-25b5-4588-8308-b7d586974115"
+					(reference "J2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+BATT")
+		(at 201.93 111.76 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "cfe1dc74-f029-410f-aa50-257a4dc54f80")
+		(property "Reference" "#PWR017"
+			(at 201.93 115.57 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+BATT"
+			(at 201.93 106.68 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 201.93 111.76 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 201.93 111.76 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+BATT\""
+			(at 201.93 111.76 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "f68baa8f-5edf-4fd2-a3ef-1f05d056cafa")
+		)
+		(instances
+			(project "Automative_Hexapod"
+				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/e9a15bf3-25b5-4588-8308-b7d586974115"
+					(reference "#PWR017")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 76.2 139.7 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "debfc1ef-f7d7-4b87-8e3b-7e4f113cce3b")
+		(property "Reference" "#PWR06"
+			(at 76.2 146.05 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 76.2 144.78 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 76.2 139.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 76.2 139.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 76.2 139.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "6826a93f-c68f-4cb5-bc66-d9441a734e5e")
+		)
+		(instances
+			(project "Automative_Hexapod"
+				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/e9a15bf3-25b5-4588-8308-b7d586974115"
+					(reference "#PWR06")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:Vdrive")
+		(at 236.22 138.43 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "e3eebb9f-9858-4411-9120-4ffe28112b1d")
+		(property "Reference" "#PWR022"
+			(at 236.22 142.24 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "Vdrive"
+			(at 236.22 133.35 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 236.22 138.43 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 236.22 138.43 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"Vdrive\""
+			(at 236.22 138.43 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "8675f0c3-0ab3-462b-b820-fa1173039a4b")
+		)
+		(instances
+			(project ""
+				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/e9a15bf3-25b5-4588-8308-b7d586974115"
+					(reference "#PWR022")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "automative_hexapod:LED_0805")
+		(at 50.8 120.65 270)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "e4a568b6-cbda-4de8-a1fc-d81bb74fc8c3")
+		(property "Reference" "D1"
+			(at 45.72 120.65 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "PIN"
+			(at 54.61 120.65 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "automative_hexapod:LED_0805"
+			(at 55.88 116.84 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 55.88 110.744 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Light emitting diode"
+			(at 55.626 120.904 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply Name" "Thegioiic"
+			(at 56.134 119.888 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply Part Number" "LED Xanh Lá 0805 Dán SMD Trong Suốt"
+			(at 55.626 121.158 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply URL" "https://www.Thegioiic.com/led-xanh-la-0805-dan-smd-trong-suot"
+			(at 56.134 119.888 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "cde5ecd6-818a-4bed-a0ec-2162651c97ee")
+		)
+		(pin "2"
+			(uuid "a10762df-87b2-4599-8a67-940ee49bbfba")
+		)
+		(instances
+			(project "Automative_Hexapod"
+				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/e9a15bf3-25b5-4588-8308-b7d586974115"
+					(reference "D1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "automative_hexapod:LED_0805")
+		(at 127 120.65 270)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "ef632466-a96b-47a3-9537-322253a865b0")
+		(property "Reference" "D4"
+			(at 121.158 120.65 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "3.3V"
+			(at 130.556 120.65 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "automative_hexapod:LED_0805"
+			(at 132.08 116.84 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 132.08 110.744 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Light emitting diode"
+			(at 131.826 120.904 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply Name" "Thegioiic"
+			(at 132.334 119.888 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply Part Number" "LED Xanh Lá 0805 Dán SMD Trong Suốt"
+			(at 131.826 121.158 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply URL" "https://www.Thegioiic.com/led-xanh-la-0805-dan-smd-trong-suot"
+			(at 132.334 119.888 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "739d0836-8e30-4dd6-9e9f-03d1021b2462")
+		)
+		(pin "2"
+			(uuid "218b716e-34e3-4ca1-a019-b1ec776e448b")
+		)
+		(instances
+			(project "Automative_Hexapod"
+				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/e9a15bf3-25b5-4588-8308-b7d586974115"
+					(reference "D4")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "automative_hexapod:Res_10.5K_0805_1%")
+		(at 76.2 133.35 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "f1a23ea6-1364-4b61-b21c-4a9373a1e87f")
+		(property "Reference" "R2"
+			(at 70.612 133.35 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" "10.5kOhm"
+			(at 78.74 129.54 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Footprint" "automative_hexapod:Res_0805"
+			(at 70.358 133.096 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 73.66 133.35 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Res_10.5K_0805_1%"
+			(at 70.866 132.842 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value 2" "1/8W"
+			(at 78.74 132.08 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(color 0 132 132 1)
+				)
+				(justify right)
+			)
+		)
+		(property "Value 3" "0805"
+			(at 78.74 134.62 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(color 0 132 132 1)
+				)
+				(justify right)
+			)
+		)
+		(property "Value 4" "1%"
+			(at 78.74 137.16 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(color 0 132 132 1)
+				)
+				(justify right)
+			)
+		)
+		(property "Supply Name" "Thegioiic"
+			(at 70.612 133.858 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply Part Number" "Điện Trở 10.5 KOhm 0805 1%"
+			(at 70.612 132.588 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Supply URL" "https://www.Thegioiic.com/dien-tro-10-5-kohm-0805-1-"
+			(at 70.866 133.096 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "aa05344a-562d-4cc8-a9a4-7c94ecdf0f81")
+		)
+		(pin "2"
+			(uuid "dbe754a6-90fb-4163-9d85-c6b2d832927a")
+		)
+		(instances
+			(project "Automative_Hexapod"
+				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/e9a15bf3-25b5-4588-8308-b7d586974115"
+					(reference "R2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+BATT")
+		(at 236.22 107.95 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "f2543e27-6be7-4c70-8a16-c4a8982b570b")
+		(property "Reference" "#PWR020"
+			(at 236.22 111.76 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+BATT"
+			(at 236.22 102.87 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 236.22 107.95 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 236.22 107.95 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+BATT\""
+			(at 236.22 107.95 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "d6f751e7-2693-46a4-9202-7e6ef68cc741")
+		)
+		(instances
+			(project "Automative_Hexapod"
+				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/e9a15bf3-25b5-4588-8308-b7d586974115"
+					(reference "#PWR020")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 236.22 119.38 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "f4bcaafc-67a2-4581-8010-9ec646d4a8d1")
+		(property "Reference" "#PWR021"
+			(at 236.22 125.73 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 236.22 124.46 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 236.22 119.38 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 236.22 119.38 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 236.22 119.38 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "78056786-2d42-407f-8ab5-d44cf6b6449f")
+		)
+		(instances
+			(project "Automative_Hexapod"
+				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/e9a15bf3-25b5-4588-8308-b7d586974115"
+					(reference "#PWR021")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+BATT")
+		(at 195.58 129.54 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "f75d1a8b-6623-44fc-86d8-63fc5c19d353")
+		(property "Reference" "#PWR016"
+			(at 195.58 133.35 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+BATT"
+			(at 195.58 124.46 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 195.58 129.54 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 195.58 129.54 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+BATT\""
+			(at 195.58 129.54 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "1df1dfbf-1847-46a8-af59-7edca97cd082")
+		)
+		(instances
+			(project ""
+				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/e9a15bf3-25b5-4588-8308-b7d586974115"
+					(reference "#PWR016")
+					(unit 1)
+				)
+			)
+		)
+	)
+)

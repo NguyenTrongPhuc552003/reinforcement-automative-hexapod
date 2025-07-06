@@ -30,7 +30,7 @@
 #define MPU6050_REG_WHO_AM_I 0x75     /* Who Am I */
 
 /* MPU6050 specific constants */
-#define MPU6050_DEVICE_ID 0x98 /* Expected value from WHO_AM_I register */
+#define MPU6050_DEVICE_ID 0x68 /* Expected value from WHO_AM_I register */
 #define MPU6050_RESET_BIT 0x80 /* Reset bit in PWR_MGMT_1 */
 #define MPU6050_SLEEP_BIT 0x40 /* Sleep bit in PWR_MGMT_1 */
 #define MPU6050_CLOCK_PLL 0x01 /* Use PLL with X axis gyro reference */

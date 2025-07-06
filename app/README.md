@@ -62,7 +62,7 @@ sudo ./test_hcsr04      # Test ultrasonic sensor
 
 The application can be run using the main controller:
 ```bash
-sudo ./hexapod_controller
+sudo ./hexapod_app
 ```
     hexapod_cleanup();
     return 0;

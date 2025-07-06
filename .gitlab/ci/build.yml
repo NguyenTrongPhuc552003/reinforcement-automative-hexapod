@@ -14,7 +14,7 @@ build_app:
     - ./scripts/build.sh -u
   artifacts:
     paths:
-      - deploy/hexapod_controller
+      - deploy/hexapod_app
       - deploy/test_mpu6050
       - deploy/test_balance
       - deploy/test_calibration
