@@ -156,20 +156,6 @@
 			)
 		)
 	)
-	(pad "" smd roundrect
-		(at -5.7 6.2)
-		(size 1.4 3)
-		(layers "F.Cu" "F.Mask" "F.Paste")
-		(roundrect_rratio 0.2)
-		(uuid "128231c9-9ee2-4b08-81c5-995a819d3cb9")
-	)
-	(pad "" smd roundrect
-		(at 5.7 6.2)
-		(size 1.4 3)
-		(layers "F.Cu" "F.Mask" "F.Paste")
-		(roundrect_rratio 0.2)
-		(uuid "660e2c58-fc87-43a4-9547-80822d6cc0f6")
-	)
 	(pad "1" smd roundrect
 		(at 2.54 -1.6)
 		(size 1.5 3)
@@ -190,6 +176,20 @@
 		(layers "F.Cu" "F.Mask" "F.Paste")
 		(roundrect_rratio 0.2)
 		(uuid "294b8d63-9f63-46ca-8954-4420ba6b22de")
+	)
+	(pad "SH" smd roundrect
+		(at -5.7 6.2)
+		(size 1.4 3)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(roundrect_rratio 0.2)
+		(uuid "128231c9-9ee2-4b08-81c5-995a819d3cb9")
+	)
+	(pad "SH" smd roundrect
+		(at 5.7 6.2)
+		(size 1.4 3)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(roundrect_rratio 0.2)
+		(uuid "660e2c58-fc87-43a4-9547-80822d6cc0f6")
 	)
 	(embedded_fonts no)
 	(model "${KIPRJMOD}/../../Library/3d_model/JST - XH - SMD (R) - 3Pin - 2.54mm.stp"

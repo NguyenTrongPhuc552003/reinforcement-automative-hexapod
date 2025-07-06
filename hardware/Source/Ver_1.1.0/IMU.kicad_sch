@@ -1283,7 +1283,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "29fe5044-210c-4856-a33f-00da9b5c425b")
-		(property "Reference" "#PWR085"
+		(property "Reference" "#PWR083"
 			(at 143.51 90.17 0)
 			(effects
 				(font
@@ -1333,7 +1333,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/6f119c3f-94db-4ed9-9af0-8eee89c2f72e"
-					(reference "#PWR085")
+					(reference "#PWR083")
 					(unit 1)
 				)
 			)
@@ -1461,7 +1461,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "6304d3c7-d3d9-4d08-a0b5-8d72beea2d07")
-		(property "Reference" "#PWR086"
+		(property "Reference" "#PWR084"
 			(at 149.86 90.17 0)
 			(effects
 				(font
@@ -1512,7 +1512,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/6f119c3f-94db-4ed9-9af0-8eee89c2f72e"
-					(reference "#PWR086")
+					(reference "#PWR084")
 					(unit 1)
 				)
 			)
@@ -1528,7 +1528,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "657154fa-81fd-4380-8571-8e2b24bbd26d")
-		(property "Reference" "#PWR088"
+		(property "Reference" "#PWR086"
 			(at 184.15 110.49 0)
 			(effects
 				(font
@@ -1578,7 +1578,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/6f119c3f-94db-4ed9-9af0-8eee89c2f72e"
-					(reference "#PWR088")
+					(reference "#PWR086")
 					(unit 1)
 				)
 			)
@@ -1593,7 +1593,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "b78aefce-08cf-4f3e-a849-efbd2b5495ba")
-		(property "Reference" "#PWR087"
+		(property "Reference" "#PWR085"
 			(at 184.15 90.17 0)
 			(effects
 				(font
@@ -1643,7 +1643,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/6f119c3f-94db-4ed9-9af0-8eee89c2f72e"
-					(reference "#PWR087")
+					(reference "#PWR085")
 					(unit 1)
 				)
 			)
@@ -1658,7 +1658,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "d8cfa395-aabf-480c-a6e5-9777e98cead7")
-		(property "Reference" "C34"
+		(property "Reference" "C28"
 			(at 195.58 95.25 90)
 			(effects
 				(font
@@ -1769,7 +1769,7 @@
 		(instances
 			(project ""
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/6f119c3f-94db-4ed9-9af0-8eee89c2f72e"
-					(reference "C34")
+					(reference "C28")
 					(unit 1)
 				)
 			)
@@ -1784,7 +1784,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "e46689fe-c54d-4db2-aa9f-152060d9dac4")
-		(property "Reference" "C33"
+		(property "Reference" "C27"
 			(at 176.53 95.25 90)
 			(effects
 				(font
@@ -1895,7 +1895,7 @@
 		(instances
 			(project ""
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/6f119c3f-94db-4ed9-9af0-8eee89c2f72e"
-					(reference "C33")
+					(reference "C27")
 					(unit 1)
 				)
 			)
