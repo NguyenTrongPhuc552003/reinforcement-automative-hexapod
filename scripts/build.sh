@@ -304,8 +304,8 @@ generate_package() {
     
     # Get version from version.txt or use current date
     local VERSION="1.0.0"
-    if [ -f "${PROJECT_ROOT}/version.txt" ]; then
-        VERSION=$(cat "${PROJECT_ROOT}/version.txt" | tr -d '\n\r')
+    if [ -f "${PACKAGE_DIR}/version.txt" ]; then
+        VERSION=$(cat "${PACKAGE_DIR}/version.txt" | tr -d '\n\r')
     else
         VERSION="1.0.0-$(date +%Y%m%d)"
     fi
