@@ -71,7 +71,7 @@ i2cdetect -y -r ${I2C_PORT}
 
 # Check for conflicting drivers
 echo "Checking for conflicting drivers..."
-for module in inv_mpu6050_i2c inv_mpu6050 mpu6050_i2c; do
+for module in inv_mpu6050_i2c inv_mpu6050 mpu6050_i2c adxl345; do
     if lsmod | grep -q "^$module"; then
         echo "Removing conflicting module: $module"
         sudo rmmod $module || true
