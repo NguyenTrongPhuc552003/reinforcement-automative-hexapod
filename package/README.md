@@ -85,9 +85,9 @@ sudo /opt/hexapod/monitor.sh
 
 ## Updates and Support
 
-- Project repository: https://github.com/your-repo/hexapod
-- Issue tracker: https://github.com/your-repo/hexapod/issues
-- Documentation: https://hexapod-docs.example.com
+- Project repository: https://github.com/NguyenTrongPhuc552003/reinforcement-automative-hexapod.git
+- Issue tracker: https://github.com/NguyenTrongPhuc552003/reinforcement-automative-hexapod/issues
+- Documentation: https://github.com/NguyenTrongPhuc552003/reinforcement-automative-hexapod/tree/main/docs
 
 ## Version Information
 
