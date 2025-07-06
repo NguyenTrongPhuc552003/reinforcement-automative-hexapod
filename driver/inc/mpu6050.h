@@ -65,17 +65,17 @@ int mpu6050_init(void);
 int mpu6050_init_with_config(const struct mpu6050_config *config);
 
 /**
+ * Cleanup the MPU6050 module
+ */
+void mpu6050_cleanup(void);
+
+/**
  * Read sensor data from MPU6050
  *
  * @param data Pointer to data structure to fill with sensor readings
  * @return 0 on success, negative error code on failure
  */
 int mpu6050_read_sensors(struct mpu6050_imu_data *data);
-
-/**
- * Cleanup the MPU6050 module
- */
-void mpu6050_cleanup(void);
 
 /**
  * Get device status and information
