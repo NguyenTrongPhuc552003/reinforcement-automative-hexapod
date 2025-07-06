@@ -1,0 +1,17 @@
+Package: hexapod
+Version: 1.0.0
+Section: misc
+Priority: optional
+Architecture: armhf
+Maintainer: StrongFood <trong552003@gmail.com>
+Depends: libc6 (>= 2.28)
+Description: Hexapod Robot Control System
+ Complete control system for hexapod robots with kernel drivers,
+ user space applications, and reinforcement learning modules.
+ .
+ This package includes:
+ - Kernel driver for hardware interface
+ - Main control application
+ - Test and calibration utilities
+ - System monitoring tools
+ - PyTD3 reinforcement learning support

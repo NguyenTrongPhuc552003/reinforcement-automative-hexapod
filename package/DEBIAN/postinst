@@ -1,0 +1,48 @@
+#!/bin/bash
+set -e
+
+echo "Configuring Hexapod Robot Control System..."
+
+# Install and load kernel module
+if [ -f "/lib/modules/$(uname -r)/extra/hexapod_driver.ko" ]; then
+    echo "Loading hexapod kernel driver..."
+    depmod -a
+    modprobe hexapod_driver || true
+    
+    # Add to modules for auto-loading on boot
+    if ! grep -q "hexapod_driver" /etc/modules 2>/dev/null; then
+        echo "hexapod_driver" >> /etc/modules
+        echo "Added hexapod_driver to auto-load modules"
+    fi
+else
+    echo "Warning: Kernel module not found, manual installation may be required"
+fi
+
+# Set proper permissions for executables
+echo "Setting executable permissions..."
+chmod +x /usr/local/bin/hexapod_app 2>/dev/null || true
+chmod +x /usr/local/bin/test_* 2>/dev/null || true
+chmod +x /opt/hexapod/install.sh 2>/dev/null || true
+chmod +x /opt/hexapod/monitor.sh 2>/dev/null || true
+
+# Create device node if it doesn't exist
+if [ ! -c /dev/hexapod ]; then
+    echo "Creating device node..."
+    # Note: The actual device node creation is handled by udev rules
+    # This is just a placeholder for manual creation if needed
+fi
+
+# Create log directory
+mkdir -p /var/log/hexapod
+chmod 755 /var/log/hexapod
+
+echo "Hexapod Robot Control System installed successfully!"
+echo ""
+echo "Quick start:"
+echo "  sudo hexapod_app          - Run main application"
+echo "  sudo test_mpu6050         - Test IMU sensor"
+echo "  sudo /opt/hexapod/monitor.sh - Monitor system"
+echo ""
+echo "For more information, see /usr/local/bin/README.md"
+
+exit 0
