@@ -10,11 +10,7 @@
 	path = tidl/utils
 	url = git://git.ti.com/tidl/tidl-utils.git
 	branch = master
-[submodule "utils/ti-linux-kernel-dev"]
-	path = utils/ti-linux-kernel-dev
-	url = https://github.com/RobertCNelson/ti-linux-kernel-dev.git
-	branch = ti-linux-4.14.y
 [submodule "thesis"]
 	path = thesis
-	url = https://github.com/PKief/latex-thesis-template.git
+	url = git@github.com:NguyenTrongPhuc552003/final-hexapod-thesis.git
 	branch = main
