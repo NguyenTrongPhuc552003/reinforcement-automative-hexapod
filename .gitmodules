@@ -12,5 +12,5 @@
 	branch = master
 [submodule "thesis"]
 	path = thesis
-	url = https://github.com/PKief/latex-thesis-template.git
+	url = git@github.com:NguyenTrongPhuc552003/final-hexapod-thesis.git
 	branch = main
