@@ -10,7 +10,7 @@
 	path = tidl/utils
 	url = git://git.ti.com/tidl/tidl-utils.git
 	branch = master
-[submodule "thesis"]
-	path = thesis
+[submodule "report/thesis"]
+	path = report/thesis
 	url = git@github.com:NguyenTrongPhuc552003/final-hexapod-thesis.git
 	branch = main
