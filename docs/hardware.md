@@ -4,9 +4,9 @@
 
 This document describes the hardware components of the hexapod robot and provides detailed specifications, wiring diagrams, and configuration information.
 
-![Hexapod Hardware Overview](../resource/overview.jpg)
+![Hexapod Hardware Overview](../hardware/README.md)
 
-For detailed visual representation of hardware organization, see the [Component Diagram](diagrams/out/component.png) and [Deployment Diagram](diagrams/out/deployment.png).
+For detailed visual representation of hardware organization, see the [Component Diagram](diagrams/image/component.png) and [Deployment Diagram](diagrams/image/deployment.png).
 
 ## Robot Specifications
 
@@ -25,20 +25,20 @@ For detailed visual representation of hardware organization, see the [Component 
 
 ## Component List
 
-| Component                 | Quantity | Description                            |
-|---------------------------|----------|----------------------------------------|
-| BeagleBone AI/Black       | 1        | Main control board                     |
-| MG996R Servo Motors       | 18       | 3 per leg (hip, knee, ankle)           |
-| PCA9685 PWM Controller    | 2        | 16-channel PWM controller              |
-| MPU6050 IMU Sensor        | 1        | 6-axis accelerometer + gyroscope       |
-| 6V 10A Power Supply       | 1        | For powering servos                    |
-| Voltage Regulator 5V      | 1        | For logic power                        |
-| Aluminum/Plastic Brackets | 18       | For leg joints                         |
-| Body Frame                | 1        | Central chassis                        |
-| Leg Segments              | 18       | Connecting rods for legs               |
-| Foot Pads                 | 6        | Non-slip contact points                |
-| Wires and Connectors      | Assorted | For electrical connections             |
-| Mounting Hardware         | Assorted | Screws, nuts, standoffs                |
+| Component Description     | Quantity | Notes                            |
+|---------------------------|----------|----------------------------------|
+| BeagleBone AI/Black       | 1        | Main control board               |
+| MG996R Servo Motors       | 18       | 3 per leg (hip, knee, ankle)     |
+| PCA9685 PWM Controller    | 2        | 16-channel PWM controller        |
+| MPU6050 IMU Sensor        | 1        | 6-axis accelerometer + gyroscope |
+| 6V 10A Power Supply       | 1        | For powering servos              |
+| Voltage Regulator 5V      | 1        | For logic power                  |
+| Aluminum/Plastic Brackets | 18       | For leg joints                   |
+| Body Frame                | 1        | Central chassis                  |
+| Leg Segments              | 18       | Connecting rods for legs         |
+| Foot Pads                 | 6        | Non-slip contact points          |
+| Wires and Connectors      | Assorted | For electrical connections       |
+| Mounting Hardware         | Assorted | Screws, nuts, standoffs          |
 
 ## Mechanical Architecture
 
@@ -93,21 +93,21 @@ The hexapod follows a standard hexapod design with 6 legs arranged radially arou
 
 The I2C bus 2 on BeagleBone is used for connecting sensors and actuators:
 
-| Device            | I2C Address | Bus | Description                          |
-|-------------------|-------------|-----|--------------------------------------|
-| MPU6050           | 0x68        | 3   | 6-axis IMU sensor                    |
-| PCA9685 Primary   | 0x40        | 3   | 16-channel PWM controller            |
-| PCA9685 Secondary | 0x70        | 3   | 16-channel PWM controller (optional) |
+| Device Description | I2C Address | Bus | Description               |
+|------------------- |-------------|-----|---------------------------|
+| MPU6050            | 0x68        | 3   | 6-axis IMU sensor         |
+| PCA9685 Primary    | 0x40        | 3   | 16-channel PWM controller |
+| PCA9685 Secondary  | 0x70        | 3   | 16-channel PWM controller |
 
 ### BeagleBone Pin Configuration
 
-| BeagleBone Pin | Function   | Connected To               |
-|----------------|------------|----------------------------|
-| P9_19          | I2C2_SCL   | SCL of all I2C devices     |
-| P9_20          | I2C2_SDA   | SDA of all I2C devices     |
-| P9_1, P9_2     | GND        | Ground for all devices     |
-| P9_7, P9_8     | SYS_5V     | Logic power for shields    |
-| P9_3, P9_4     | DC_3.3V    | 3.3V sensors (e.g. MPU6050)|
+| BeagleBone Pin | Function   | Connected To                |
+|----------------|------------|-----------------------------|
+| P9_19          | I2C2_SCL   | SCL of all I2C devices      |
+| P9_20          | I2C2_SDA   | SDA of all I2C devices      |
+| P9_1, P9_2     | GND        | Ground for all devices      |
+| P9_7, P9_8     | SYS_5V     | Logic power for shields     |
+| P9_3, P9_4     | DC_3.3V    | 3.3V sensors (e.g. MPU6050) |
 
 ## Servo Motor Specifications
 
@@ -118,36 +118,36 @@ Type: MG996R (or compatible) high-torque metal gear servo
 | Operating Voltage  | 4.8V to 6.6V                              |
 | Stall Torque       | 9.4 kg·cm (4.8V) / 11 kg·cm (6.0V)        |
 | Speed              | 0.17 sec/60° (4.8V) / 0.14 sec/60° (6.0V) |
-| Weight             | 55g                                        |
-| Dimensions         | 40.7 × 19.7 × 42.9 mm                      |
-| Control Signal     | PWM, 1-2ms pulse, 50Hz                     |
-| Rotation Range     | 180° (controlled as ±90°)                  |
-| Working Temperature| -30°C to +60°C                             |
+| Weight             | 55g                                       |
+| Dimensions         | 40.7 × 19.7 × 42.9 mm                     |
+| Control Signal     | PWM, 1-2ms pulse, 50Hz                    |
+| Rotation Range     | 180° (controlled as ±90°)                 |
+| Working Temperature| -30°C to +60°C                            |
 
 ## Servo Mapping
 
 Each servo is connected to a specific channel on the PCA9685 controllers.
 
-| Leg | Joint | PWM Channel | Controller |
-|-----|-------|-------------|------------|
-| 0   | Hip   | 0           | Primary    |
-|     | Knee  | 1           | Primary    |
-|_____| Ankle | 2           | Primary    |
-| 1   | Hip   | 3           | Primary    |
-|     | Knee  | 4           | Primary    |
-|_____| Ankle | 5           | Primary    |
-| 2   | Hip   | 6           | Primary    |
-|     | Knee  | 7           | Primary    |
-|_____| Ankle | 8           | Primary    |
-| 3   | Hip   | 0           | Secondary  |
-|     | Knee  | 1           | Secondary  |
-|_____| Ankle | 2           | Secondary  |
-| 4   | Hip   | 3           | Secondary  |
-|     | Knee  | 4           | Secondary  |
-|_____| Ankle | 5           | Secondary  |
-| 5   | Hip   | 6           | Secondary  |
-|     | Knee  | 7           | Secondary  |
-|_____| Ankle | 8           | Secondary  |
+| Leg | Joint | PWM Channel  | Controller |
+|-----|-------|--------------|------------|
+| 0   | Hip   | 0            | Primary    |
+|     | Knee  | 1            | Primary    |
+|_____| Ankle | 2            | Primary    |
+| 1   | Hip   | 4            | Primary    |
+|     | Knee  | 5            | Primary    |
+|_____| Ankle | 6            | Primary    |
+| 2   | Hip   | 8            | Primary    |
+|     | Knee  | 9            | Primary    |
+|_____| Ankle | 10           | Primary    |
+| 3   | Hip   | 0            | Secondary  |
+|     | Knee  | 1            | Secondary  |
+|_____| Ankle | 2            | Secondary  |
+| 4   | Hip   | 4            | Secondary  |
+|     | Knee  | 5            | Secondary  |
+|_____| Ankle | 6            | Secondary  |
+| 5   | Hip   | 8            | Secondary  |
+|     | Knee  | 9            | Secondary  |
+|_____| Ankle | 10           | Secondary  |
 
 Note: The secondary controller is optional. If using only one controller, leg 5's knee and ankle joints must be remapped to unused channels or a different solution implemented.
 

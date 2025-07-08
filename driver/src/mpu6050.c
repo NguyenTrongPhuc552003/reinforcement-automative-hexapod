@@ -1,3 +1,8 @@
+/**
+ * @file mpu6050.c
+ * @brief Kernel-space driver for the MPU6050 IMU
+ */
+
 #include <linux/module.h>
 #include <linux/i2c.h>
 #include <linux/mutex.h>
@@ -384,7 +389,7 @@ void mpu6050_cleanup(void)
 }
 EXPORT_SYMBOL_GPL(mpu6050_cleanup);
 
-MODULE_LICENSE("GPL");
+MODULE_LICENSE("GPL v2");
 MODULE_DESCRIPTION("MPU6050 IMU Driver");
 MODULE_AUTHOR("StrongFood");
 MODULE_VERSION("1.0");

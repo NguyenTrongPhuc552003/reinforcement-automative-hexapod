@@ -5728,6 +5728,131 @@
 			)
 			(embedded_fonts no)
 		)
+		(symbol "power:VBUS"
+			(power)
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "#PWR"
+				(at 0 -3.81 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Value" "VBUS"
+				(at 0 3.556 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Power symbol creates a global label with name \"VBUS\""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "global power"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "VBUS_0_1"
+				(polyline
+					(pts
+						(xy -0.762 1.27) (xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 2.54) (xy 0.762 1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 0) (xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "VBUS_1_1"
+				(pin power_in line
+					(at 0 0 90)
+					(length 0)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 		(symbol "power:VCC"
 			(power)
 			(pin_numbers
@@ -6082,6 +6207,12 @@
 		(uuid "cd0fa0ee-566c-4f79-b0f3-16128768b306")
 	)
 	(junction
+		(at 186.69 128.27)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "d37cbeff-143d-4e80-93dd-ee26bb921181")
+	)
+	(junction
 		(at 163.83 38.1)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -6203,6 +6334,16 @@
 	)
 	(wire
 		(pts
+			(xy 186.69 128.27) (xy 200.66 128.27)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "17dd3832-9cd5-40e7-9a47-bd1a138c24be")
+	)
+	(wire
+		(pts
 			(xy 236.22 116.84) (xy 236.22 114.3)
 		)
 		(stroke
@@ -6240,6 +6381,16 @@
 			(type default)
 		)
 		(uuid "29339595-7b3a-4037-8cb6-35b3ac9c811a")
+	)
+	(wire
+		(pts
+			(xy 186.69 124.46) (xy 186.69 128.27)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "2d08b5a6-45ef-40e5-bbc1-ccf23ffc9e25")
 	)
 	(wire
 		(pts
@@ -6473,7 +6624,7 @@
 	)
 	(wire
 		(pts
-			(xy 194.31 133.35) (xy 194.31 130.81)
+			(xy 187.96 133.35) (xy 187.96 130.81)
 		)
 		(stroke
 			(width 0)
@@ -6743,7 +6894,7 @@
 	)
 	(wire
 		(pts
-			(xy 189.23 128.27) (xy 200.66 128.27)
+			(xy 181.61 128.27) (xy 186.69 128.27)
 		)
 		(stroke
 			(width 0)
@@ -6903,7 +7054,7 @@
 	)
 	(wire
 		(pts
-			(xy 194.31 130.81) (xy 189.23 130.81)
+			(xy 187.96 130.81) (xy 181.61 130.81)
 		)
 		(stroke
 			(width 0)
@@ -7486,6 +7637,72 @@
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/e9a15bf3-25b5-4588-8308-b7d586974115"
 					(reference "#PWR021")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:VBUS")
+		(at 186.69 124.46 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "20e1eaf1-1fc1-4280-a547-e0b60ee9e5fb")
+		(property "Reference" "#PWR0186"
+			(at 186.69 128.27 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "VBUS"
+			(at 186.69 119.38 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 186.69 124.46 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 186.69 124.46 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"VBUS\""
+			(at 186.69 124.46 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "823659e2-e32b-40b9-97cd-11bad1c19b98")
+		)
+		(instances
+			(project "Automative_Hexapod"
+				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/e9a15bf3-25b5-4588-8308-b7d586974115"
+					(reference "#PWR0186")
 					(unit 1)
 				)
 			)
@@ -8268,7 +8485,7 @@
 	)
 	(symbol
 		(lib_id "automative_hexapod:Pin Connector")
-		(at 184.15 128.27 0)
+		(at 176.53 128.27 0)
 		(mirror y)
 		(unit 1)
 		(exclude_from_sim no)
@@ -8277,7 +8494,7 @@
 		(dnp no)
 		(uuid "663744f3-d839-4482-9634-c246d4f03ef5")
 		(property "Reference" "J1"
-			(at 182.88 126.9999 0)
+			(at 175.26 126.9999 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8286,7 +8503,7 @@
 			)
 		)
 		(property "Value" "Pin Connector"
-			(at 182.88 129.5399 0)
+			(at 175.26 129.5399 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8295,7 +8512,7 @@
 			)
 		)
 		(property "Footprint" "automative_hexapod:Connector-Pin"
-			(at 183.388 137.16 0)
+			(at 175.768 137.16 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8304,7 +8521,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 184.15 128.27 0)
+			(at 176.53 128.27 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8313,7 +8530,7 @@
 			)
 		)
 		(property "Description" "~"
-			(at 182.118 137.16 0)
+			(at 174.498 137.16 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8322,7 +8539,7 @@
 			)
 		)
 		(property "Value 2" "~"
-			(at 182.88 131.445 0)
+			(at 175.26 131.445 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8331,7 +8548,7 @@
 			)
 		)
 		(property "Value 3" "~"
-			(at 182.88 132.715 0)
+			(at 175.26 132.715 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8341,7 +8558,7 @@
 			)
 		)
 		(property "Value 4" "~"
-			(at 184.15 128.27 0)
+			(at 176.53 128.27 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8350,7 +8567,7 @@
 			)
 		)
 		(property "Supply Name" "~"
-			(at 182.118 137.16 0)
+			(at 174.498 137.16 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8359,7 +8576,7 @@
 			)
 		)
 		(property "Supply Part Number" "~"
-			(at 184.15 137.16 0)
+			(at 176.53 137.16 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8368,7 +8585,7 @@
 			)
 		)
 		(property "Supply URL" "~"
-			(at 184.15 137.16 0)
+			(at 176.53 137.16 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8717,7 +8934,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 194.31 133.35 0)
+		(at 187.96 133.35 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -8726,7 +8943,7 @@
 		(fields_autoplaced yes)
 		(uuid "8593a8d3-fa8a-47e3-8620-479dc4e311e1")
 		(property "Reference" "#PWR017"
-			(at 194.31 139.7 0)
+			(at 187.96 139.7 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8735,7 +8952,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 194.31 138.43 0)
+			(at 187.96 138.43 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8743,7 +8960,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 194.31 133.35 0)
+			(at 187.96 133.35 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8752,7 +8969,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 194.31 133.35 0)
+			(at 187.96 133.35 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8761,7 +8978,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 194.31 133.35 0)
+			(at 187.96 133.35 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9822,72 +10039,6 @@
 			(project ""
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/e9a15bf3-25b5-4588-8308-b7d586974115"
 					(reference "C4")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:VCC")
-		(at 236.22 107.95 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "a9e598b4-fcd7-4484-bf10-fe5e23c02412")
-		(property "Reference" "#PWR022"
-			(at 236.22 111.76 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "VCC"
-			(at 236.22 102.87 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 236.22 107.95 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 236.22 107.95 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"VCC\""
-			(at 236.22 107.95 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "a4f03172-a176-4ab8-9394-c69251b8d5e9")
-		)
-		(instances
-			(project "Automative_Hexapod"
-				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/e9a15bf3-25b5-4588-8308-b7d586974115"
-					(reference "#PWR022")
 					(unit 1)
 				)
 			)
@@ -11863,6 +12014,72 @@
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/e9a15bf3-25b5-4588-8308-b7d586974115"
 					(reference "#PWR09")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:VBUS")
+		(at 236.22 107.95 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "eb235ccf-d637-4417-83e1-10932cf31746")
+		(property "Reference" "#PWR0187"
+			(at 236.22 111.76 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "VBUS"
+			(at 236.22 102.87 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 236.22 107.95 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 236.22 107.95 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"VBUS\""
+			(at 236.22 107.95 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "341c393f-be97-4f35-b44b-376e62dbf47e")
+		)
+		(instances
+			(project "Automative_Hexapod"
+				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/e9a15bf3-25b5-4588-8308-b7d586974115"
+					(reference "#PWR0187")
 					(unit 1)
 				)
 			)

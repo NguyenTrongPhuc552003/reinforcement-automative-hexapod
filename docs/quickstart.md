@@ -1,97 +1,154 @@
-# Hexapod Quick Start Guide
+# Hexapod Robot - Quick Start Guide
+
+This guide will help you quickly set up and operate the reinforcement learning-enabled hexapod robot.
 
 ## Prerequisites
 
-- BeagleBone AI or Black (with Debian/Ubuntu Linux)
-- I2C enabled on bus 3
-- Hardware components assembled:
-  - 18× MG996R servo motors
-  - 2× PCA9685 PWM controllers
-  - 1× MPU6050 IMU sensor
-  - Power supply (6V for servos, 5V logic)
-- Host computer with:
-  - Docker installed
-  - SSH client
+- BeagleBone Black or compatible single-board computer
+- Properly assembled hexapod with 18 servos (3 per leg)
+- IMU sensor (MPU6050 or ADXL345)
+- Optional: Ultrasonic distance sensor
+- Power supply (7.4V-12V recommended)
 
-## 1. Build the Project
+## Installation
 
-The easiest way to build all components is using our Docker-based build environment.
+### Option 1: Using Pre-built Image
 
-### Using the Docker Build Environment
+1. Download the pre-built image from our repository
+2. Flash the image to a microSD card
+3. Insert the card into your BeagleBone and power on
+4. The system will boot automatically
 
-From the project root directory:
+### Option 2: Manual Installation
 
-```bash
-# Build all components (kernel modules, user applications, pytd3)
-./scripts/build.sh
+1. Install dependencies:
+   ```bash
+   sudo apt update
+   sudo apt install -y build-essential cmake git docker
+   ```
 
-# Or build specific components:
-./scripts/build.sh -m    # Build only kernel modules
-./scripts/build.sh -u    # Build only user applications
-./scripts/build.sh -d    # Build only pytd3 components
-```
+2. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/reinforcement-automative-hexapod.git
+   cd reinforcement-automative-hexapod
+   ```
 
-The build outputs will be placed in the `deploy` directory.
+3. Build the project:
+   ```bash
+   ./scripts/build.sh
+   ```
 
-## 2. Train pytd3 Models with Docker
+4. Deploy the applications to your BeagleBone:
+   ```bash
+   ./scripts/deploy.sh
+   ```
 
-Our Docker-based workflow makes it easy to train and deploy reinforcement learning models:
+## Hardware Setup
 
-```bash
-# Start the training container
-docker-compose run train
+1. Connect the servo controller (PCA9685) to I2C bus
+2. Connect the IMU sensor (MPU6050 or ADXL345) to I2C bus
+3. Connect ultrasonic sensor (optional) to designated GPIO pins
+4. Connect power supply to the servo power rail
 
-# Inside the container, train a model
-train my_model
+## Running the Hexapod
 
-# Or run a specific training script
-python3 /app/pytd3/examples/demo.py
-```
+1. Start the hexapod driver:
+   ```bash
+   ./install.sh
+   ```
 
-## 3. Deploy to BeagleBone AI with Hardware Acceleration
+2. Launch the hexapod application:
+   ```bash
+   ./hexapod_app
+   ```
 
-After training, you can deploy the model to your BeagleBone AI with hardware acceleration:
+3. Test the hexapod's movement:
+   ```bash
+   ./test_movement
+   ```
 
-```bash
-# Using docker-compose
-docker-compose run deploy deploy my_model --host beaglebone.local
+## Basic Controls
 
-# Or using the deploy script directly
-./pytd3/tools/deploy.sh --model models/my_model --tidl --hardware
-```
+Once the application is running, use the following keyboard controls:
 
-## 4. Hardware Acceleration Options
+| Key       | Function                         |
+|-----------|----------------------------------|
+| W         | Walk forward                     |
+| S         | Walk backward                    |
+| A         | Rotate left                      |
+| D         | Rotate right                     |
+| I / K     | Raise/lower body                 |
+| J / L     | Tilt left/right                  |
+| 1 / 2 / 3 | Switch gait (Tripod/Wave/Ripple) |
+| +/-       | Increase/decrease speed          |
+| Space     | Stop and center legs             |
+| B         | Toggle balance mode              |
+| [ / ]     | Adjust balance sensitivity       |
+| U         | Toggle ultrasonic sensor         |
+| T         | Toggle telemetry display         |
+| P         | Toggle performance monitoring    |
+| H         | Display help                     |
+| Q         | Quit application                 |
 
-The BeagleBone AI offers multiple acceleration options:
+## Advanced Features
 
-- **TIDL (TI Deep Learning)**: Uses DSP and EVE cores for best performance
-  ```bash
-  # Deploy with TIDL acceleration (4 EVE cores, 2 DSP cores)
-  ./pytd3/tools/deploy.sh --model models/my_model --tidl
-  ```
+### Balance Mode
 
-- **OpenCL**: Uses GPU for compute operations
-  ```bash
-  # Deploy with OpenCL acceleration
-  ./pytd3/tools/deploy.sh --model models/my_model --opencl
-  ```
+Enable automatic balancing with the 'B' key. The hexapod will use IMU data to maintain stability:
+- Use '[' and ']' to adjust sensitivity
+- Balance works in all movement modes
 
-To check available hardware capabilities:
-```bash
-./pytd3/tools/hwdetect.sh
-```
+### Sensor Options
 
-## 5. Monitoring and Control
+The system supports multiple sensor configurations:
+- MPU6050: 6-axis IMU with accelerometer and gyroscope
+- ADXL345: 3-axis accelerometer
+- Switch between them with 'X' and 'C' keys
 
-Once deployed, you can monitor and control the hexapod:
+### Obstacle Avoidance
 
-```bash
-# SSH into BeagleBone
-ssh debian@beaglebone.local
+When ultrasonic sensor is enabled ('U' key):
+- Automatically slows down when approaching obstacles
+- Stops and backs away from close obstacles
 
-# Start the pytd3 controller
-cd /home/debian/pytd3_model
-./run.sh
-```
+## Troubleshooting
 
-The hexapod will now use the trained reinforcement learning model to control movement.
+### Common Issues
+
+1. **Servo jittering**
+   - Check power supply voltage
+   - Verify calibration values
+   - Ensure I2C connection is stable
+
+2. **Unresponsive controls**
+   - Check if terminal is in the correct mode
+   - Verify driver is loaded (`lsmod | grep hexapod`)
+   - Restart the application
+
+3. **IMU errors**
+   - Verify I2C connections
+   - Try switching sensor type (MPU6050/ADXL345)
+   - Run diagnostics with 'P' command
+
+### Running Diagnostics
+
+Use the 'M' key to run comprehensive diagnostics on:
+- Servo mapping
+- Controller connectivity
+- Sensor readings
+
+## Next Steps
+
+After getting familiar with basic operation:
+
+1. Explore the reinforcement learning module in `pytd3/`
+2. Customize gait patterns in the `gait.cpp` file in `app/src/`
+3. Create your own sequences and behaviors
+4. See the full documentation for advanced API usage
+
+## Support
+
+For additional help, please:
+- Check the complete documentation in the `docs/` directory
+- File issues on our GitHub repository
+- Join our community Discord server for real-time assistance

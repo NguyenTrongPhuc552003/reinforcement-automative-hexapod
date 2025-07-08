@@ -3,7 +3,7 @@
 build_driver:
   stage: build
   script:
-    - ./scripts/build.sh -m
+    - ./scripts/build.sh -b driver
   artifacts:
     paths:
       - deploy/hexapod_driver.ko
@@ -11,7 +11,7 @@ build_driver:
 build_app:
   stage: build
   script:
-    - ./scripts/build.sh -u
+    - ./scripts/build.sh -b app
   artifacts:
     paths:
       - deploy/hexapod_app
@@ -25,7 +25,7 @@ build_app:
 build_pytd3:
   stage: build
   script:
-    - ./scripts/build.sh -d
+    - ./scripts/build.sh -b pytd3
   artifacts:
     paths:
       - deploy/pytd3/

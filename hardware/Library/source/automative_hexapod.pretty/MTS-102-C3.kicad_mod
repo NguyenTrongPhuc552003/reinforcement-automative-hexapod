@@ -132,7 +132,7 @@
 		(uuid "adf4716f-d476-46d0-b1f0-5a4487e55550")
 	)
 	(embedded_fonts no)
-	(model "D:/OneDrive/Project/reinforcement-automative-hexapod/hardware/Library/3d_model/MTS-102-C3.step"
+	(model "${KIPRJMOD}/../../Library/3d_model/MTS-102-C3.step"
 		(offset
 			(xyz 0 0 0)
 		)

@@ -1,8 +1,12 @@
+## NOTE: This hexapod project is still under development and may not be fully functional. So, please wait for an official release is coming soon!
+
 # Hexapod Robot Control System
 
 A comprehensive control system for a six-legged robot (hexapod) using BeagleBone AI (or Black), featuring both kernel-space drivers and user-space applications with reinforcement learning capabilities.
 
-![Hexapod Robot](resource/beagleboneAI/overview.jpg)
+<p align="center">
+  <img src="resource/beagleboneAI/overview.jpg" alt="Hexapod Robot">
+</p>
 
 ## Project Overview
 
@@ -65,7 +69,7 @@ The system follows a layered architecture with hardware abstraction. For visual 
 
 1. Build the kernel module:
    ```bash
-   ./scripts/build.sh -m
+   ./scripts/build.sh -b driver
    ```
 
 2. Install the kernel module on BeagleBone AI:
@@ -75,7 +79,7 @@ The system follows a layered architecture with hardware abstraction. For visual 
 
 3. Build user-space applications:
    ```bash
-   ./scripts/build.sh -u
+   ./scripts/build.sh -b app
    ```
 
 4. Run the test utility on BeagleBone AI:
@@ -88,6 +92,8 @@ The system follows a layered architecture with hardware abstraction. For visual 
 See individual README files in subdirectories for detailed development guides:
 - [Kernel Driver README](driver/README.md)
 - [User Space README](app/README.md)
+- [Hardware Overview README](hardware/README.md)
+- [Cross-compile Environment README](docker/README.md)
 - [Documentation](docs/README.md)
 
 ## Testing
@@ -127,7 +133,8 @@ Individual tests:
 
 ## License
 
-This project is licensed under the GPL License - see the [LICENSE](LICENSE) file for details.
+[![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](LICENSE)
+This project is licensed under the terms of the GNU General Public License v2.0.
 
 ## Authors
 
