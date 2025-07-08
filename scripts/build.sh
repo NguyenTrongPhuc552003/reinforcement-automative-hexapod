@@ -35,7 +35,7 @@ usage() {
     echo "  -s, --setup           Setup Python virtual environment for PyTD3"
     echo "  -l, --uml             Build UML diagrams (no Docker required)"
     echo "  -t, --utility         Create utility scripts (no Docker required)"
-    echo "  -c, --clean [TYPE]    Clean build artifacts (optional TYPE: app|driver|pytd3|deploy|package)"
+    echo "  -c, --clean [TYPE]    Clean build artifacts (optional TYPE: app|driver|pytd3|deploy|package|utility)"
     echo "  -p, --purge [TYPE]    Purge all build artifacts and Docker images (optional TYPE: app|driver|pytd3)"
     echo "  -n, --no-cache        Build all without cache"
     echo "  -h, --help            Show this help message"
@@ -851,6 +851,7 @@ else
                       "$next_arg" == "driver" || \
                       "$next_arg" == "pytd3" || \
                       "$next_arg" == "deploy" || \
+                      "$next_arg" == "utility" || \
                       "$next_arg" == "package" ]]; then
                     CLEAN_TYPE="$next_arg"
                     i=$next_i  # Skip the next argument since we've consumed it
@@ -1085,6 +1086,18 @@ clean_package() {
     log "${GREEN}" "Package directory cleaned successfully"
 }
 
+# Function to clean utility directory
+clean_utility() {
+    log "${YELLOW}" "Cleaning UML diagram files..."
+
+    # Check if export.sh exists
+    if [ -f "${PROJECT_ROOT}/scripts/export.sh" ]; then
+        bash "${PROJECT_ROOT}/scripts/export.sh" -c
+    else
+        log "${RED}" "export.sh not found in scripts directory!"
+    fi
+}
+
 # Function to purge Docker images
 purge_docker_images() {
     local image_type=$1
@@ -1173,6 +1186,9 @@ if [ $DO_CLEAN -eq 1 ]; then
         package)
             clean_package
             ;;
+        utility)
+            clean_utility
+            ;;
         all)
             # Clean all components
             clean_app
@@ -1180,16 +1196,7 @@ if [ $DO_CLEAN -eq 1 ]; then
             clean_pytd3
             clean_deploy
             clean_package
-            
-            # Clean UML diagrams without requiring Docker
-            log "${YELLOW}" "Cleaning UML diagram files..."
-            
-            # Check if export.sh exists
-            if [ -f "${PROJECT_ROOT}/scripts/export.sh" ]; then
-                bash "${PROJECT_ROOT}/scripts/export.sh" -c
-            else
-                log "${RED}" "export.sh not found in scripts directory!"
-            fi
+            clean_utility
             ;;
     esac
     
