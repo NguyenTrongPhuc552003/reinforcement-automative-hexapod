@@ -18,103 +18,51 @@
  '/
 
 @startuml class
+!define RECTANGLE class
 
-' Style and theme settings - enhanced for readability
-!theme plain
-skinparam {
-    classAttributeIconSize 0
-    classBackgroundColor #FEFECE
-    classBorderColor #A80036
-    packageBackgroundColor #FEFECE
-    packageBorderColor #A80036
-    ArrowColor #A80036
-    defaultFontName Arial
-    shadowing false
-    
-    ' Enhanced visual cues for hardware components
-    packageBackgroundColor<<hardware>> #E8F8E8
-    packageBorderColor<<hardware>> #2E8B57
-    classBackgroundColor<<device>> #E0FFFF
-    classBorderColor<<device>> #4682B4
-    classBackgroundColor<<sensor>> #FFE6CC
-    classBorderColor<<sensor>> #D2691E
-    classBackgroundColor<<actuator>> #E6CCFF
-    classBorderColor<<actuator>> #9370DB
-    
-    NoteBackgroundColor #FFFFCC
-    NoteBorderColor #999999
+skinparam class {
+    BackgroundColor<<Actuators>> #D1C4E9
+    BackgroundColor<<PIMPL>> #FFB74D
+    BackgroundColor<<Singleton>> #FFF9C4
+    BackgroundColor<<Utilities>> #B3E5FC
+    BackgroundColor<<Hardware>> #C8E6C9
+    BackgroundColor<<Controller>> #FFCDD2
 }
 
-' Title with improved description
-title Hexapod Robot Control System - Class Architecture with Hardware Focus
+skinparam package {
+    BackgroundColor #E1F5FE
+    BorderColor #666666
+}
 
-' =============================================================================
-' HARDWARE LAYER
-' =============================================================================
-package "Hardware Layer" <<hardware>> {
-    ' Hardware interfaces
-    class "Hexapod" as HexapodHW <<device>> {
-        ' Core hardware interface methods
+package "Hardware Layer" {
+    class Hexapod <<Hardware>> {
+        -pImpl: unique_ptr<HexapodImpl>
         +init(): bool
         +cleanup(): void
         +setLegPosition(leg_num: uint8_t, position: LegPosition): bool
         +getLegPosition(leg_num: uint8_t, position: LegPosition&): bool
-        +centerAll(): bool
         +getImuData(data: ImuData&): bool
-        +setCalibration(leg_num: uint8_t, hip_offset: int16_t, knee_offset: int16_t, ankle_offset: int16_t): bool
-        
-        ' Error handling
+        +setSensorType(type: SensorType): bool
+        +getSensorType(type: SensorType&): bool
+        +setCalibration(leg_num: uint8_t, hip: int16_t, knee: int16_t, ankle: int16_t): bool
+        +centerAll(): bool
         +getLastError(): ErrorInfo
-        +getLastErrorMessage(): string
-        +getLastErrorCode(): int
-        +getLastErrorCategory(): ErrorCategory
+        +getCurrentTime(): double
     }
-    
-    ' Implementation details (hidden via PIMPL)
-    class HexapodImpl << (P,#FF7700) PIMPL >> {
-        -fd: int  ' Device file descriptor
+
+    class HexapodImpl <<PIMPL>> {
+        -fd: int
         -initialized: bool
-        -positions: LegPosition[NUM_LEGS]
-        -executeIoctl(request: unsigned long, arg: void*, errorMessage: const char*): bool
+        -leg_positions: LegPosition[6]
+        -imu_data: ImuData
+        -lastError: ErrorInfo
+        +executeIoctl(request: unsigned long, arg: void*): bool
+        +setError(code: int, category: ErrorCategory, message: string): void
     }
-    
-    ' Physical components represented as classes
-    class "ServoMotor" as Servo <<actuator>> {
-        -channel: uint8_t
-        -minPulse: uint16_t
-        -maxPulse: uint16_t
-        -centerPulse: uint16_t
-        
-        +setAngle(degrees: int16_t): void
-        +getAngle(): int16_t
-        +center(): void
-    }
-    
-    class "IMU (MPU6050)" as IMU <<sensor>> {
-        -i2cAddress: uint8_t
-        -sampleRate: uint16_t
-        
-        +readAcceleration(): Vector3D
-        +readGyroscope(): Vector3D
-        +calibrate(): bool
-    }
-    
-    class "PWM Controller (PCA9685)" as PWMController <<device>> {
-        -i2cAddress: uint8_t
-        -frequency: uint16_t
-        
-        +setPWM(channel: uint8_t, on: uint16_t, off: uint16_t): bool
-        +setPWMFrequency(freq_hz: uint16_t): bool
-        +sleep(): void
-        +wakeup(): void
-    }
-    
-    ' Hardware data structures
+
     class LegPosition {
         +leg_num: uint8_t
         +joints: JointAngles
-        
-        ' Methods for accessing joint angles
         +getHip(): int16_t
         +getKnee(): int16_t
         +getAnkle(): int16_t
@@ -122,165 +70,362 @@ package "Hardware Layer" <<hardware>> {
         +setKnee(value: int16_t): void
         +setAnkle(value: int16_t): void
     }
-    
-    class ImuData <<sensor>> {
+
+    struct JointAngles {
+        +hip: int16_t
+        +knee: int16_t
+        +ankle: int16_t
+    }
+
+    class ImuData {
         +accel_x: int16_t
         +accel_y: int16_t
         +accel_z: int16_t
         +gyro_x: int16_t
         +gyro_y: int16_t
         +gyro_z: int16_t
-        
-        ' Conversion methods for raw values
-        +getAccelX(): float  ' Returns in g units
-        +getAccelY(): float  ' Returns in g units
-        +getAccelZ(): float  ' Returns in g units
-        +getGyroX(): float   ' Returns in degrees/second
-        +getGyroY(): float   ' Returns in degrees/second
-        +getGyroZ(): float   ' Returns in degrees/second
+        +sensor_type: uint8_t
+        +getAccelX(): float
+        +getAccelY(): float
+        +getAccelZ(): float
+        +getGyroX(): float
+        +getGyroY(): float
+        +getGyroZ(): float
+        +hasGyro(): bool
+        +getSensorType(): SensorType
     }
-    
-    ' Hardware constants and configuration
-    class "Hardware Constants" as HWConstants <<device>> {
-        +{static} I2C_BUS: int = 3
-        +{static} PWM_FREQ_HZ: int = 50
-        +{static} PWM_RESOLUTION: int = 4096
-        +{static} PWM_MIN_US: int = 1000   ' 1ms pulse
-        +{static} PWM_MAX_US: int = 2000   ' 2ms pulse
-        +{static} PWM_CENTER_US: int = 1500 ' 1.5ms pulse
+
+    enum SensorType {
+        MPU6050
+        ADXL345
+        AUTO
     }
-    
-    ' Physical dimensions and limits
-    struct Config {
-        +{static} NUM_LEGS: int = 6
-        +{static} SERVOS_PER_LEG: int = 3
-        +{static} TOTAL_SERVOS: int = 18
+
+    class UltrasonicSensor <<Hardware>> {
+        -pImpl: unique_ptr<Impl>
+        +init(): bool
+        +cleanup(): void
+        +measure(): Measurement
+        +measureAverage(samples: int): Measurement
+        +isObjectDetected(maxRange: float): bool
+        +selfTest(): bool
+        +getConfig(): SensorConfig
+        +setConfig(config: SensorConfig): void
     }
-    
-    struct Dimensions {
-        +{static} COXA_LENGTH: int = 30    ' Hip joint length (mm)
-        +{static} FEMUR_LENGTH: int = 85   ' Thigh segment length (mm)
-        +{static} TIBIA_LENGTH: int = 130  ' Lower leg length (mm)
+
+    struct UltrasonicSensor::Measurement {
+        +distance: float
+        +valid: bool
+        +timestamp: time_point
+        +rawDistance: float
+        +echoTimeUs: int
     }
-    
-    struct AngleLimits {
-        +{static} HIP_MIN: int = -90   ' Minimum hip angle (degrees)
-        +{static} HIP_MAX: int = 90    ' Maximum hip angle (degrees)
-        +{static} KNEE_MIN: int = -90  ' Minimum knee angle (degrees)
-        +{static} KNEE_MAX: int = 90   ' Maximum knee angle (degrees)
-        +{static} ANKLE_MIN: int = -90 ' Minimum ankle angle (degrees)
-        +{static} ANKLE_MAX: int = 90  ' Maximum ankle angle (degrees)
-    }
-    
-    ' Error handling for hardware
-    enum ErrorCategory {
-        NONE
-        DEVICE         ' Hardware device errors
-        COMMUNICATION  ' I2C/bus communication errors
-        PARAMETER      ' Invalid parameter errors
-        SYSTEM         ' OS/system errors
-        HARDWARE       ' Physical hardware errors
-    }
-    
-    class ErrorInfo {
-        -code: int
-        -category: ErrorCategory
-        -message: string
-        
-        +getCode(): int
-        +getCategory(): ErrorCategory
-        +getMessage(): string
-        +hasError(): bool
-    }
-    
-    ' Hardware relationships
-    HexapodHW *-- HexapodImpl : implementation
-    HexapodHW "1" *-- "18" Servo : controls
-    HexapodHW "1" *-- "1" IMU : reads from
-    HexapodHW "1" *-- "2" PWMController : communicates with
-    
-    Servo "9" --* "1" PWMController : connected to
-    LegPosition -- JointAngles : contains
-    HexapodImpl -- ErrorInfo : uses
 }
 
-' =============================================================================
-' MOTION CONTROL LAYER (simplified)
-' =============================================================================
-package "Motion Control" {
+package "Motion Control Layer" {
+    class Kinematics <<Singleton>> {
+        -pImpl: unique_ptr<KinematicsImpl>
+        +{static}getInstance(): Kinematics&
+        +forwardKinematics(angles: LegPosition&, position: Point3D&): bool
+        +inverseKinematics(position: Point3D&, angles: LegPosition&): bool
+        +isPositionReachable(position: Point3D&): bool
+        +setLegParameters(legIndex: int, coxa: double, femur: double, tibia: double): bool
+    }
+
+    class KinematicsImpl <<PIMPL>> {
+        -initialized: bool
+        -legParams: array<LegParameters, 6>
+        +setLegParameters(legIndex: int, coxa: double, femur: double, tibia: double): bool
+    }
+
+    class Point3D {
+        +x: double
+        +y: double
+        +z: double
+        +Point3D(x: double, y: double, z: double)
+        +operator+(other: Point3D): Point3D
+        +operator-(other: Point3D): Point3D
+        +operator*(scalar: double): Point3D
+        +length(): double
+        +normalize(): void
+        +distanceTo(other: Point3D): double
+        +{static}lerp(a: Point3D, b: Point3D, t: double): Point3D
+        +{static}dot(a: Point3D, b: Point3D): double
+        +{static}cross(a: Point3D, b: Point3D): Point3D
+    }
+
     class Gait {
-        +init(hexapod: HexapodHW&, params: GaitParameters): bool
+        -pImpl: unique_ptr<GaitImpl>
+        +init(hexapod: Hexapod&, params: GaitParameters): bool
         +update(time: double, direction: double, speed: double): bool
         +centerLegs(): bool
+        +getParameters(): GaitParameters
+        +setParameters(params: GaitParameters): bool
+        +calculateLegPhase(legIndex: int, time: double): double
+        +isInitialized(): bool
     }
-    
-    class Kinematics {
-        +forwardKinematics(angles: LegPosition, position: Point3D&): bool
-        +inverseKinematics(position: Point3D, angles: LegPosition&): bool
+
+    class GaitImpl <<PIMPL>> {
+        -hexapod: Hexapod&
+        -params: GaitParameters
+        -initialized: bool
+        -defaultPositions: vector<Position>
+        -phaseOffsets: vector<double>
+        -legStates: vector<int>
+        +updateLegPosition(legIndex: int, phase: double, direction: double, speed: double): bool
+        +computeLegTrajectory(position: Point3D&, phase: double, direction: double, speed: double): void
+    }
+
+    class GaitParameters {
+        +type: GaitType
+        +stepHeight: double
+        +stepLength: double
+        +cycleTime: double
+        +dutyFactor: double
+        +validate(): bool
+    }
+
+    enum GaitType {
+        TRIPOD
+        WAVE
+        RIPPLE
     }
 }
 
-' =============================================================================
-' USER CONTROL LAYER (simplified)
-' =============================================================================
-package "User Control" {
-    class Controller {
+package "Control Layer" {
+    class Controller <<Controller>> {
+        -pImpl: unique_ptr<ControllerImpl>
+        +Controller(hexapod: Hexapod&)
         +init(): bool
         +processKey(key: char): bool
         +update(): bool
+        +getState(): ControllerState
+        +setSpeed(speed: double): void
+        +setDirection(direction: double): void
+        +setHeight(height: double): void
+        +setTilt(tiltX: double, tiltY: double): void
+        +setGaitType(type: GaitType): void
+        +setBalanceEnabled(enabled: bool): void
+        +isBalanceEnabled(): bool
+        +switchImuSensor(sensorType: SensorType): void
+        +getCurrentImuSensor(): SensorType
+        +validateServoMapping(): bool
+        +testServoConnectivity(): bool
     }
-    
-    class Application {
-        +init(): bool
-        +run(): ExecutionResult
-        +shutdown(): void
+
+    class ControllerImpl <<PIMPL>> {
+        -hexapod: Hexapod&
+        -gait: Gait
+        -speed: double
+        -direction: double
+        -height: double
+        -tiltX: double
+        -tiltY: double
+        -state: ControllerState
+        -balanceConfig: BalanceConfig
+        -ultrasonicSensor: unique_ptr<UltrasonicSensor>
+        -currentSensorType: SensorType
+        +applyTilt(): bool
+        +processBalanceAdjustments(): bool
+        +calculateTilt(imuData: ImuData&, roll: double&, pitch: double&): void
+        +readUltrasonicDistance(): double
+        +processObstacleAvoidance(distance: double): bool
+    }
+
+    enum ControllerState {
+        IDLE
+        WALKING
+        ROTATING
+        TILTING
+    }
+
+    struct BalanceConfig {
+        +max_tilt_adjustment: double
+        +response_factor: double
+        +deadzone: double
+        +enabled: bool
     }
 }
 
-' External connections between layers
-Controller --> HexapodHW : controls
-Controller --> Gait : uses
-Gait --> HexapodHW : positions legs
-Kinematics --> LegPosition : calculates
-Application --> Controller : manages
+package "Application Layer" {
+    class Application <<Singleton>> {
+        -pImpl: unique_ptr<ApplicationImpl>
+        +{static}getInstance(): Application&
+        +{static}m_running: atomic<bool>
+        +{static}m_telemetryActive: atomic<bool>
+        +init(): bool
+        +run(): ExecutionResult
+        +shutdown(): void
+        +switchMode(mode: ControlMode): bool
+        +getCurrentMode(): ControlMode
+        +getLastErrorMessage(): string
+        +{static}signalHandler(signal: int): void
+    }
 
-' Notes explaining hardware components
-note right of PWMController
-  <b>PCA9685 PWM Controllers:</b>
-  - Primary controller (0x40): legs 0, 1, 2
-  - Secondary controller (0x41): legs 3, 4, 5
-  - 16 channels per controller
-  - 12-bit resolution (4096 steps)
-  - 50Hz frequency (20ms period)
-end note
+    class ApplicationImpl <<PIMPL>> {
+        -currentMode: ControlMode
+        -hexapod: unique_ptr<Hexapod>
+        -controller: unique_ptr<Controller>
+        -keyCommands: unordered_map<char, KeyCommand>
+        -frameCount: unsigned long
+        -totalFrameTime: unsigned long
+        -maxFrameTime: unsigned long
+        +initializeHexapod(): bool
+        +initializeController(): bool
+        +setupInputHandling(): bool
+        +setupKeyCommands(): void
+        +processInput(): bool
+        +update(): bool
+        +displayTelemetry(): void
+        +reportPerformance(): void
+    }
 
-note right of IMU
-  <b>MPU6050 IMU Sensor:</b>
-  - I2C address: 0x68
-  - 3-axis accelerometer
-  - 3-axis gyroscope
-  - 16-bit ADC resolution
-  - Configurable sample rate
-end note
+    enum ControlMode {
+        MANUAL
+        AUTONOMOUS
+        SEQUENCE
+        CALIBRATION
+    }
 
-note right of Servo
-  <b>Servo Motors:</b>
-  - 18 total servos (3 per leg × 6 legs)
-  - Hip, knee, and ankle joints
-  - PWM controlled (1000-2000μs pulse)
-  - 1500μs = center position (0°)
-  - ±90° range of motion
-end note
+    enum ExecutionResult {
+        SUCCESS
+        ERROR_INITIALIZATION
+        ERROR_RUNTIME
+        ERROR_SHUTDOWN
+        TERMINATED_BY_USER
+    }
+}
 
-' Comprehensive legend for hardware components
+package "Calibration System" {
+    class CalibrationManager <<Singleton>> {
+        -pImpl: unique_ptr<CalibrationManagerImpl>
+        +{static}getInstance(): CalibrationManager&
+        +{static}loadCalibration(calibrations: vector<Calibration>&, filename: string): bool
+        +{static}saveCalibration(calibrations: vector<Calibration>&, filename: string): bool
+        +{static}getDefaultCalibration(): vector<Calibration>
+        +{static}applyCalibration(hexapod: Hexapod&, calibrations: vector<Calibration>&): bool
+        +{static}validateCalibration(calibrations: vector<Calibration>&): bool
+        +{static}getDefaultCalibrationPath(): string
+    }
+
+    struct Calibration {
+        +leg_num: uint8_t
+        +hip_offset: int16_t
+        +knee_offset: int16_t
+        +ankle_offset: int16_t
+        +Calibration()
+        +Calibration(leg: uint8_t, hip: int16_t, knee: int16_t, ankle: int16_t)
+    }
+
+    class CalibrationException {
+        -message: string
+        +CalibrationException(message: string)
+        +what(): const char*
+    }
+}
+
+package "Common Utilities" <<Utilities>> {
+    class TerminalManager {
+        +{static}setupNonBlocking(): bool
+        +{static}setupImmediate(): bool
+        +{static}restore(): void
+        +{static}isModified(): bool
+        +{static}readChar(ch: char&): bool
+    }
+
+    class SignalManager {
+        +{static}setupGracefulShutdown(running: atomic<bool>&, handler: SignalHandler): void
+        +{static}defaultHandler(signal: int): void
+    }
+
+    class PerformanceMonitor {
+        -frameStart: time_point
+        -frameCount: unsigned long
+        -totalFrameTime: double
+        -maxFrameTime: double
+        +startFrame(): void
+        +endFrame(): void
+        +getAverageFrameTime(): double
+        +getFPS(): double
+        +reset(): void
+        +printReport(prefix: string): void
+    }
+
+    class ErrorReporter {
+        +{static}reportError(component: string, operation: string, details: string): void
+        +{static}reportWarning(component: string, message: string): void
+        +{static}reportInfo(component: string, message: string): void
+    }
+
+    class Validator {
+        +{static}validateAngle(angle: double, min: double, max: double): bool
+        +{static}validateLegNumber(legNum: int, maxLegs: int): bool
+        +{static}validateSpeed(speed: double): bool
+        +{static}clamp<T>(value: T, min: T, max: T): T
+    }
+
+    class StringUtils {
+        +{static}formatNumber(value: double, precision: int): string
+        +{static}formatDuration(seconds: double): string
+        +{static}padString(text: string, width: int, fillChar: char): string
+        +{static}toLower(str: string): string
+        +{static}toUpper(str: string): string
+    }
+
+    class MathUtils {
+        +{static}degToRad(degrees: double): double
+        +{static}radToDeg(radians: double): double
+        +{static}lerp(a: double, b: double, t: double): double
+        +{static}normalizeAngle(angle: double): double
+        +{static}movingAverage(values: vector<double>, windowSize: int): vector<double>
+    }
+}
+
+' Relationships
+Hexapod ||--|| HexapodImpl : pImpl
+Hexapod "1" *-- "6" LegPosition : manages
+LegPosition *-- JointAngles
+Hexapod "1" *-- "1" ImuData : reads
+ImuData -- SensorType
+
+Kinematics ||--|| KinematicsImpl : pImpl
+Kinematics ..> Point3D : uses
+Kinematics ..> LegPosition : transforms
+
+Gait ||--|| GaitImpl : pImpl
+GaitImpl --> Hexapod : controls
+Gait "1" *-- "1" GaitParameters : configured_by
+GaitParameters -- GaitType
+
+Controller ||--|| ControllerImpl : pImpl
+ControllerImpl --> Hexapod : controls
+ControllerImpl "1" *-- "1" Gait : uses
+ControllerImpl "1" *-- "1" UltrasonicSensor : optional
+ControllerImpl "1" *-- "1" BalanceConfig : configured_by
+ControllerImpl -- ControllerState
+
+Application ||--|| ApplicationImpl : pImpl
+ApplicationImpl "1" *-- "1" Hexapod : manages
+ApplicationImpl "1" *-- "1" Controller : uses
+Application -- ControlMode
+Application -- ExecutionResult
+
+CalibrationManager "1" *-- "*" Calibration : manages
+CalibrationManager ..> Hexapod : configures
+CalibrationManager ..> CalibrationException : throws
+
+UltrasonicSensor "1" *-- "1" UltrasonicSensor::Measurement : produces
+
+' Constants and Configuration
+note top of Hexapod : Hardware Bus:\nI2C Bus 3 on BeagleBone AI\nSCL: P9_19, SDA: P9_20, 100kHz\n\nPhysical Organization:\n- 6 legs with 3 servos each\n- 2 PWM controllers (primary/secondary)\n- 1 IMU for orientation sensing
+
 legend right
-  <b>Hexapod Hardware Architecture</b>
-  --
-  <b>Color Legend:</b>
-  <back:#E0FFFF>■</back> Control Devices
-  <back:#FFE6CC>■</back> Sensors
   <back:#E6CCFF>■</back> Actuators
   <back:#FF7700>■</back> Implementation Classes (PIMPL)
+  <back:#FFE6CC>■</back> Singleton Pattern
+  <back:#E6F3FF>■</back> Utility Classes
+  <back:#E6FFE6>■</back> Hardware Interface
+  <back:#FFE6E6>■</back> Control Layer
   
   <b>Hardware Bus:</b>
   I2C Bus 3 on BeagleBone AI
