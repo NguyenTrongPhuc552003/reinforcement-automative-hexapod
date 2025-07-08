@@ -1230,7 +1230,7 @@
 		)
 		(uuid "dca7c35c-0d58-43a7-a2a2-faa480eebc8b")
 	)
-	(global_label "MPU6050_I2C_SDA"
+	(global_label "BBAI_I2C_SDA"
 		(shape bidirectional)
 		(at 144.78 95.25 0)
 		(fields_autoplaced yes)
@@ -1242,7 +1242,7 @@
 		)
 		(uuid "01c6707e-1f18-4b37-9b25-37e234593fed")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 166.354 95.25 0)
+			(at 161.6975 95.25 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1252,7 +1252,7 @@
 			)
 		)
 	)
-	(global_label "MPU6050_I2C_SCL"
+	(global_label "BBAI_I2C_SCL"
 		(shape input)
 		(at 144.78 92.71 0)
 		(fields_autoplaced yes)
@@ -1264,7 +1264,7 @@
 		)
 		(uuid "fb6d7a94-7484-4194-a0b4-bb0ed656884e")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 165.1822 92.71 0)
+			(at 160.5257 92.71 0)
 			(effects
 				(font
 					(size 1.27 1.27)
