@@ -18,145 +18,152 @@
  '/
 
 @startuml component
-
 !theme plain
-skinparam {
-    componentStyle rectangle
-    componentBackgroundColor #FEFECE
-    componentBorderColor #A80036
-    DatabaseBackgroundColor #EEEEEE
-    interfaceBackgroundColor #EEEEEE
-    ArrowColor #A80036
-    NoteBorderColor #A80036
-    NoteBorderThickness 1
-    NoteBackgroundColor #FDFDFD
-    defaultFontName Arial
-    shadowing false
+skinparam componentStyle rectangle
+skinparam backgroundColor White
+skinparam component {
+    BackgroundColor<<Application>> LightBlue
+    BackgroundColor<<Control>> LightGreen
+    BackgroundColor<<Hardware>> Orange
+    BackgroundColor<<AI>> Yellow
+    BackgroundColor<<External>> LightGray
+}
+skinparam package {
+    BackgroundColor<<UserSpace>> AliceBlue
+    BackgroundColor<<KernelSpace>> LightYellow
+    BackgroundColor<<Hardware>> MistyRose
 }
 
-' Package definitions for other layers (simplified)
-package "User Interface Layer" #EEEEFF {
-    [Hexapod User Interface] as UI
-}
+title Hexapod Robot - Component Architecture
+header Detailed Component Diagram
+footer Page 1 of 1
 
-package "Application Layer" #EEEEFF {
-    [Application Controller] as App
-    [Hexapod Controller] as Controller
-}
-
-package "Motion Control Layer" #EEEEFF {
-    [Gait Generator] as Gait
-    [Kinematics Engine] as Kinematics
-    [Calibration Manager] as Calibration
-}
-
-' Hardware Layer - Enhanced and improved
-package "Hardware Layer" #E8F8E8 {
-    ' Software components
-    package "Software Interface" #FFFFFF {
-        [Hexapod Hardware Interface] as HexapodIF
-        interface "/dev/hexapod" as DevNode
+package "User Space Applications" <<UserSpace>> {
+    
+    package "Application Layer" {
+        component [Application Controller] <<Application>> as AppCtrl
+        component [Hexapod User Interface] <<Application>> as UI
+        component [Calibration Manager] <<Application>> as CalMgr
     }
     
-    ' Kernel driver subsystem
-    package "Kernel Drivers" #FFFAF0 {
-        [hexapod_driver.ko] as MainDriver
-        [pca9685.ko] as PWMDriver
-        [mpu6050.ko] as IMUDriver
-        [servo.ko] as ServoDriver
+    package "Motion Control Layer" {
+        component [Gait Generator] <<Control>> as GaitGen
+        component [Kinematics Engine] <<Control>> as KinematicsEng
+        component [Balance System] <<Control>> as BalSys
+        component [Controller] <<Control>> as Ctrl
     }
     
-    ' Physical hardware components
-    package "Physical Hardware" #F0FFF0 {
-        ' Controllers
-        package "Controllers" #FFFFFF {
-            [PCA9685 Primary (0x40)] as PWM1
-            [PCA9685 Secondary (0x41)] as PWM2
-            [MPU6050 IMU (0x68)] as IMU
-        }
-        
-        ' Servo motors organized by leg
-        package "Servo Motors" #FFFFFF {
-            package "Left Side" {
-                [Front Left Servos (3x)] as FL
-                [Middle Left Servos (3x)] as ML
-                [Rear Left Servos (3x)] as RL
-            }
-            package "Right Side" {
-                [Front Right Servos (3x)] as FR
-                [Middle Right Servos (3x)] as MR
-                [Rear Right Servos (3x)] as RR
-            }
+    package "Hardware Interface Layer" {
+        component [Hexapod Hardware Interface] <<Hardware>> as HexHW
+        component [Ultrasonic Sensor] <<Hardware>> as USSensor
+        component [Common Utilities] <<Application>> as CommonUtil
+    }
+    
+    package "Python TD3 AI System" {
+        package "pytd3" {
+            component [TD3 Agent] <<AI>> as TD3Agent
+            component [Environment Interface] <<AI>> as EnvInterface
+            component [Neural Networks] <<AI>> as NeuralNets
+            component [TD3 Bridge] <<AI>> as TD3Bridge
         }
     }
-    
-    ' I2C Bus interface
-    interface "I2C Bus" as I2CBus
 }
 
-' Connections between hardware components
-' Application to driver interface
-Controller --> HexapodIF
-HexapodIF --> DevNode : uses
-DevNode --> MainDriver : provides
+package "Kernel Space" <<KernelSpace>> {
+    component [Hexapod Kernel Driver] <<Hardware>> as KernelDriver
+    component [I2C Subsystem] <<Hardware>> as I2C
+    component [GPIO Subsystem] <<Hardware>> as GPIO
+}
 
-' Driver hierarchy
-MainDriver --> PWMDriver : loads
-MainDriver --> IMUDriver : loads
-MainDriver --> ServoDriver : loads
+package "Physical Hardware" <<Hardware>> {
+    component [BeagleBone Black] <<Hardware>> as BBB
+    component [PCA9685 PWM Controller] <<Hardware>> as PCA9685
+    component [MPU6050 IMU] <<Hardware>> as MPU6050
+    component [ADXL345 Accelerometer] <<Hardware>> as ADXL345
+    component [HC-SR04 Ultrasonic] <<Hardware>> as HCSR04
+    component [18x SG90 Servo Motors] <<Hardware>> as Servos
+}
 
-' I2C communications
-PWMDriver --> I2CBus : writes
-IMUDriver --> I2CBus : reads/writes
+package "External Systems" <<External>> {
+    component [Docker Environment] <<External>> as Docker
+    component [Build System] <<External>> as BuildSys
+    component [Package Manager] <<External>> as PkgMgr
+}
 
-' Hardware connections
-I2CBus --> PWM1 : 0x40
-I2CBus --> PWM2 : 0x41
-I2CBus --> IMU : 0x68
+' Application Layer Connections
+AppCtrl --> UI : "user commands"
+AppCtrl --> Ctrl : "robot control"
+AppCtrl --> CalMgr : "calibration data"
 
-' PWM Controllers to servos
-PWM1 --> FL : "PWM Channels 0-2"
-PWM1 --> ML : "PWM Channels 3-5"
-PWM1 --> RL : "PWM Channels 6-8"
-PWM2 --> FR : "PWM Channels 0-2"
-PWM2 --> MR : "PWM Channels 3-5"
-PWM2 --> RR : "PWM Channels 6-8"
+' Control Layer Connections
+Ctrl --> GaitGen : "gait parameters"
+Ctrl --> BalSys : "balance control"
+Ctrl --> HexHW : "hardware commands"
+GaitGen --> KinematicsEng : "position calculations"
+KinematicsEng --> HexHW : "joint angles"
+BalSys --> HexHW : "tilt corrections"
 
-' Notes for clarity
-note right of HexapodIF
-  C++ class that abstracts
-  the hardware details
-  from higher-level code
+' Hardware Interface Connections
+HexHW --> KernelDriver : "/dev/hexapod\nIOCTL calls"
+USSensor --> GPIO : "GPIO control"
+Ctrl --> USSensor : "distance sensing"
+
+' AI System Connections
+TD3Agent --> EnvInterface : "state/action"
+TD3Agent --> NeuralNets : "policy/value"
+TD3Bridge --> HexHW : "AI commands"
+EnvInterface --> TD3Bridge : "environment state"
+
+' Kernel Connections
+KernelDriver --> I2C : "I2C transactions"
+KernelDriver --> GPIO : "GPIO operations"
+I2C --> PCA9685 : "PWM commands"
+I2C --> MPU6050 : "IMU data"
+I2C --> ADXL345 : "accelerometer data"
+GPIO --> HCSR04 : "trigger/echo"
+
+' Hardware Connections
+PCA9685 --> Servos : "PWM signals\n(18 channels)"
+MPU6050 --> BBB : "I2C bus"
+ADXL345 --> BBB : "I2C bus"
+HCSR04 --> BBB : "GPIO pins"
+Servos --> BBB : "power distribution"
+
+' External System Connections
+Docker --> AppCtrl : "containerized\napplication"
+BuildSys --> AppCtrl : "cross-compilation\nBeagleBone target"
+PkgMgr --> KernelDriver : "deployment\npackaging"
+
+' Common Utilities Connections
+CommonUtil --> AppCtrl : "terminal mgmt,\nperformance monitoring"
+CommonUtil --> Ctrl : "error reporting,\nvalidation"
+
+' Notes for key components
+note right of KernelDriver
+  - Device file: /dev/hexapod
+  - IOCTL commands for servo control
+  - IMU data acquisition
+  - Sensor type switching
+  - Calibration management
 end note
 
-note bottom of MainDriver
-  Core kernel module that
-  coordinates all hardware
-  communication
+note right of TD3Agent
+  - Deep Reinforcement Learning
+  - Twin Delayed DDPG
+  - Continuous action space
+  - Policy gradient methods
 end note
 
-note right of I2CBus
-  I2C Bus 3 on BeagleBone
-  SCL: P9_19, SDA: P9_20
+note bottom of PCA9685
+  16-channel PWM driver
+  Controls 18 servo motors
+  (6 legs × 3 joints each)
 end note
 
-note bottom of PWM2
-  Each controller provides
-  16 PWM channels at 50Hz
-  with 12-bit resolution
+note bottom of BBB
+  ARM Cortex-A8 processor
+  Linux-based embedded system
+  I2C, GPIO, and PWM interfaces
 end note
-
-' Legend
-legend right
-  Hexapod Hardware Architecture
-  --
-  Color coding:
-  ■ Software Interface
-  ■ Kernel Drivers
-  ■ Physical Hardware  
-  
-  Each leg has 3 servos: 
-  hip, knee, and ankle joints
-endlegend
 
 @enduml
