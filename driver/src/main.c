@@ -1,3 +1,22 @@
+/*
+ * Hexapod Project - A Reinforcement Learning-based Autonomous Hexapod
+ * Copyright (C) 2025  Nguyen Trong Phuc
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+
 /**
  * @file main.c
  * @brief Comprehensive hexapod robot device driver for Linux kernel
@@ -18,9 +37,9 @@
  * - ADXL345: 3-axis accelerometer (alternative to MPU6050)
  * - GPIO: Optional status/debug pins
  *
- * @author Hexapod Development Team
- * @version 2.0
- * @date 2024
+ * @author StrongFood
+ * @version 1.0
+ * @date 2025
  * @license GPL v2
  */
 
@@ -55,7 +74,7 @@
 MODULE_LICENSE("GPL v2");
 MODULE_AUTHOR("StrongFood");
 MODULE_DESCRIPTION("A big update for hexapod robot driver with complete functionality");
-MODULE_VERSION("2.0");
+MODULE_VERSION("1.0");
 
 /**
  * @brief Module debug parameter
