@@ -43,7 +43,7 @@ usage() {
     echo "Examples:"
     echo "  ./scripts/build.sh -i app           Build only the app Docker image"
     echo "  ./scripts/build.sh -b app           Build only user space programs"
-    echo "  ./scripts/build.sh -b driver        Build only kernel modules"
+    echo "  ./scripts/build.sh -b driver        Build the driver Docker image (if not already built) and kernel modules"
     echo "  ./scripts/build.sh -g               Generate Debian package (default)"
     echo "  ./scripts/build.sh -g tar.xz        Generate tar.xz package"
     echo "  ./scripts/build.sh -bg              Build all and generate Debian package"
