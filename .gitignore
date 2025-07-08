@@ -85,6 +85,7 @@ Thumbs.db
 .ssh/
 .bash_history
 .python_history
+*.ignore
 
 # Python
 __pycache__/
