@@ -1,100 +1,109 @@
-# Hexapod User-Space Applications
+# Hexapod Robot Control Application
 
-This directory contains the user-space components of the hexapod control system.
+## Overview
 
-## Directory Structure
-
-```
-.
-├── include/       # Header files
-│   ├── gait.h     # Gait control interface
-│   ├── hexapod.h  # Hexpod interface
-├── src/           # Source files
-│   ├── gait.c     # Gait implementation
-│   └── main.c     # Main control implementation
-└── test/          # Test applications
-    ├── test_servo.c
-    ├── test_mpu6050.c
-    ├── test_calibration.c
-    ├── test_movement.c
-    └── test_hcsr04.c
-```
+This application provides a comprehensive control system for a 6-legged (hexapod) robot. It implements advanced kinematics, gait generation, sensor integration, and balance control to enable smooth and adaptive movement capabilities.
 
 ## Features
 
-### Gait Control
-- Tripod gait (alternating groups of 3 legs)
-- Wave gait (sequential leg movement)
-- Ripple gait (2-4-6 sequence)
-- Dynamic gait transitions
+- **Multiple Gait Patterns**: Tripod, Wave, and Ripple gaits with configurable parameters
+- **Adaptive Movement**: Dynamic speed, direction, and height control
+- **Sensor Integration**: Support for MPU6050 (6-axis) and ADXL345 (3-axis) IMU sensors
+- **Obstacle Detection**: Ultrasonic sensor integration with automatic avoidance
+- **Balance Mode**: Self-stabilizing capability using IMU feedback
+- **Interactive Control**: Real-time keyboard control interface
+- **Diagnostics**: Performance monitoring and hardware verification tools
+- **Calibration**: Joint calibration system for mechanical adjustments
 
-### Position Control
-- Forward/inverse kinematics
-- Joint angle limits
-- Smooth movement transitions
+## Architecture
 
-### Hardware Interface
-- Servo control via kernel driver
-- IMU data reading
-- Ultrasonic distance sensing
-- Error handling and recovery
+The application follows a modular, object-oriented design with several key components:
 
-## Building
+- **Hexapod**: Hardware abstraction layer for the robot platform
+- **Kinematics**: Mathematical model for leg positioning and inverse kinematics
+- **Gait**: Movement pattern generation and coordination
+- **Controller**: High-level control and command interpretation
+- **Calibration**: Servo calibration management
+- **Application**: Main program and user interface
+
+## Building the Application
+
+### Prerequisites
+
+- ARM cross-compiler (arm-linux-gnueabihf-g++)
+- C++17 compatible compiler
+- Standard development libraries
+
+### Compilation
+
+The project uses a Makefile build system with the following targets:
 
 ```bash
-make           # Build all components
-make test     # Build test applications
-make clean    # Clean build files
-```
+# Standard build (optimized)
+./scripts/build.sh -b app
 
-## Testing
+# Debug build with additional debug information
+./scripts/build.sh -b app DEBUG=1
 
-Run individual tests:
-```bash
-sudo ./test_servo       # Test servo control
-sudo ./test_mpu6050     # Test IMU sensor
-sudo ./test_movement    # Test movement patterns
-sudo ./test_kinematics  # Test kinematics
-sudo ./test_hcsr04      # Test ultrasonic sensor
+# Run tests for help
+./scripts/test.sh -h
+
+# Clean build artifacts
+./scripts/build.sh -c app
+
+# Install to target location
+./scripts/deploy.sh
 ```
 
 ## Usage
 
-The application can be run using the main controller:
-```bash
-sudo ./hexapod_app
-```
-    hexapod_cleanup();
-    return 0;
-}
-```
+### Controls
 
-### Gait Control
-```c
-gait_params_t params = {
-    .type = GAIT_TRIPOD,
-    .step_height = 30.0,
-    .step_length = 50.0,
-    .cycle_time = 1.0
-};
+| Key   | Function                                 |
+|-------|------------------------------------------|
+| W / S | Move forward/backward                    |
+| A / D | Rotate left/right                        |
+| I / K | Raise/lower body                         |
+| J / L | Tilt left/right                          |
+| 1 - 3 | Select gait (1=Tripod, 2=Wave, 3=Ripple) |
+| + / - | Increase/decrease speed                  |
+| SPACE | Stop and center legs                     |
+| B     | Toggle balance mode                      |
+| [ / ] | Decrease/increase balance sensitivity    |
+| U     | Toggle ultrasonic sensor                 |
+| T     | Toggle telemetry display                 |
+| P     | Toggle performance monitoring            |
+| M     | Run servo diagnostics                    |
+| H     | Show help                                |
+| Q     | Quit                                     |
 
-gait_init(&params);
-gait_update(time, &state);
-```
+### Telemetry Display
 
-## API Documentation
+When enabled, the telemetry shows:
+- IMU sensor readings
+- Current controller state
+- Performance metrics
+- Balance mode status
 
-See [API Documentation](../docs/api/user/README.md) for detailed interface descriptions.
+### Balance Mode
 
-## Development
+The balance mode uses IMU sensor data to automatically adjust the robot's posture in response to tilting or uneven surfaces. This can be fine-tuned using the response factor and deadzone settings.
 
-### Adding New Gaits
-1. Define gait type in `include/gait.h`
-2. Implement gait in `src/gait.c`
-3. Add test cases in `test/test_movement.c`
+## Test Programs
 
-### Testing Guidelines
-- Test all new functions
-- Verify angle limits
-- Check error handling
-- Test edge cases
+The `/test` directory contains individual test programs for specific components:
+
+- **servo.cpp**: Test servo motor control
+- **mpu6050.cpp**: Test MPU6050 sensor readings
+- **adxl345.cpp**: Test ADXL345 accelerometer readings
+- **movement.cpp**: Test movement patterns
+- **hcsr04.cpp**: Test ultrasonic distance sensor
+- **calibration.cpp**: Test calibration procedures
+- **balance.cpp**: Test balance mode functionality
+
+## Safety Features
+
+- Automatic obstacle detection and avoidance
+- Graceful signal handling for clean shutdown
+- Leg centering on startup and shutdown
+- Configurable movement speed limits

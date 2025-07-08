@@ -1,3 +1,5 @@
+## NOTE: This hexapod project is still under development and may not be fully functional. So, please wait for an official release is coming soon!
+
 # Hexapod Robot Control System
 
 A comprehensive control system for a six-legged robot (hexapod) using BeagleBone AI (or Black), featuring both kernel-space drivers and user-space applications with reinforcement learning capabilities.
