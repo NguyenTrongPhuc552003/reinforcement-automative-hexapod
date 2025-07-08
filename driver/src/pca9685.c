@@ -1,3 +1,8 @@
+/**
+ * @file pca9685.c
+ * @brief Kernel-space driver for the PCA9685 PWM controller
+ */
+
 #include <linux/module.h>
 #include <linux/i2c.h>
 #include <linux/errno.h>
@@ -596,7 +601,7 @@ void pca9685_cleanup(void)
 }
 EXPORT_SYMBOL_GPL(pca9685_cleanup);
 
-MODULE_LICENSE("GPL");
+MODULE_LICENSE("GPL v2");
 MODULE_DESCRIPTION("PCA9685 PWM Controller Driver");
 MODULE_AUTHOR("StrongFood");
 MODULE_VERSION("1.0");

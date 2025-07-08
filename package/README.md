@@ -98,4 +98,4 @@ modinfo hexapod_driver | grep version
 ```
 
 ---
-© 2024 Hexapod Development Team. Licensed under MIT License.
+© 2025 StrongFood. Licensed under GPL v2.0

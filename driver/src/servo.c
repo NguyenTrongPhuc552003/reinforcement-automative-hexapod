@@ -1,3 +1,8 @@
+/**
+ * @file servo.c
+ * @brief Kernel-space driver for controlling servos
+ */
+
 #include <linux/module.h>
 #include <linux/errno.h>
 #include <linux/mutex.h>
@@ -306,7 +311,7 @@ EXPORT_SYMBOL_GPL(servo_set_angle);
 EXPORT_SYMBOL_GPL(servo_set_calibration);
 EXPORT_SYMBOL_GPL(servo_center_all);
 
-MODULE_LICENSE("GPL");
+MODULE_LICENSE("GPL v2");
 MODULE_DESCRIPTION("Hexapod Servo Control Driver");
 MODULE_AUTHOR("StrongFood");
 MODULE_VERSION("1.0");

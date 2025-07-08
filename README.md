@@ -129,7 +129,8 @@ Individual tests:
 
 ## License
 
-This project is licensed under the GPL License - see the [LICENSE](LICENSE) file for details.
+[![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](LICENSE)
+This project is licensed under the terms of the GNU General Public License v2.0.
 
 ## Authors
 
