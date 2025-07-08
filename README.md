@@ -69,7 +69,7 @@ The system follows a layered architecture with hardware abstraction. For visual 
 
 1. Build the kernel module:
    ```bash
-   ./scripts/build.sh -m
+   ./scripts/build.sh -b driver
    ```
 
 2. Install the kernel module on BeagleBone AI:
@@ -79,7 +79,7 @@ The system follows a layered architecture with hardware abstraction. For visual 
 
 3. Build user-space applications:
    ```bash
-   ./scripts/build.sh -u
+   ./scripts/build.sh -b app
    ```
 
 4. Run the test utility on BeagleBone AI:
