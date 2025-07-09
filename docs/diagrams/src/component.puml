@@ -86,7 +86,7 @@ package "Physical Hardware" <<Hardware>> {
     component [MPU6050 IMU] <<Hardware>> as MPU6050
     component [ADXL345 Accelerometer] <<Hardware>> as ADXL345
     component [HC-SR04 Ultrasonic] <<Hardware>> as HCSR04
-    component [18x SG90 Servo Motors] <<Hardware>> as Servos
+    component [18x MG996R Servo Motors] <<Hardware>> as Servos
 }
 
 package "External Systems" <<External>> {

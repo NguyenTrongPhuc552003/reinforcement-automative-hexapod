@@ -52,7 +52,7 @@ This guide will help you quickly set up and operate the reinforcement learning-e
 
 ## Running the Hexapod
 
-1. Start the hexapod driver:
+1. Install the hexapod driver:
    ```bash
    ./install.sh
    ```
@@ -83,7 +83,7 @@ Once the application is running, use the following keyboard controls:
 | +/-       | Increase/decrease speed          |
 | Space     | Stop and center legs             |
 | B         | Toggle balance mode              |
-| [ / ]     | Adjust balance sensitivity       |
+| \[ / \]   | Adjust balance sensitivity       |
 | U         | Toggle ultrasonic sensor         |
 | T         | Toggle telemetry display         |
 | P         | Toggle performance monitoring    |
@@ -95,7 +95,7 @@ Once the application is running, use the following keyboard controls:
 ### Balance Mode
 
 Enable automatic balancing with the 'B' key. The hexapod will use IMU data to maintain stability:
-- Use '[' and ']' to adjust sensitivity
+- Use '\[' and '\]' to adjust sensitivity
 - Balance works in all movement modes
 
 ### Sensor Options

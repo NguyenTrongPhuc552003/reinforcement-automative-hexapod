@@ -14,14 +14,14 @@ This directory contains comprehensive documentation for the reinforcement learni
 
 The `diagrams/` directory contains PlantUML source files that generate various system diagrams:
 
-| Diagram | Description |
-|---------|-------------|
-| [class.puml](diagrams/src/class.puml) | Class diagrams showing software component relationships |
-| [component.puml](diagrams/src/component.puml) | Component diagrams illustrating system modules |
-| [sequence.puml](diagrams/src/sequence.puml) | Sequence diagrams for key interactions and processes |
-| [state.puml](diagrams/src/state.puml) | State machine diagrams for robot control states |
+| Diagram                                         | Description                                                |
+|-------------------------------------------------|------------------------------------------------------------|
+| [class.puml](diagrams/src/class.puml)           | Class diagrams showing software component relationships    |
+| [component.puml](diagrams/src/component.puml)   | Component diagrams illustrating system modules             |
+| [sequence.puml](diagrams/src/sequence.puml)     | Sequence diagrams for key interactions and processes       |
+| [state.puml](diagrams/src/state.puml)           | State machine diagrams for robot control states            |
 | [deployment.puml](diagrams/src/deployment.puml) | Deployment diagrams showing hardware/software distribution |
-| [building.puml](diagrams/src/building.puml) | Diagrams explaining the build and compilation process |
+| [building.puml](diagrams/src/building.puml)     | Diagrams explaining the build and compilation process      |
 
 ## Generating Diagrams
 
@@ -49,7 +49,7 @@ You can view the documentation directly on GitHub or use tools like VSCode with 
 
 ## Documentation Structure
 
-```
+```t
 docs/
 ├── README.md               # This file
 ├── architecture.md         # Software architecture details

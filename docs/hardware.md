@@ -20,7 +20,7 @@ For detailed visual representation of hardware organization, see the [Component 
 | Control Board         | BeagleBone AI/Black                        |
 | Servo Motors          | 18× MG996R (or compatible)                 |
 | Degrees of Freedom    | 18 (3 per leg)                             |
-| Operating Time        | ~1 hour (with 5000mAh battery)             |
+| Operating Time        | ~1 hour (with 2800mAh battery)             |
 | Sensing               | 6-axis IMU (accelerometer + gyroscope)     |
 
 ## Component List
@@ -76,8 +76,9 @@ The hexapod follows a standard hexapod design with 6 legs arranged radially arou
 ### Control System
 
 - **Main Controller**: BeagleBone AI/Black
-  - AM335x 1GHz ARM Cortex-A8 processor
-  - 512MB DDR3 RAM
+  - AM5729 processor
+  - 1GB DDR3 RAM
+  - 16GB onboard eMMC
   - Linux operating system
 
 - **Servo Control**: Via PCA9685 PWM controllers
@@ -97,7 +98,7 @@ The I2C bus 2 on BeagleBone is used for connecting sensors and actuators:
 |------------------- |-------------|-----|---------------------------|
 | MPU6050            | 0x68        | 3   | 6-axis IMU sensor         |
 | PCA9685 Primary    | 0x40        | 3   | 16-channel PWM controller |
-| PCA9685 Secondary  | 0x70        | 3   | 16-channel PWM controller |
+| PCA9685 Secondary  | 0x71        | 3   | 16-channel PWM controller |
 
 ### BeagleBone Pin Configuration
 
@@ -149,8 +150,6 @@ Each servo is connected to a specific channel on the PCA9685 controllers.
 |     | Knee  | 9            | Secondary  |
 |_____| Ankle | 10           | Secondary  |
 
-Note: The secondary controller is optional. If using only one controller, leg 5's knee and ankle joints must be remapped to unused channels or a different solution implemented.
-
 ## MPU6050 IMU Configuration
 
 The MPU6050 provides orientation data for the hexapod:
@@ -172,4 +171,3 @@ Key power management features:
 - Sleep mode: Automatically entered to conserve power
 - Wake-on-read: Driver automatically detects and wakes the device when readings are requested
 - Clock source: PLL with X-axis gyroscope reference for stability
-

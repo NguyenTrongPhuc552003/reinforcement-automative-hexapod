@@ -182,7 +182,7 @@ note left of servos
   - 18 total servos (3 per leg)
   - 6 legs × 3 joints each
   - Hip, Knee, Ankle joints
-  - SG90 micro servos
+  - MG996R micro servos
   - PWM control @ 50Hz
 end note
 
