@@ -1,4 +1,4 @@
-# TD3 Reinforcement Learning for Hexapod Robot
+# TD3 Reinforcement Learning for Hexapod Robot (NOTE: Support only for BeagleBone AI)
 
 This directory contains a Twin Delayed Deep Deterministic Policy Gradient (TD3) reinforcement learning implementation for training hexapod robot walking gaits and control strategies.
 
@@ -28,7 +28,7 @@ The system bridges between the Python-based TD3 algorithm and the C++ hexapod co
 ### Prerequisites
 
 - Python 3.8 or higher
-- BeagleBone Black with hexapod control software installed
+- BeagleBone AI with hexapod control software installed
 - Virtual environment (recommended)
 
 ### Using setup.sh (Recommended)

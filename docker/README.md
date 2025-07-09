@@ -34,11 +34,11 @@ The Python TD3 container runs the TD3 reinforcement learning algorithm:
 
 ### Using Docker Compose (Recommended)
 
-The easiest way to build both containers is using Docker Compose:
+The easiest way to build all available containers is using Docker Compose:
 
 ```bash
 # From the project root directory
-docker-compose build
+./scripts/build.sh -i
 ```
 
 ### Building Individual Containers
@@ -61,7 +61,7 @@ To build containers individually:
 ### Using Docker Compose (Recommended)
 
 ```bash
-# Start both containers
+# Start all containers
 docker-compose up
 
 # Run in detached mode

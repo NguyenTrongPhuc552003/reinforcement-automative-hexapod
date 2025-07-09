@@ -27,16 +27,20 @@ The driver interfaces with the following hardware components:
 
 ## Directory Structure
 
-```
+```t
 driver/
 ├── inc/
-│   ├── mpu6050.h          # Public header file with IOCTL definitions
+│   ├── mpu6050.h          # MPU6050 IMU sensor data structures
 │   └── pca9685.h          # PCA9685 PWM controller data structures
+│   └── adxl345.h          # ADXL345 accelerometer data structures
+│   └── servo.h            # Servo motor data structures
 ├── src/
-│   ├── mpu6050.c          # Core driver code
+│   ├── mpu6050.c          # MPU6050 IMU sensor handling code
 │   ├── pca9685.c          # PCA9685 PWM controller handling code
+│   ├── adxl345.c          # ADXL345 accelerometer handling code
+│   └── servo.c            # Servo motor handling code
 │   └── main.c             # Main application code
-├── Makefile               # Build instructions
+├── Makefile               # System build instructions
 └── README.md              # This file
 ```
 
@@ -46,7 +50,7 @@ driver/
 
 - Linux kernel headers
 - Cross-compilation toolchain
-- BeagleBone AI device tree (maybe not)
+- BeagleBone AI device tree (unused yet)
 
 ### Build Commands
 

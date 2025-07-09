@@ -40,7 +40,7 @@ The system follows a layered architecture with hardware abstraction. For visual 
 - [Class Diagram](docs/diagrams/image/class.png): Software class structure
 - [Building Process](docs/diagrams/image/building.png): Build and deployment process
 
-```
+```t
 .
 ├── driver/          # Linux kernel device drivers
 ├── app/             # User applications and libraries
@@ -62,7 +62,7 @@ The system follows a layered architecture with hardware abstraction. For visual 
 - BeagleBone AI (or Black) running Linux 4.14+
 - I2C enabled (bus 3)
 - 18x servo motors (MG996R recommended)
-- MPU6050 IMU sensor
+- 1x MPU6050 IMU sensor
 - 2x PCA9685 PWM controllers
 
 ## Quick Start
