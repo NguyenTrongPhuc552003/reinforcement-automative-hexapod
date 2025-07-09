@@ -18,9 +18,12 @@
  '/
 
 @startuml building
-
-' Apply a clear, readable visual theme
 !theme plain
+
+title <font size=20><b>Hexapod Robot - Build and Deployment Process</b></font>
+left header Version 1.0 - Reinforcement Learning Autonomous Hexapod
+right header BeagleBone AI Platform
+
 skinparam {
     ArrowColor #333333
     FontName Arial
@@ -49,9 +52,6 @@ skinparam {
     legendBackgroundColor #FAFAFA
     legendBorderColor #BDBDBD
 }
-
-' Title
-title <font size=20><b>Hexapod Robot Build and Deployment Process</b></font>
 
 ' ARCHITECTURE OVERVIEW
 ' =============================================================================

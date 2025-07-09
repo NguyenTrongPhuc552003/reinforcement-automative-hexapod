@@ -18,7 +18,12 @@
  '/
 
 @startuml class
+!theme plain
 !define RECTANGLE class
+
+title <font size=20><b>Hexapod Robot - Class Diagram</b></font>
+left header Version 1.0 - Reinforcement Learning Autonomous Hexapod
+right header BeagleBone AI Platform
 
 skinparam class {
     BackgroundColor<<Actuators>> #D1C4E9
@@ -420,6 +425,8 @@ UltrasonicSensor "1" *-- "1" UltrasonicSensor::Measurement : produces
 note top of Hexapod : Hardware Bus:\nI2C Bus 3 on BeagleBone AI\nSCL: P9_19, SDA: P9_20, 100kHz\n\nPhysical Organization:\n- 6 legs with 3 servos each\n- 2 PWM controllers (primary/secondary)\n- 1 IMU for orientation sensing
 
 legend right
+  <b>Hexapod Robot - Class Legend</b>
+  --
   <back:#E6CCFF>■</back> Actuators
   <back:#FF7700>■</back> Implementation Classes (PIMPL)
   <back:#FFE6CC>■</back> Singleton Pattern

@@ -19,8 +19,16 @@
 
 @startuml component
 !theme plain
-skinparam componentStyle rectangle
-skinparam backgroundColor White
+
+title <font size=20><b>Hexapod Robot - Component Architecture</b></font>
+left header Version 1.0 - Reinforcement Learning Autonomous Hexapod
+right header BeagleBone AI Platform
+
+skinparam {
+    componentStyle rectangle
+    backgroundColor White
+}
+
 skinparam component {
     BackgroundColor<<Application>> LightBlue
     BackgroundColor<<Control>> LightGreen
@@ -28,15 +36,12 @@ skinparam component {
     BackgroundColor<<AI>> Yellow
     BackgroundColor<<External>> LightGray
 }
+
 skinparam package {
     BackgroundColor<<UserSpace>> AliceBlue
     BackgroundColor<<KernelSpace>> LightYellow
     BackgroundColor<<Hardware>> MistyRose
 }
-
-title Hexapod Robot - Component Architecture
-header Detailed Component Diagram
-footer Page 1 of 1
 
 package "User Space Applications" <<UserSpace>> {
     
@@ -165,5 +170,28 @@ note bottom of BBB
   Linux-based embedded system
   I2C, GPIO, and PWM interfaces
 end note
+
+legend right
+  <b>Hexapod Robot - Component Legend</b>
+  --
+  <b>Hardware Components:</b>
+  • BeagleBone AI
+  • PCA9685 PWM Controllers
+  • MPU6050 IMU Sensor
+  • ADXL345 Accelerometer
+  • Ultrasonic Sensor
+  • Servo Motors
+
+  <b>Software Components:</b>
+  • Linux Kernel
+  • Device Drivers
+  • User Space Applications
+  • Python TD3 (Optional)
+
+  <b>Communication Protocols:</b>
+  • I2C
+  • PWM
+  • GPIO
+end legend
 
 @enduml
