@@ -11,7 +11,7 @@ modules.order
 deploy/
 obj/
 cmd/
-# bin/
+bin/
 deps/
 *.d
 *.so
