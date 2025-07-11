@@ -6187,6 +6187,18 @@
 					(type none)
 				)
 			)
+			(polyline
+				(pts
+					(xy -1.27 -5.08) (xy -0.508 -5.08)
+				)
+				(stroke
+					(width 0.1524)
+					(type default)
+				)
+				(fill
+					(type none)
+				)
+			)
 			(arc
 				(start 0 -0.508)
 				(mid -0.5058 0)
@@ -6203,6 +6215,18 @@
 				(start 0 -3.048)
 				(mid -0.5058 -2.54)
 				(end 0 -2.032)
+				(stroke
+					(width 0.1524)
+					(type default)
+				)
+				(fill
+					(type none)
+				)
+			)
+			(arc
+				(start 0 -5.588)
+				(mid -0.5058 -5.08)
+				(end 0 -4.572)
 				(stroke
 					(width 0.1524)
 					(type default)
@@ -6240,6 +6264,24 @@
 					)
 				)
 				(number "2"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin passive line
+				(at -5.08 -5.08 0)
+				(length 3.81)
+				(name "Pin_3"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number "SH"
 					(effects
 						(font
 							(size 1.27 1.27)
@@ -6697,6 +6739,18 @@
 					(type none)
 				)
 			)
+			(polyline
+				(pts
+					(xy -1.27 -7.62) (xy -0.508 -7.62)
+				)
+				(stroke
+					(width 0.1524)
+					(type default)
+				)
+				(fill
+					(type none)
+				)
+			)
 			(arc
 				(start 0 2.032)
 				(mid -0.5058 2.54)
@@ -6737,6 +6791,18 @@
 				(start 0 -5.588)
 				(mid -0.5058 -5.08)
 				(end 0 -4.572)
+				(stroke
+					(width 0.1524)
+					(type default)
+				)
+				(fill
+					(type none)
+				)
+			)
+			(arc
+				(start 0 -8.128)
+				(mid -0.5058 -7.62)
+				(end 0 -7.112)
 				(stroke
 					(width 0.1524)
 					(type default)
@@ -6810,6 +6876,24 @@
 					)
 				)
 				(number "4"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin passive line
+				(at -5.08 -7.62 0)
+				(length 3.81)
+				(name "Pin_3"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number "SH"
 					(effects
 						(font
 							(size 1.27 1.27)
@@ -8117,7 +8201,7 @@
 			)
 		)
 		(property "Value" "MPU6050"
-			(at 0 -12.7 0)
+			(at 0 -12.446 0)
 			(effects
 				(font
 					(size 1.27 1.27)

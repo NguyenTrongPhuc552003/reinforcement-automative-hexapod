@@ -1329,7 +1329,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "5c251ec0-4c9c-423e-806e-4b91def3816f")
-		(property "Reference" "#PWR093"
+		(property "Reference" "#PWR094"
 			(at 128.27 93.98 0)
 			(effects
 				(font
@@ -1379,7 +1379,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/716aec1c-0009-4d7b-ab53-21c905b5927d"
-					(reference "#PWR093")
+					(reference "#PWR094")
 					(unit 1)
 				)
 			)
@@ -1529,7 +1529,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "9bc66f04-a502-4047-9908-538175166da2")
-		(property "Reference" "#PWR095"
+		(property "Reference" "#PWR096"
 			(at 176.53 95.25 0)
 			(effects
 				(font
@@ -1579,7 +1579,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/716aec1c-0009-4d7b-ab53-21c905b5927d"
-					(reference "#PWR095")
+					(reference "#PWR096")
 					(unit 1)
 				)
 			)
@@ -1594,7 +1594,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "ade78b7b-6405-4838-9c1d-3ac92c857ae6")
-		(property "Reference" "#PWR094"
+		(property "Reference" "#PWR095"
 			(at 176.53 74.93 0)
 			(effects
 				(font
@@ -1644,7 +1644,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/716aec1c-0009-4d7b-ab53-21c905b5927d"
-					(reference "#PWR094")
+					(reference "#PWR095")
 					(unit 1)
 				)
 			)
@@ -1785,7 +1785,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "c8a3ffd7-b280-4e38-b57b-729b6ad86f44")
-		(property "Reference" "#PWR092"
+		(property "Reference" "#PWR093"
 			(at 128.27 77.47 0)
 			(effects
 				(font
@@ -1835,7 +1835,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/716aec1c-0009-4d7b-ab53-21c905b5927d"
-					(reference "#PWR092")
+					(reference "#PWR093")
 					(unit 1)
 				)
 			)
