@@ -86,6 +86,7 @@ Thumbs.db
 .bash_history
 .python_history
 *.ignore
+template/
 
 # Python
 __pycache__/
