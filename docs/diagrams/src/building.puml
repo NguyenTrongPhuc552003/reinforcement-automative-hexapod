@@ -18,9 +18,12 @@
  '/
 
 @startuml building
-
-' Apply a clear, readable visual theme
 !theme plain
+
+title <font size=20><b>Hexapod Robot - Build and Deployment Process</b></font>
+left header Version 1.0 - Reinforcement Learning Autonomous Hexapod
+right header BeagleBone AI Platform
+
 skinparam {
     ArrowColor #333333
     FontName Arial
@@ -50,9 +53,6 @@ skinparam {
     legendBorderColor #BDBDBD
 }
 
-' Title
-title <font size=20><b>Hexapod Robot Build and Deployment Process</b></font>
-
 ' ARCHITECTURE OVERVIEW
 ' =============================================================================
 
@@ -77,9 +77,9 @@ rectangle "Build Environment (Docker)" as build_env <<build>> {
     
     rectangle "Build Outputs" as build_out {
         file "hexapod_driver.ko" as driver_ko
-        file "pca9685.ko" as pca_ko
-        file "mpu6050.ko" as mpu_ko
-        file "servo.ko" as servo_ko
+        file "pca9685.o" as pca_o
+        file "mpu6050.o" as mpu_o
+        file "servo.o" as servo_o
         file "hexapod_app" as controller_bin
         file "pytd3_deploy" as td3_bin
         file "install.sh" as install_sh

@@ -18,103 +18,222 @@
  '/
 
 @startuml deployment
-
 !theme plain
-skinparam nodeBackgroundColor #FEFECE
-skinparam nodeBorderColor #A80036
-skinparam deviceBackgroundColor #FEFECE
-skinparam deviceBorderColor #A80036
-skinparam artifactBackgroundColor #FEFECE
-skinparam artifactBorderColor #A80036
-skinparam ArrowColor #A80036
+!define RECTANGLE class
 
-' Physical devices based on the actual hardware configuration
-node "BeagleBone AI" as sbc {
-  frame "User Space" {
-    artifact "Applications" as app {
-      artifact "hexapod_app" #ADD8E6
-      artifact "test_servo"
-      artifact "test_movement"
-      artifact "test_balance"
-      artifact "test_calibration"
-      artifact "test_mpu6050"
-      artifact "pytd3_deploy" #ADD8E6
+title <font size=20><b>Hexapod Robot - System Deployment Architecture</b></font>
+left header Version 1.0 - Reinforcement Learning Autonomous Hexapod
+right header BeagleBone AI Platform
+
+skinparam page {
+    size A4
+    margin 10mm
+}
+
+skinparam {
+    defaultFontSize 9
+    classFontSize 8
+    packageFontSize 10
+    titleFontSize 12
+}
+
+skinparam node {
+    BackgroundColor<<hardware>> LightBlue
+    BackgroundColor<<kernel>> LightGreen
+    BackgroundColor<<userspace>> LightYellow
+    BackgroundColor<<sensors>> LightCoral
+    BackgroundColor<<actuators>> LightPink
+}
+
+' Hardware Layer
+node "BeagleBone AI Hardware Platform" <<hardware>> {
+    component "TI AM5729 Sitara\nARM Cortex-A15\n1.5GHz Dual-Core\n1GB DDR3L RAM" as processor
+    component "16GB eMMC\nStorage" as storage
+    component "I2C Bus 3\n(0x40, 0x41, 0x53, 0x68)" as i2c_bus
+    component "GPIO Pins\n(P9_11-P9_42)" as gpio_pins
+    component "PWM Subsystem" as pwm_sys
+}
+
+' Sensor Hardware
+node "Sensor Hardware" <<sensors>> {
+    component "MPU6050\n6-axis IMU\nI2C@0x68" as mpu6050_hw
+    component "ADXL345\n3-axis Accelerometer\nI2C@0x68" as adxl345_hw
+    component "HC-SR04\nUltrasonic Sensor\nGPIO P9_12, P9_15" as ultrasonic_hw
+}
+
+' Actuator Hardware
+node "Servo Motor Array" <<actuators>> {
+    component "PCA9685 #1\nPWM Controller\nI2C@0x40\nChannels 0-10" as pca9685_1
+    component "PCA9685 #2\nPWM Controller\nI2C@0x41\nChannels 0-10" as pca9685_2
+    component "18x MG996R\nServo Motors\n(3 per leg)" as servos
+}
+
+' Kernel Space
+node "Linux Kernel Space" <<kernel>> {
+    package "Device Drivers" {
+        component "hexapod_driver.ko\nMain Controller\nIOCTL Interface" as hexapod_driver
+        component "pca9685.o\nPWM Driver\nI2C Communication" as pca9685_driver
+        component "mpu6050.o\nIMU Driver\nSensor Data" as mpu6050_driver
+        component "adxl345.o\nAccel Driver\nTilt Detection" as adxl345_driver
+        component "servo.o\nServo Control\nPosition Management" as servo_driver
     }
     
-    ' Direct connection from applications to device nodes without middleware libraries
-  }
-  
-  frame "Kernel Space" {
-    artifact "Kernel Modules" as driver {
-      artifact "hexapod_driver.ko" #ADD8E6
-      artifact "pca9685.ko" #ADD8E6
-      artifact "mpu6050.ko" #ADD8E6
-      artifact "servo.ko" #ADD8E6
+    component "/dev/hexapod\nDevice Node\nCharacter Device" as device_node
+    component "I2C Subsystem\ni2c-dev, i2c-omap" as i2c_subsystem
+    component "GPIO Subsystem\ngpio-omap" as gpio_subsystem
+}
+
+' User Space Applications
+node "User Space Applications" <<userspace>> {
+    package "Main Application" {
+        component "hexapod_app\nMain Control App\nKeyboard Interface" as main_app
+        component "Application Layer\nSignal Handling\nInput Processing" as app_layer
+        component "Controller Layer\nMovement Logic\nBalance Control" as controller_layer
     }
     
-    artifact "Device Nodes" as device {
-      file "/dev/hexapod" #ADD8E6
-      file "/dev/i2c-3"
+    package "Test Programs" <<testprograms>> {
+        component "test_servo\nServo Testing" as test_servo
+        component "test_mpu6050\nIMU Testing" as test_mpu6050
+        component "test_adxl345\nAccel Testing" as test_adxl345
+        component "test_movement\nGait Testing" as test_movement
+        component "test_balance\nBalance Testing" as test_balance
+        component "test_calibration\nCalibration Tool" as test_calibration
+        component "test_hcsr04\nUltrasonic Testing" as test_hcsr04
     }
-  }
-  
-  artifact "Configuration" as config {
-    file "~/.config/hexapod/calibration.cfg" #ADD8E6
-  }
+    
+    package "Core Libraries" {
+        component "Hexapod API\nhexapod.hpp/cpp\nHardware Interface" as hexapod_api
+        component "Kinematics Engine\nForward/Inverse IK\n3D Calculations" as kinematics
+        component "Gait Controller\nTripod/Wave/Ripple\nMovement Patterns" as gait_controller
+        component "Calibration Manager\nOffset Management\nFile I/O" as calibration
+        component "Ultrasonic Sensor\nDistance Measurement\nObstacle Detection" as ultrasonic_api
+        component "Common Utilities\nTerminal/Signal/Performance" as common_utils
+    }
 }
 
-artifact "PWM Controllers" as pca9685 {
-  artifact "PCA9685 Primary (0x40)" #ADD8E6
-  artifact "PCA9685 Secondary (0x41)" #ADD8E6
+' Optional Python Layer
+node "Python TD3 (Optional)" <<userspace>> {
+    component "pytd3\nReinforcement Learning\nTD3 Algorithm" as pytd3
+    component "td3bridge.py\nC++ Interface\nReward System" as td3bridge
 }
 
-artifact "IMU Sensor" as mpu6050 {
-  artifact "MPU6050 (0x68)" #ADD8E6
-}
+' Connections - Hardware to Kernel
+processor <|-- i2c_bus
+processor <|-- gpio_pins
+processor <|-- pwm_sys
+i2c_bus <|-- i2c_subsystem : "I2C Protocol"
+gpio_pins <|-- gpio_subsystem : "GPIO Control"
 
-artifact "Servo Motors (18x)" as servos {
-  frame "Left Side" {
-    artifact "Front Left (3x)"
-    artifact "Middle Left (3x)"
-    artifact "Rear Left (3x)"
-  }
-  frame "Right Side" {
-    artifact "Front Right (3x)" 
-    artifact "Middle Right (3x)"
-    artifact "Rear Right (3x)"
-  }
-}
+' Sensor Connections
+mpu6050_hw <|-- i2c_bus : "I2C@0x68"
+adxl345_hw <|-- i2c_bus : "I2C@0x53 (Alt)"
+ultrasonic_hw <|-- gpio_pins : "Trigger/Echo"
 
-' Connections based on actual system architecture
-app --> device : <<reads/writes>>
-device --> driver : <<managed by>>
-driver --> pca9685 : <<I2C@0x40,0x41>>
-driver --> mpu6050 : <<I2C@0x68>>
-pca9685 --> servos : <<PWM signals>>
+' Actuator Connections
+pca9685_1 <|-- i2c_bus : "I2C@0x40"
+pca9685_2 <|-- i2c_bus : "I2C@0x41"
+pca9685_1 <|-- servos : "PWM 0-10"
+pca9685_2 <|-- servos : "PWM 0-10"
 
-' Notes based on code documentation
-note right of app
-  C++ applications that provide:
-  - Manual control
-  - Autonomous movement
-  - Calibration utilities 
-  - TD3 reinforcement learning
+' Kernel Driver Connections
+i2c_subsystem <|-- hexapod_driver
+hexapod_driver <|-- pca9685_driver
+hexapod_driver <|-- mpu6050_driver
+hexapod_driver <|-- adxl345_driver
+gpio_subsystem <|-- hexapod_driver
+hexapod_driver <|-- servo_driver
+hexapod_driver <|-- device_node : "Creates"
+
+' User Space to Kernel
+hexapod_api --|>  device_node : "IOCTL Calls"
+main_app <|-- hexapod_api : "Hardware Control"
+test_servo <|-- hexapod_api
+test_mpu6050 <|-- hexapod_api
+test_adxl345 <|-- hexapod_api
+test_movement <|-- hexapod_api
+test_balance <|-- hexapod_api
+test_calibration <|-- hexapod_api
+test_hcsr04 <|-- ultrasonic_api
+
+' Application Layer Dependencies
+app_layer <|-- controller_layer
+controller_layer <|-- gait_controller
+controller_layer <|-- kinematics
+controller_layer <|-- calibration
+controller_layer <|-- ultrasonic_api
+controller_layer <|-- common_utils
+main_app <|-- app_layer
+
+' Python Integration (Optional)
+pytd3 <|-- td3bridge : "Python Interface"
+td3bridge -.-> hexapod_api : "Optional Integration"
+
+' Notes with technical details
+note right of processor
+  Processing Power:
+  - ARM Cortex-A15 @ 1.5GHz
+  - 1GB DDR3L RAM
+  - 16GB eMMC Storage
+  - Real-time capabilities
 end note
 
-note right of driver
-  Kernel modules handle:
-  - I2C communication
-  - PWM signal generation
-  - Servo positioning
-  - IMU data acquisition
+note left of servos
+  Servo Configuration:
+  - 18 total servos (3 per leg)
+  - 6 legs × 3 joints each
+  - Hip, Knee, Ankle joints
+  - MG996R micro servos
+  - PWM control @ 50Hz
 end note
 
-note bottom of servos
-  18 servos total:
-  - 6 hip joints
-  - 6 knee joints
-  - 6 ankle joints
-  Each controlled through PWM signals
+note bottom of device_node
+  IOCTL Commands:
+  - HEXAPOD_IOCTL_SET_LEG
+  - HEXAPOD_IOCTL_GET_IMU
+  - HEXAPOD_IOCTL_CALIBRATE
+  - HEXAPOD_IOCTL_CENTER_ALL
+  - HEXAPOD_IOCTL_SET_SENSOR_TYPE
 end note
+
+note top of gait_controller
+  Supported Gaits:
+  - Tripod: Fast, stable
+  - Wave: Slow, smooth
+  - Ripple: Medium speed
+  - Adaptive parameters
+  - Obstacle avoidance
+end note
+
+note bottom of ultrasonic_api
+  Features:
+  - Distance measurement
+  - Obstacle detection
+  - Automatic slowdown
+  - Collision avoidance
+  - Configurable thresholds
+end note
+
+legend right
+  <b>Hexapod Robot - Deployment Legend</b>
+  --
+  <b>Hardware Components:</b>
+  • BeagleBone AI
+  • PCA9685 PWM Controllers
+  • MPU6050 IMU Sensor
+  • ADXL345 Accelerometer
+  • Ultrasonic Sensor
+  • Servo Motors
+
+  <b>Software Components:</b>
+  • Linux Kernel
+  • Device Drivers
+  • User Space Applications
+  • Python TD3 (Optional)
+
+  <b>Communication Protocols:</b>
+  • I2C
+  • PWM
+  • GPIO
+end legend
 
 @enduml

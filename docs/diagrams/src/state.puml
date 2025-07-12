@@ -18,9 +18,12 @@
  '/
 
 @startuml state
-
 !theme plain
-' Use better color scheme for hardware states
+
+title <font size=20><b>Hexapod Robot - Hardware States</b></font>
+left header Version 1.0 - Reinforcement Learning Autonomous Hexapod
+right header BeagleBone AI Platform
+
 skinparam {
     stateBackgroundColor #E2F0FF
     stateBorderColor #3C7FC0
@@ -40,9 +43,6 @@ skinparam {
     noteBackgroundColor #FFEED9
     noteFontColor #663500
 }
-
-' Title
-title Hexapod Robot - Hardware Component States
 
 ' Overall hardware system state
 state "Hardware System" as SystemState {

@@ -8201,7 +8201,7 @@
 			)
 		)
 		(property "Value" "MPU6050"
-			(at 0 -12.7 0)
+			(at 0 -12.446 0)
 			(effects
 				(font
 					(size 1.27 1.27)

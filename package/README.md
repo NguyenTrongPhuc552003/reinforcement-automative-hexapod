@@ -31,14 +31,14 @@ This installation package includes:
 
 2. **Run Main Application**
    ```bash
-   sudo hexapod_app
+   ./hexapod_app
    ```
 
 3. **Test Hardware Components**
    ```bash
-   sudo test_mpu6050    # Test IMU sensor
-   sudo test_servo      # Test servo motors  
-   sudo test_balance    # Test balance system
+   ./test_mpu6050    # Test IMU sensor
+   ./test_servo      # Test servo motors
+   ./test_balance    # Test balance system
    ```
 
 ## Hardware Requirements
@@ -79,8 +79,8 @@ sudo usermod -a -G dialout $USER
 
 **Hardware Detection:**
 ```bash
-sudo i2cdetect -r 1
-sudo /opt/hexapod/monitor.sh
+i2cdetect -y -r 3
+./monitor.sh -h   # Call for help more options
 ```
 
 ## Updates and Support

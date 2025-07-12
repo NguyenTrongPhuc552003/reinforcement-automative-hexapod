@@ -9,1146 +9,6 @@
 		(date "2025-07-02")
 	)
 	(lib_symbols
-		(symbol "JST-XH-SMD-3-2.54mm_1"
-			(pin_names
-				(offset 1.016)
-				(hide yes)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(property "Reference" "J"
-				(at 0 5.08 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "Connector"
-				(at 6.35 2.032 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" "automative_hexapod:JST-XH-SMD-3-2.54mm"
-				(at 1.778 -9.652 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Datasheet" "~"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Description" "250V 3A"
-				(at -0.762 -9.906 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Value 2" "~"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value 3" "XH2.54mm"
-				(at 6.604 -0.254 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-						(color 0 132 132 1)
-					)
-				)
-			)
-			(property "Value 4" "~"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Supply Name" "Thegioiic"
-				(at -0.254 -9.906 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Supply Part Number" "Đầu XH2.54mm 3 Chân Dán SMD Nằm Ngang"
-				(at 0.254 -9.906 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Supply URL" "https://www.Thegioiic.com/dau-xh2-54mm-3-chan-dan-smd-nam-ngang"
-				(at 0.254 -9.906 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_keywords" "JST-XH-SMD-3-2.54mm"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(symbol "JST-XH-SMD-3-2.54mm_1_1_1"
-				(polyline
-					(pts
-						(xy -1.27 2.54) (xy -0.508 2.54)
-					)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -1.27 0) (xy -0.508 0)
-					)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -1.27 -2.54) (xy -0.508 -2.54)
-					)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -1.27 -5.08) (xy -0.508 -5.08)
-					)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(arc
-					(start 0 2.032)
-					(mid -0.5058 2.54)
-					(end 0 3.048)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(arc
-					(start 0 -0.508)
-					(mid -0.5058 0)
-					(end 0 0.508)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(arc
-					(start 0 -3.048)
-					(mid -0.5058 -2.54)
-					(end 0 -2.032)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(arc
-					(start 0 -5.588)
-					(mid -0.5058 -5.08)
-					(end 0 -4.572)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(pin passive line
-					(at -5.08 2.54 0)
-					(length 3.81)
-					(name "Pin_1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -5.08 0 0)
-					(length 3.81)
-					(name "Pin_2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -5.08 -2.54 0)
-					(length 3.81)
-					(name "Pin_3"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "3"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -5.08 -5.08 0)
-					(length 3.81)
-					(name "Pin_3"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "SH"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
-		(symbol "JST-XH-SMD-3-2.54mm_2"
-			(pin_names
-				(offset 1.016)
-				(hide yes)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(property "Reference" "J"
-				(at 0 5.08 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "Connector"
-				(at 6.35 2.032 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" "automative_hexapod:JST-XH-SMD-3-2.54mm"
-				(at 1.778 -9.652 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Datasheet" "~"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Description" "250V 3A"
-				(at -0.762 -9.906 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Value 2" "~"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value 3" "XH2.54mm"
-				(at 6.604 -0.254 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-						(color 0 132 132 1)
-					)
-				)
-			)
-			(property "Value 4" "~"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Supply Name" "Thegioiic"
-				(at -0.254 -9.906 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Supply Part Number" "Đầu XH2.54mm 3 Chân Dán SMD Nằm Ngang"
-				(at 0.254 -9.906 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Supply URL" "https://www.Thegioiic.com/dau-xh2-54mm-3-chan-dan-smd-nam-ngang"
-				(at 0.254 -9.906 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_keywords" "JST-XH-SMD-3-2.54mm"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(symbol "JST-XH-SMD-3-2.54mm_2_1_1"
-				(polyline
-					(pts
-						(xy -1.27 2.54) (xy -0.508 2.54)
-					)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -1.27 0) (xy -0.508 0)
-					)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -1.27 -2.54) (xy -0.508 -2.54)
-					)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -1.27 -5.08) (xy -0.508 -5.08)
-					)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(arc
-					(start 0 2.032)
-					(mid -0.5058 2.54)
-					(end 0 3.048)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(arc
-					(start 0 -0.508)
-					(mid -0.5058 0)
-					(end 0 0.508)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(arc
-					(start 0 -3.048)
-					(mid -0.5058 -2.54)
-					(end 0 -2.032)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(arc
-					(start 0 -5.588)
-					(mid -0.5058 -5.08)
-					(end 0 -4.572)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(pin passive line
-					(at -5.08 2.54 0)
-					(length 3.81)
-					(name "Pin_1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -5.08 0 0)
-					(length 3.81)
-					(name "Pin_2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -5.08 -2.54 0)
-					(length 3.81)
-					(name "Pin_3"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "3"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -5.08 -5.08 0)
-					(length 3.81)
-					(name "Pin_3"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "SH"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
-		(symbol "JST-XH-SMD-3-2.54mm_3"
-			(pin_names
-				(offset 1.016)
-				(hide yes)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(property "Reference" "J"
-				(at 0 5.08 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "Connector"
-				(at 6.35 2.032 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" "automative_hexapod:JST-XH-SMD-3-2.54mm"
-				(at 1.778 -9.652 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Datasheet" "~"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Description" "250V 3A"
-				(at -0.762 -9.906 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Value 2" "~"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value 3" "XH2.54mm"
-				(at 6.604 -0.254 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-						(color 0 132 132 1)
-					)
-				)
-			)
-			(property "Value 4" "~"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Supply Name" "Thegioiic"
-				(at -0.254 -9.906 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Supply Part Number" "Đầu XH2.54mm 3 Chân Dán SMD Nằm Ngang"
-				(at 0.254 -9.906 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Supply URL" "https://www.Thegioiic.com/dau-xh2-54mm-3-chan-dan-smd-nam-ngang"
-				(at 0.254 -9.906 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_keywords" "JST-XH-SMD-3-2.54mm"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(symbol "JST-XH-SMD-3-2.54mm_3_1_1"
-				(polyline
-					(pts
-						(xy -1.27 2.54) (xy -0.508 2.54)
-					)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -1.27 0) (xy -0.508 0)
-					)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -1.27 -2.54) (xy -0.508 -2.54)
-					)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -1.27 -5.08) (xy -0.508 -5.08)
-					)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(arc
-					(start 0 2.032)
-					(mid -0.5058 2.54)
-					(end 0 3.048)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(arc
-					(start 0 -0.508)
-					(mid -0.5058 0)
-					(end 0 0.508)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(arc
-					(start 0 -3.048)
-					(mid -0.5058 -2.54)
-					(end 0 -2.032)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(arc
-					(start 0 -5.588)
-					(mid -0.5058 -5.08)
-					(end 0 -4.572)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(pin passive line
-					(at -5.08 2.54 0)
-					(length 3.81)
-					(name "Pin_1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -5.08 0 0)
-					(length 3.81)
-					(name "Pin_2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -5.08 -2.54 0)
-					(length 3.81)
-					(name "Pin_3"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "3"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -5.08 -5.08 0)
-					(length 3.81)
-					(name "Pin_3"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "SH"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
-		(symbol "JST-XH-SMD-3-2.54mm_4"
-			(pin_names
-				(offset 1.016)
-				(hide yes)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(property "Reference" "J"
-				(at 0 5.08 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "Connector"
-				(at 6.35 2.032 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" "automative_hexapod:JST-XH-SMD-3-2.54mm"
-				(at 1.778 -9.652 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Datasheet" "~"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Description" "250V 3A"
-				(at -0.762 -9.906 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Value 2" "~"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value 3" "XH2.54mm"
-				(at 6.604 -0.254 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-						(color 0 132 132 1)
-					)
-				)
-			)
-			(property "Value 4" "~"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Supply Name" "Thegioiic"
-				(at -0.254 -9.906 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Supply Part Number" "Đầu XH2.54mm 3 Chân Dán SMD Nằm Ngang"
-				(at 0.254 -9.906 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Supply URL" "https://www.Thegioiic.com/dau-xh2-54mm-3-chan-dan-smd-nam-ngang"
-				(at 0.254 -9.906 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_keywords" "JST-XH-SMD-3-2.54mm"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(symbol "JST-XH-SMD-3-2.54mm_4_1_1"
-				(polyline
-					(pts
-						(xy -1.27 2.54) (xy -0.508 2.54)
-					)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -1.27 0) (xy -0.508 0)
-					)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -1.27 -2.54) (xy -0.508 -2.54)
-					)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -1.27 -5.08) (xy -0.508 -5.08)
-					)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(arc
-					(start 0 2.032)
-					(mid -0.5058 2.54)
-					(end 0 3.048)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(arc
-					(start 0 -0.508)
-					(mid -0.5058 0)
-					(end 0 0.508)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(arc
-					(start 0 -3.048)
-					(mid -0.5058 -2.54)
-					(end 0 -2.032)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(arc
-					(start 0 -5.588)
-					(mid -0.5058 -5.08)
-					(end 0 -4.572)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(pin passive line
-					(at -5.08 2.54 0)
-					(length 3.81)
-					(name "Pin_1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -5.08 0 0)
-					(length 3.81)
-					(name "Pin_2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -5.08 -2.54 0)
-					(length 3.81)
-					(name "Pin_3"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "3"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at -5.08 -5.08 0)
-					(length 3.81)
-					(name "Pin_3"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "SH"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
 		(symbol "automative_hexapod:Ceramic_Cap_0805_100nF_50V"
 			(pin_numbers
 				(hide yes)
@@ -5565,7 +4425,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "00f22542-6186-4cb8-a678-68f98240488e")
-		(property "Reference" "#PWR0135"
+		(property "Reference" "#PWR0136"
 			(at 173.99 69.85 0)
 			(effects
 				(font
@@ -5615,7 +4475,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0135")
+					(reference "#PWR0136")
 					(unit 1)
 				)
 			)
@@ -5762,7 +4622,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "05c67b78-a606-451c-99fa-8ceb195f1f88")
-		(property "Reference" "#PWR0124"
+		(property "Reference" "#PWR0125"
 			(at 128.27 86.36 0)
 			(effects
 				(font
@@ -5812,7 +4672,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0124")
+					(reference "#PWR0125")
 					(unit 1)
 				)
 			)
@@ -5828,7 +4688,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "0828eb9f-653f-4372-9341-742238b4304e")
-		(property "Reference" "#PWR0119"
+		(property "Reference" "#PWR0120"
 			(at 76.2 200.66 0)
 			(effects
 				(font
@@ -5878,7 +4738,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0119")
+					(reference "#PWR0120")
 					(unit 1)
 				)
 			)
@@ -5894,7 +4754,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "08c2f0b5-3323-497e-9a0f-0728d8e789c9")
-		(property "Reference" "#PWR0154"
+		(property "Reference" "#PWR0155"
 			(at 240.03 175.26 0)
 			(effects
 				(font
@@ -5944,7 +4804,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0154")
+					(reference "#PWR0155")
 					(unit 1)
 				)
 			)
@@ -5960,7 +4820,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "0e047c93-8530-40ba-aa23-434d184c0ea4")
-		(property "Reference" "#PWR0165"
+		(property "Reference" "#PWR0166"
 			(at 270.51 220.98 0)
 			(effects
 				(font
@@ -6010,7 +4870,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0165")
+					(reference "#PWR0166")
 					(unit 1)
 				)
 			)
@@ -6026,7 +4886,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "0e8b37f9-df1c-4e1d-ac58-d6ae4984b27f")
-		(property "Reference" "#PWR0151"
+		(property "Reference" "#PWR0152"
 			(at 240.03 52.07 0)
 			(effects
 				(font
@@ -6076,7 +4936,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0151")
+					(reference "#PWR0152")
 					(unit 1)
 				)
 			)
@@ -6092,7 +4952,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "0f68a979-158b-4685-a487-6a5daa2c8db5")
-		(property "Reference" "#PWR0153"
+		(property "Reference" "#PWR0154"
 			(at 240.03 133.35 0)
 			(effects
 				(font
@@ -6142,7 +5002,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0153")
+					(reference "#PWR0154")
 					(unit 1)
 				)
 			)
@@ -6289,7 +5149,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "112086f2-433a-4fa8-9fe3-0315dfc74ea3")
-		(property "Reference" "#PWR0183"
+		(property "Reference" "#PWR0184"
 			(at 367.03 134.62 0)
 			(effects
 				(font
@@ -6339,7 +5199,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0183")
+					(reference "#PWR0184")
 					(unit 1)
 				)
 			)
@@ -6612,7 +5472,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "157a6a4b-cf0a-444d-8661-173389309ed7")
-		(property "Reference" "#PWR0170"
+		(property "Reference" "#PWR0171"
 			(at 321.31 119.38 0)
 			(effects
 				(font
@@ -6662,7 +5522,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0170")
+					(reference "#PWR0171")
 					(unit 1)
 				)
 			)
@@ -6678,7 +5538,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "19a89f2d-0d78-4d41-9ff5-d2c22f621566")
-		(property "Reference" "#PWR0149"
+		(property "Reference" "#PWR0150"
 			(at 224.79 205.74 0)
 			(effects
 				(font
@@ -6728,7 +5588,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0149")
+					(reference "#PWR0150")
 					(unit 1)
 				)
 			)
@@ -6744,7 +5604,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "19e98bd3-47ea-41c1-a0ed-1adeb026cf36")
-		(property "Reference" "#PWR0122"
+		(property "Reference" "#PWR0123"
 			(at 128.27 49.53 0)
 			(effects
 				(font
@@ -6794,7 +5654,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0122")
+					(reference "#PWR0123")
 					(unit 1)
 				)
 			)
@@ -7067,7 +5927,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "1b9a5d66-2a51-488d-bf5f-ef818497edf5")
-		(property "Reference" "#PWR0172"
+		(property "Reference" "#PWR0173"
 			(at 321.31 161.29 0)
 			(effects
 				(font
@@ -7117,7 +5977,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0172")
+					(reference "#PWR0173")
 					(unit 1)
 				)
 			)
@@ -7133,7 +5993,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "207b887b-86d0-4544-8193-09c4193122fb")
-		(property "Reference" "#PWR0161"
+		(property "Reference" "#PWR0162"
 			(at 270.51 134.62 0)
 			(effects
 				(font
@@ -7183,7 +6043,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0161")
+					(reference "#PWR0162")
 					(unit 1)
 				)
 			)
@@ -7199,7 +6059,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "216e5fc3-005a-43ef-bd62-405028d83e55")
-		(property "Reference" "#PWR0112"
+		(property "Reference" "#PWR0113"
 			(at 76.2 53.34 0)
 			(effects
 				(font
@@ -7249,7 +6109,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0112")
+					(reference "#PWR0113")
 					(unit 1)
 				)
 			)
@@ -7391,7 +6251,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "265af164-1cc0-439b-ab4d-d0fa4e2d078d")
-		(property "Reference" "#PWR0127"
+		(property "Reference" "#PWR0128"
 			(at 128.27 160.02 0)
 			(effects
 				(font
@@ -7441,7 +6301,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0127")
+					(reference "#PWR0128")
 					(unit 1)
 				)
 			)
@@ -7457,7 +6317,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "28a888ac-9122-444e-a1af-fa5ce045a3ac")
-		(property "Reference" "#PWR0106"
+		(property "Reference" "#PWR0107"
 			(at 45.72 52.07 0)
 			(effects
 				(font
@@ -7507,7 +6367,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0106")
+					(reference "#PWR0107")
 					(unit 1)
 				)
 			)
@@ -7523,7 +6383,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "28bcbeb6-c924-407f-865c-88a0f3d52cb0")
-		(property "Reference" "#PWR0164"
+		(property "Reference" "#PWR0165"
 			(at 270.51 200.66 0)
 			(effects
 				(font
@@ -7573,7 +6433,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0164")
+					(reference "#PWR0165")
 					(unit 1)
 				)
 			)
@@ -7841,7 +6701,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "306281f3-11fc-458b-bfde-c6df18d6f5cb")
-		(property "Reference" "#PWR0114"
+		(property "Reference" "#PWR0115"
 			(at 76.2 90.17 0)
 			(effects
 				(font
@@ -7891,7 +6751,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0114")
+					(reference "#PWR0115")
 					(unit 1)
 				)
 			)
@@ -7907,7 +6767,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "324fd4c6-d01e-4ca6-b7c7-53d64afedecc")
-		(property "Reference" "#PWR0110"
+		(property "Reference" "#PWR0111"
 			(at 45.72 219.71 0)
 			(effects
 				(font
@@ -7957,7 +6817,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0110")
+					(reference "#PWR0111")
 					(unit 1)
 				)
 			)
@@ -7973,7 +6833,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "32cd8a18-85ec-4755-9e6b-a42ee2603d84")
-		(property "Reference" "#PWR0140"
+		(property "Reference" "#PWR0141"
 			(at 173.99 175.26 0)
 			(effects
 				(font
@@ -8023,7 +6883,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0140")
+					(reference "#PWR0141")
 					(unit 1)
 				)
 			)
@@ -8039,7 +6899,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "337ade9f-14b6-4852-9f6a-3aba2c26ff00")
-		(property "Reference" "#PWR0142"
+		(property "Reference" "#PWR0143"
 			(at 224.79 49.53 0)
 			(effects
 				(font
@@ -8089,7 +6949,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0142")
+					(reference "#PWR0143")
 					(unit 1)
 				)
 			)
@@ -8105,7 +6965,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "33aa2e3b-829d-4d6f-942d-e6a7f4570ca0")
-		(property "Reference" "#PWR0126"
+		(property "Reference" "#PWR0127"
 			(at 128.27 130.81 0)
 			(effects
 				(font
@@ -8155,7 +7015,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0126")
+					(reference "#PWR0127")
 					(unit 1)
 				)
 			)
@@ -8171,7 +7031,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "3564a7b3-1661-4d60-929f-e18842a39e9a")
-		(property "Reference" "#PWR0101"
+		(property "Reference" "#PWR0102"
 			(at 30.48 130.81 0)
 			(effects
 				(font
@@ -8221,7 +7081,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0101")
+					(reference "#PWR0102")
 					(unit 1)
 				)
 			)
@@ -8615,7 +7475,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "39d15fed-27bd-471d-ac54-e504275694c8")
-		(property "Reference" "#PWR0137"
+		(property "Reference" "#PWR0138"
 			(at 173.99 114.3 0)
 			(effects
 				(font
@@ -8665,7 +7525,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0137")
+					(reference "#PWR0138")
 					(unit 1)
 				)
 			)
@@ -8681,7 +7541,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "3d9f10e3-51aa-4e15-982c-88cf7fe832e5")
-		(property "Reference" "#PWR0103"
+		(property "Reference" "#PWR0104"
 			(at 30.48 171.45 0)
 			(effects
 				(font
@@ -8731,7 +7591,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0103")
+					(reference "#PWR0104")
 					(unit 1)
 				)
 			)
@@ -8747,7 +7607,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "3ffe7169-a4cd-4318-94dc-86a90fcc5915")
-		(property "Reference" "#PWR0175"
+		(property "Reference" "#PWR0176"
 			(at 336.55 88.9 0)
 			(effects
 				(font
@@ -8797,7 +7657,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0175")
+					(reference "#PWR0176")
 					(unit 1)
 				)
 			)
@@ -8944,7 +7804,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "43b7ec83-6d30-4b70-82e8-b4adcc54e3b3")
-		(property "Reference" "#PWR0155"
+		(property "Reference" "#PWR0156"
 			(at 240.03 219.71 0)
 			(effects
 				(font
@@ -8994,7 +7854,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0155")
+					(reference "#PWR0156")
 					(unit 1)
 				)
 			)
@@ -9010,7 +7870,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "44402a19-4767-4cec-b76a-d87ab3369a66")
-		(property "Reference" "#PWR0130"
+		(property "Reference" "#PWR0131"
 			(at 143.51 88.9 0)
 			(effects
 				(font
@@ -9060,7 +7920,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0130")
+					(reference "#PWR0131")
 					(unit 1)
 				)
 			)
@@ -9076,7 +7936,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "46e86fe5-4024-4b60-a057-ea578c4d5883")
-		(property "Reference" "#PWR0156"
+		(property "Reference" "#PWR0157"
 			(at 270.51 33.02 0)
 			(effects
 				(font
@@ -9126,7 +7986,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0156")
+					(reference "#PWR0157")
 					(unit 1)
 				)
 			)
@@ -9142,7 +8002,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "47e967c9-0ffb-45d5-b107-cf4874692475")
-		(property "Reference" "#PWR0139"
+		(property "Reference" "#PWR0140"
 			(at 173.99 154.94 0)
 			(effects
 				(font
@@ -9192,7 +8052,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0139")
+					(reference "#PWR0140")
 					(unit 1)
 				)
 			)
@@ -9208,7 +8068,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "480c4ab4-3b78-4de9-b138-5589f0eabdd6")
-		(property "Reference" "#PWR0184"
+		(property "Reference" "#PWR0185"
 			(at 367.03 156.21 0)
 			(effects
 				(font
@@ -9258,7 +8118,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0184")
+					(reference "#PWR0185")
 					(unit 1)
 				)
 			)
@@ -9274,7 +8134,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "486fd9b0-c1b3-46f9-beb0-7d4e0f79a9ba")
-		(property "Reference" "#PWR0150"
+		(property "Reference" "#PWR0151"
 			(at 224.79 217.17 0)
 			(effects
 				(font
@@ -9324,7 +8184,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0150")
+					(reference "#PWR0151")
 					(unit 1)
 				)
 			)
@@ -9340,7 +8200,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "4c3d3ea9-a39d-41c9-a538-93f7218c950d")
-		(property "Reference" "#PWR0108"
+		(property "Reference" "#PWR0109"
 			(at 45.72 133.35 0)
 			(effects
 				(font
@@ -9390,7 +8250,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0108")
+					(reference "#PWR0109")
 					(unit 1)
 				)
 			)
@@ -9406,7 +8266,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "511d3216-9f9b-41f3-8d35-015fba362cb8")
-		(property "Reference" "#PWR0128"
+		(property "Reference" "#PWR0129"
 			(at 128.27 171.45 0)
 			(effects
 				(font
@@ -9456,7 +8316,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0128")
+					(reference "#PWR0129")
 					(unit 1)
 				)
 			)
@@ -9598,7 +8458,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "58236fc0-40ec-4c69-8e1c-2f142784463d")
-		(property "Reference" "#PWR0171"
+		(property "Reference" "#PWR0172"
 			(at 321.31 130.81 0)
 			(effects
 				(font
@@ -9648,7 +8508,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0171")
+					(reference "#PWR0172")
 					(unit 1)
 				)
 			)
@@ -9790,7 +8650,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "5c904154-9e6c-458b-9bcc-4520ce710c0b")
-		(property "Reference" "#PWR0111"
+		(property "Reference" "#PWR0112"
 			(at 76.2 33.02 0)
 			(effects
 				(font
@@ -9840,7 +8700,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0111")
+					(reference "#PWR0112")
 					(unit 1)
 				)
 			)
@@ -9856,7 +8716,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "5dca0eed-4065-42b7-be6f-4cdfcd27f07c")
-		(property "Reference" "#PWR0148"
+		(property "Reference" "#PWR0149"
 			(at 224.79 172.72 0)
 			(effects
 				(font
@@ -9906,7 +8766,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0148")
+					(reference "#PWR0149")
 					(unit 1)
 				)
 			)
@@ -10048,7 +8908,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "69c74c1e-4fea-4c29-bb5a-ebbecef8886f")
-		(property "Reference" "#PWR0159"
+		(property "Reference" "#PWR0160"
 			(at 270.51 90.17 0)
 			(effects
 				(font
@@ -10098,7 +8958,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0159")
+					(reference "#PWR0160")
 					(unit 1)
 				)
 			)
@@ -10114,7 +8974,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "6a16288e-9711-47b5-8695-5b1275396c3d")
-		(property "Reference" "#PWR0129"
+		(property "Reference" "#PWR0130"
 			(at 143.51 52.07 0)
 			(effects
 				(font
@@ -10164,7 +9024,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0129")
+					(reference "#PWR0130")
 					(unit 1)
 				)
 			)
@@ -10180,7 +9040,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "6ac94eb4-e2c2-49b8-818c-8f8586d84171")
-		(property "Reference" "#PWR0158"
+		(property "Reference" "#PWR0159"
 			(at 270.51 69.85 0)
 			(effects
 				(font
@@ -10230,7 +9090,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0158")
+					(reference "#PWR0159")
 					(unit 1)
 				)
 			)
@@ -10246,7 +9106,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "6c0f0279-d7f4-4001-aa91-8c9fe37fd624")
-		(property "Reference" "#PWR096"
+		(property "Reference" "#PWR097"
 			(at 30.48 38.1 0)
 			(effects
 				(font
@@ -10296,7 +9156,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR096")
+					(reference "#PWR097")
 					(unit 1)
 				)
 			)
@@ -10312,7 +9172,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "6c675082-7930-41cf-8bf7-2accc15b5629")
-		(property "Reference" "#PWR0169"
+		(property "Reference" "#PWR0170"
 			(at 321.31 86.36 0)
 			(effects
 				(font
@@ -10362,7 +9222,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0169")
+					(reference "#PWR0170")
 					(unit 1)
 				)
 			)
@@ -10378,7 +9238,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "705410a7-282c-4dfc-b877-c8facd625fd8")
-		(property "Reference" "#PWR0136"
+		(property "Reference" "#PWR0137"
 			(at 173.99 90.17 0)
 			(effects
 				(font
@@ -10428,7 +9288,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0136")
+					(reference "#PWR0137")
 					(unit 1)
 				)
 			)
@@ -10444,7 +9304,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "720436c0-1a05-4246-8a38-024ff8e46301")
-		(property "Reference" "#PWR0166"
+		(property "Reference" "#PWR0167"
 			(at 321.31 38.1 0)
 			(effects
 				(font
@@ -10494,7 +9354,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0166")
+					(reference "#PWR0167")
 					(unit 1)
 				)
 			)
@@ -10510,7 +9370,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "72edc3e0-eedb-45c8-948f-aefcde9db901")
-		(property "Reference" "#PWR0185"
+		(property "Reference" "#PWR0186"
 			(at 367.03 176.53 0)
 			(effects
 				(font
@@ -10560,7 +9420,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0185")
+					(reference "#PWR0186")
 					(unit 1)
 				)
 			)
@@ -10576,7 +9436,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "735e60c7-c61f-492f-83d6-19d5f07c6908")
-		(property "Reference" "#PWR0145"
+		(property "Reference" "#PWR0146"
 			(at 224.79 119.38 0)
 			(effects
 				(font
@@ -10626,14 +9486,13 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0145")
+					(reference "#PWR0146")
 					(unit 1)
 				)
 			)
 		)
 	)
 	(symbol
-		(lib_name "JST-XH-SMD-3-2.54mm_4")
 		(lib_id "automative_hexapod:JST-XH-SMD-3-2.54mm")
 		(at 53.34 119.38 0)
 		(unit 1)
@@ -10900,7 +9759,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "7a219413-f536-4171-b2de-c76a7f41417a")
-		(property "Reference" "#PWR0116"
+		(property "Reference" "#PWR0117"
 			(at 76.2 134.62 0)
 			(effects
 				(font
@@ -10950,7 +9809,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0116")
+					(reference "#PWR0117")
 					(unit 1)
 				)
 			)
@@ -11223,7 +10082,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "7f7c05f5-154d-4b4b-9c33-de844c2d82ed")
-		(property "Reference" "#PWR0177"
+		(property "Reference" "#PWR0178"
 			(at 336.55 175.26 0)
 			(effects
 				(font
@@ -11273,7 +10132,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0177")
+					(reference "#PWR0178")
 					(unit 1)
 				)
 			)
@@ -11289,7 +10148,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "7fcdf248-3e55-4a98-b37d-4eae66a1305e")
-		(property "Reference" "#PWR0115"
+		(property "Reference" "#PWR0116"
 			(at 76.2 114.3 0)
 			(effects
 				(font
@@ -11339,7 +10198,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0115")
+					(reference "#PWR0116")
 					(unit 1)
 				)
 			)
@@ -11724,7 +10583,6 @@
 		)
 	)
 	(symbol
-		(lib_name "JST-XH-SMD-3-2.54mm_3")
 		(lib_id "automative_hexapod:JST-XH-SMD-3-2.54mm")
 		(at 151.13 74.93 0)
 		(unit 1)
@@ -11865,7 +10723,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "8bae3abb-ca61-4582-9911-fea678981b4d")
-		(property "Reference" "#PWR097"
+		(property "Reference" "#PWR098"
 			(at 30.48 49.53 0)
 			(effects
 				(font
@@ -11915,7 +10773,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR097")
+					(reference "#PWR098")
 					(unit 1)
 				)
 			)
@@ -12057,7 +10915,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "8c80e136-ad53-44e8-be10-3ecd416fa518")
-		(property "Reference" "#PWR0174"
+		(property "Reference" "#PWR0175"
 			(at 336.55 52.07 0)
 			(effects
 				(font
@@ -12107,7 +10965,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0174")
+					(reference "#PWR0175")
 					(unit 1)
 				)
 			)
@@ -12123,7 +10981,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "8caddea7-7e27-4a02-b0f0-e4d311738eb2")
-		(property "Reference" "#PWR0152"
+		(property "Reference" "#PWR0153"
 			(at 240.03 88.9 0)
 			(effects
 				(font
@@ -12173,7 +11031,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0152")
+					(reference "#PWR0153")
 					(unit 1)
 				)
 			)
@@ -12189,7 +11047,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "8d83eb11-73da-40f6-9f7d-ff40b645b6ff")
-		(property "Reference" "#PWR0118"
+		(property "Reference" "#PWR0119"
 			(at 76.2 175.26 0)
 			(effects
 				(font
@@ -12239,7 +11097,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0118")
+					(reference "#PWR0119")
 					(unit 1)
 				)
 			)
@@ -12255,7 +11113,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "8e9d9968-bbbe-4bc5-b067-3f1d147e4918")
-		(property "Reference" "#PWR0105"
+		(property "Reference" "#PWR0106"
 			(at 30.48 217.17 0)
 			(effects
 				(font
@@ -12305,7 +11163,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0105")
+					(reference "#PWR0106")
 					(unit 1)
 				)
 			)
@@ -12321,7 +11179,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "941872b7-4766-4dc3-9f7a-419039797055")
-		(property "Reference" "#PWR0132"
+		(property "Reference" "#PWR0133"
 			(at 143.51 173.99 0)
 			(effects
 				(font
@@ -12371,7 +11229,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0132")
+					(reference "#PWR0133")
 					(unit 1)
 				)
 			)
@@ -13022,7 +11880,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "9b2a4801-ace0-429b-9ecb-4074c74def1e")
-		(property "Reference" "#PWR0180"
+		(property "Reference" "#PWR0181"
 			(at 367.03 69.85 0)
 			(effects
 				(font
@@ -13072,7 +11930,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0180")
+					(reference "#PWR0181")
 					(unit 1)
 				)
 			)
@@ -13088,7 +11946,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "9c601823-4eef-4b45-863c-63d13db50bb9")
-		(property "Reference" "#PWR0144"
+		(property "Reference" "#PWR0145"
 			(at 224.79 86.36 0)
 			(effects
 				(font
@@ -13138,7 +11996,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0144")
+					(reference "#PWR0145")
 					(unit 1)
 				)
 			)
@@ -13154,7 +12012,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "9e0d51b6-18f9-4ab5-9f77-4682132d1d82")
-		(property "Reference" "#PWR0162"
+		(property "Reference" "#PWR0163"
 			(at 270.51 156.21 0)
 			(effects
 				(font
@@ -13204,7 +12062,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0162")
+					(reference "#PWR0163")
 					(unit 1)
 				)
 			)
@@ -13220,7 +12078,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "9fb6503f-7f56-4185-8a15-017e3a7a881f")
-		(property "Reference" "#PWR0133"
+		(property "Reference" "#PWR0134"
 			(at 173.99 33.02 0)
 			(effects
 				(font
@@ -13270,7 +12128,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0133")
+					(reference "#PWR0134")
 					(unit 1)
 				)
 			)
@@ -13286,7 +12144,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "a0036230-039c-4f06-a908-cb0bbcbc47c7")
-		(property "Reference" "#PWR0141"
+		(property "Reference" "#PWR0142"
 			(at 224.79 38.1 0)
 			(effects
 				(font
@@ -13336,7 +12194,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0141")
+					(reference "#PWR0142")
 					(unit 1)
 				)
 			)
@@ -13730,7 +12588,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "adecd449-e765-4cdb-af13-90878d252f37")
-		(property "Reference" "#PWR099"
+		(property "Reference" "#PWR0100"
 			(at 30.48 86.36 0)
 			(effects
 				(font
@@ -13780,7 +12638,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR099")
+					(reference "#PWR0100")
 					(unit 1)
 				)
 			)
@@ -13796,7 +12654,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "b2182929-edec-4a57-9c52-70c35303556f")
-		(property "Reference" "#PWR0179"
+		(property "Reference" "#PWR0180"
 			(at 367.03 53.34 0)
 			(effects
 				(font
@@ -13846,7 +12704,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0179")
+					(reference "#PWR0180")
 					(unit 1)
 				)
 			)
@@ -13862,7 +12720,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "b3e1adaf-0f34-40f6-9fe7-b76a6148c057")
-		(property "Reference" "#PWR0100"
+		(property "Reference" "#PWR0101"
 			(at 30.48 119.38 0)
 			(effects
 				(font
@@ -13912,7 +12770,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0100")
+					(reference "#PWR0101")
 					(unit 1)
 				)
 			)
@@ -13928,7 +12786,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "b3fc254d-3acc-46e2-b176-c8a5907cc62b")
-		(property "Reference" "#PWR0117"
+		(property "Reference" "#PWR0118"
 			(at 76.2 154.94 0)
 			(effects
 				(font
@@ -13978,7 +12836,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0117")
+					(reference "#PWR0118")
 					(unit 1)
 				)
 			)
@@ -13994,7 +12852,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "b6369e7d-647d-4cf9-961e-f6a3d916d3bf")
-		(property "Reference" "#PWR0138"
+		(property "Reference" "#PWR0139"
 			(at 173.99 134.62 0)
 			(effects
 				(font
@@ -14044,7 +12902,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0138")
+					(reference "#PWR0139")
 					(unit 1)
 				)
 			)
@@ -14060,7 +12918,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "b637b4c6-b9fa-445b-87f4-9a2c581e52ae")
-		(property "Reference" "#PWR0131"
+		(property "Reference" "#PWR0132"
 			(at 143.51 133.35 0)
 			(effects
 				(font
@@ -14110,7 +12968,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0131")
+					(reference "#PWR0132")
 					(unit 1)
 				)
 			)
@@ -14383,7 +13241,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "bfaa6dfd-7f09-44e4-b615-6ca5031d9923")
-		(property "Reference" "#PWR0109"
+		(property "Reference" "#PWR0110"
 			(at 45.72 173.99 0)
 			(effects
 				(font
@@ -14433,7 +13291,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0109")
+					(reference "#PWR0110")
 					(unit 1)
 				)
 			)
@@ -14958,7 +13816,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "c44a09ec-33a9-4234-b262-79da58b7c8f5")
-		(property "Reference" "#PWR0123"
+		(property "Reference" "#PWR0124"
 			(at 128.27 74.93 0)
 			(effects
 				(font
@@ -15008,7 +13866,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0123")
+					(reference "#PWR0124")
 					(unit 1)
 				)
 			)
@@ -15024,7 +13882,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "ca002ae9-a9d4-4534-87ef-3f3c5139885c")
-		(property "Reference" "#PWR0176"
+		(property "Reference" "#PWR0177"
 			(at 336.55 133.35 0)
 			(effects
 				(font
@@ -15074,7 +13932,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0176")
+					(reference "#PWR0177")
 					(unit 1)
 				)
 			)
@@ -15090,7 +13948,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "cdc2611b-d546-4b01-956a-579edfc4b5ba")
-		(property "Reference" "#PWR0120"
+		(property "Reference" "#PWR0121"
 			(at 76.2 220.98 0)
 			(effects
 				(font
@@ -15140,7 +13998,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0120")
+					(reference "#PWR0121")
 					(unit 1)
 				)
 			)
@@ -15156,7 +14014,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "d1d220d6-3b6f-4429-838f-4eaa974be9ef")
-		(property "Reference" "#PWR0104"
+		(property "Reference" "#PWR0105"
 			(at 30.48 205.74 0)
 			(effects
 				(font
@@ -15206,7 +14064,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0104")
+					(reference "#PWR0105")
 					(unit 1)
 				)
 			)
@@ -15222,7 +14080,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "d27b61b1-b283-4f64-bb1e-d2718337e5c8")
-		(property "Reference" "#PWR0163"
+		(property "Reference" "#PWR0164"
 			(at 270.51 176.53 0)
 			(effects
 				(font
@@ -15272,14 +14130,13 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0163")
+					(reference "#PWR0164")
 					(unit 1)
 				)
 			)
 		)
 	)
 	(symbol
-		(lib_name "JST-XH-SMD-3-2.54mm_1")
 		(lib_id "automative_hexapod:JST-XH-SMD-3-2.54mm")
 		(at 53.34 38.1 0)
 		(unit 1)
@@ -15420,7 +14277,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "d535efd0-6eae-4a42-bf4f-9f6ca760caf0")
-		(property "Reference" "#PWR0102"
+		(property "Reference" "#PWR0103"
 			(at 30.48 160.02 0)
 			(effects
 				(font
@@ -15470,7 +14327,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0102")
+					(reference "#PWR0103")
 					(unit 1)
 				)
 			)
@@ -15486,7 +14343,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "d7c57ab1-312a-4716-b146-535f93e5fd1a")
-		(property "Reference" "#PWR0107"
+		(property "Reference" "#PWR0108"
 			(at 45.72 88.9 0)
 			(effects
 				(font
@@ -15536,7 +14393,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0107")
+					(reference "#PWR0108")
 					(unit 1)
 				)
 			)
@@ -15804,7 +14661,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "da596c3b-1bd7-4902-bfd8-577cfe3cadb1")
-		(property "Reference" "#PWR0182"
+		(property "Reference" "#PWR0183"
 			(at 367.03 114.3 0)
 			(effects
 				(font
@@ -15854,7 +14711,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0182")
+					(reference "#PWR0183")
 					(unit 1)
 				)
 			)
@@ -16258,7 +15115,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "dfcf7ee1-00d1-4f11-80cd-64d7f2824975")
-		(property "Reference" "#PWR0121"
+		(property "Reference" "#PWR0122"
 			(at 128.27 38.1 0)
 			(effects
 				(font
@@ -16308,7 +15165,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0121")
+					(reference "#PWR0122")
 					(unit 1)
 				)
 			)
@@ -16324,7 +15181,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "e0f33887-f73c-4462-b813-08e022b91aa0")
-		(property "Reference" "#PWR0178"
+		(property "Reference" "#PWR0179"
 			(at 367.03 33.02 0)
 			(effects
 				(font
@@ -16374,7 +15231,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0178")
+					(reference "#PWR0179")
 					(unit 1)
 				)
 			)
@@ -16521,7 +15378,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "e2e6a96b-2982-4521-906f-eecbcc9fda50")
-		(property "Reference" "#PWR0157"
+		(property "Reference" "#PWR0158"
 			(at 270.51 53.34 0)
 			(effects
 				(font
@@ -16571,7 +15428,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0157")
+					(reference "#PWR0158")
 					(unit 1)
 				)
 			)
@@ -16587,7 +15444,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "e33e1a94-abfe-4886-9f1a-9536344097d7")
-		(property "Reference" "#PWR098"
+		(property "Reference" "#PWR099"
 			(at 30.48 74.93 0)
 			(effects
 				(font
@@ -16637,7 +15494,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR098")
+					(reference "#PWR099")
 					(unit 1)
 				)
 			)
@@ -16905,7 +15762,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "e54694dd-4f72-45d0-bcbf-9f364de6fdc3")
-		(property "Reference" "#PWR0160"
+		(property "Reference" "#PWR0161"
 			(at 270.51 114.3 0)
 			(effects
 				(font
@@ -16955,7 +15812,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0160")
+					(reference "#PWR0161")
 					(unit 1)
 				)
 			)
@@ -16971,7 +15828,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "e5e6c0f6-79ed-4ef2-9d4d-43ad3c49fe30")
-		(property "Reference" "#PWR0146"
+		(property "Reference" "#PWR0147"
 			(at 224.79 130.81 0)
 			(effects
 				(font
@@ -17021,7 +15878,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0146")
+					(reference "#PWR0147")
 					(unit 1)
 				)
 			)
@@ -17037,7 +15894,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "e6b938b0-1494-4aed-83a3-1fbc0eab4384")
-		(property "Reference" "#PWR0181"
+		(property "Reference" "#PWR0182"
 			(at 367.03 90.17 0)
 			(effects
 				(font
@@ -17087,7 +15944,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0181")
+					(reference "#PWR0182")
 					(unit 1)
 				)
 			)
@@ -17103,7 +15960,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "e6bdac8e-7d14-4a7c-a650-005c0cc8b1aa")
-		(property "Reference" "#PWR0147"
+		(property "Reference" "#PWR0148"
 			(at 224.79 161.29 0)
 			(effects
 				(font
@@ -17153,7 +16010,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0147")
+					(reference "#PWR0148")
 					(unit 1)
 				)
 			)
@@ -17169,7 +16026,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "ea7d55d7-c041-4f3b-b9b1-697667ccba15")
-		(property "Reference" "#PWR0125"
+		(property "Reference" "#PWR0126"
 			(at 128.27 119.38 0)
 			(effects
 				(font
@@ -17219,7 +16076,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0125")
+					(reference "#PWR0126")
 					(unit 1)
 				)
 			)
@@ -17235,7 +16092,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "eb5942a1-0856-4d55-a71c-81509a9b19d4")
-		(property "Reference" "#PWR0134"
+		(property "Reference" "#PWR0135"
 			(at 173.99 53.34 0)
 			(effects
 				(font
@@ -17285,7 +16142,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0134")
+					(reference "#PWR0135")
 					(unit 1)
 				)
 			)
@@ -17563,7 +16420,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "f18c314d-bc44-4c8d-b8c7-f1e05e379ac3")
-		(property "Reference" "#PWR0143"
+		(property "Reference" "#PWR0144"
 			(at 224.79 74.93 0)
 			(effects
 				(font
@@ -17613,7 +16470,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0143")
+					(reference "#PWR0144")
 					(unit 1)
 				)
 			)
@@ -17629,7 +16486,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "f2261a49-e6d7-4b37-9c0c-9f22238cb65f")
-		(property "Reference" "#PWR0173"
+		(property "Reference" "#PWR0174"
 			(at 321.31 172.72 0)
 			(effects
 				(font
@@ -17679,7 +16536,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0173")
+					(reference "#PWR0174")
 					(unit 1)
 				)
 			)
@@ -17695,7 +16552,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "f55de356-bcc6-4862-91e7-4c9a062db779")
-		(property "Reference" "#PWR0168"
+		(property "Reference" "#PWR0169"
 			(at 321.31 74.93 0)
 			(effects
 				(font
@@ -17745,7 +16602,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0168")
+					(reference "#PWR0169")
 					(unit 1)
 				)
 			)
@@ -17761,7 +16618,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "f689ed05-e87f-4617-abf5-8f6ac374633e")
-		(property "Reference" "#PWR0113"
+		(property "Reference" "#PWR0114"
 			(at 76.2 69.85 0)
 			(effects
 				(font
@@ -17811,14 +16668,13 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0113")
+					(reference "#PWR0114")
 					(unit 1)
 				)
 			)
 		)
 	)
 	(symbol
-		(lib_name "JST-XH-SMD-3-2.54mm_2")
 		(lib_id "automative_hexapod:JST-XH-SMD-3-2.54mm")
 		(at 53.34 74.93 0)
 		(unit 1)
@@ -17959,7 +16815,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "facff51f-74fc-4a49-873f-937a771a9b1c")
-		(property "Reference" "#PWR0167"
+		(property "Reference" "#PWR0168"
 			(at 321.31 49.53 0)
 			(effects
 				(font
@@ -18009,7 +16865,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/bc00c079-2846-4ee6-b9f3-67c2426c6f23"
-					(reference "#PWR0167")
+					(reference "#PWR0168")
 					(unit 1)
 				)
 			)

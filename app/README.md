@@ -59,23 +59,23 @@ The project uses a Makefile build system with the following targets:
 
 ### Controls
 
-| Key   | Function                                 |
-|-------|------------------------------------------|
-| W / S | Move forward/backward                    |
-| A / D | Rotate left/right                        |
-| I / K | Raise/lower body                         |
-| J / L | Tilt left/right                          |
-| 1 - 3 | Select gait (1=Tripod, 2=Wave, 3=Ripple) |
-| + / - | Increase/decrease speed                  |
-| SPACE | Stop and center legs                     |
-| B     | Toggle balance mode                      |
-| [ / ] | Decrease/increase balance sensitivity    |
-| U     | Toggle ultrasonic sensor                 |
-| T     | Toggle telemetry display                 |
-| P     | Toggle performance monitoring            |
-| M     | Run servo diagnostics                    |
-| H     | Show help                                |
-| Q     | Quit                                     |
+| Key     | Function                                 |
+|---------|------------------------------------------|
+| W / S   | Move forward/backward                    |
+| A / D   | Rotate left/right                        |
+| I / K   | Raise/lower body                         |
+| J / L   | Tilt left/right                          |
+| 1 - 3   | Select gait (1=Tripod, 2=Wave, 3=Ripple) |
+| + / -   | Increase/decrease speed                  |
+| SPACE   | Stop and center legs                     |
+| B       | Toggle balance mode                      |
+| \[ / \] | Decrease/increase balance sensitivity    |
+| U       | Toggle ultrasonic sensor                 |
+| T       | Toggle telemetry display                 |
+| P       | Toggle performance monitoring            |
+| M       | Run servo diagnostics                    |
+| H       | Show help                                |
+| Q       | Quit                                     |
 
 ### Telemetry Display
 
@@ -91,7 +91,7 @@ The balance mode uses IMU sensor data to automatically adjust the robot's postur
 
 ## Test Programs
 
-The `/test` directory contains individual test programs for specific components:
+The `test/` directory contains individual test programs for specific components:
 
 - **servo.cpp**: Test servo motor control
 - **mpu6050.cpp**: Test MPU6050 sensor readings

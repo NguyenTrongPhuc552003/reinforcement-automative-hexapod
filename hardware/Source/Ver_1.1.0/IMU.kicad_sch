@@ -434,7 +434,7 @@
 				)
 			)
 			(property "Value" "MPU6050"
-				(at 0 -12.7 0)
+				(at 0 -12.446 0)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -1283,7 +1283,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "29fe5044-210c-4856-a33f-00da9b5c425b")
-		(property "Reference" "#PWR083"
+		(property "Reference" "#PWR084"
 			(at 143.51 90.17 0)
 			(effects
 				(font
@@ -1333,7 +1333,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/6f119c3f-94db-4ed9-9af0-8eee89c2f72e"
-					(reference "#PWR083")
+					(reference "#PWR084")
 					(unit 1)
 				)
 			)
@@ -1461,7 +1461,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "6304d3c7-d3d9-4d08-a0b5-8d72beea2d07")
-		(property "Reference" "#PWR084"
+		(property "Reference" "#PWR085"
 			(at 149.86 90.17 0)
 			(effects
 				(font
@@ -1512,7 +1512,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/6f119c3f-94db-4ed9-9af0-8eee89c2f72e"
-					(reference "#PWR084")
+					(reference "#PWR085")
 					(unit 1)
 				)
 			)
@@ -1528,7 +1528,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "657154fa-81fd-4380-8571-8e2b24bbd26d")
-		(property "Reference" "#PWR086"
+		(property "Reference" "#PWR087"
 			(at 184.15 110.49 0)
 			(effects
 				(font
@@ -1578,7 +1578,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/6f119c3f-94db-4ed9-9af0-8eee89c2f72e"
-					(reference "#PWR086")
+					(reference "#PWR087")
 					(unit 1)
 				)
 			)
@@ -1593,7 +1593,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "b78aefce-08cf-4f3e-a849-efbd2b5495ba")
-		(property "Reference" "#PWR085"
+		(property "Reference" "#PWR086"
 			(at 184.15 90.17 0)
 			(effects
 				(font
@@ -1643,7 +1643,7 @@
 		(instances
 			(project "Automative_Hexapod"
 				(path "/c07b6013-2147-4cef-a16e-342deb9ccbf5/6f119c3f-94db-4ed9-9af0-8eee89c2f72e"
-					(reference "#PWR085")
+					(reference "#PWR086")
 					(unit 1)
 				)
 			)
@@ -1704,33 +1704,30 @@
 			)
 		)
 		(property "Value 2" "50V"
-			(at 207.01 93.726 90)
+			(at 208.534 96.012 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 					(color 0 132 132 1)
 				)
-				(justify right)
 			)
 		)
 		(property "Value 3" "0805"
-			(at 207.01 96.266 90)
+			(at 210.312 95.25 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 					(color 0 132 132 1)
 				)
-				(justify right)
 			)
 		)
 		(property "Value 4" "10%"
-			(at 207.01 98.806 90)
+			(at 212.09 95.758 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 					(color 0 132 132 1)
 				)
-				(justify right)
 			)
 		)
 		(property "Supply Name" "Thegioiic"
@@ -1830,33 +1827,30 @@
 			)
 		)
 		(property "Value 2" "16V"
-			(at 187.96 93.98 90)
+			(at 188.976 94.996 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 					(color 0 132 132 1)
 				)
-				(justify right)
 			)
 		)
 		(property "Value 3" "0805"
-			(at 187.96 96.52 90)
+			(at 190.754 94.234 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 					(color 0 132 132 1)
 				)
-				(justify right)
 			)
 		)
 		(property "Value 4" "10%"
-			(at 187.96 99.06 90)
+			(at 192.532 94.742 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 					(color 0 132 132 1)
 				)
-				(justify right)
 			)
 		)
 		(property "Supply Name" "Thegioiic"

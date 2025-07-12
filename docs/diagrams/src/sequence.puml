@@ -18,9 +18,12 @@
  '/
 
 @startuml sequence
-
-' Custom styling for better readability
 !theme plain
+
+title <font size=20><b>Hexapod Robot - Operation Sequence</b></font>
+left header Version 1.0 - Reinforcement Learning Autonomous Hexapod
+right header BeagleBone AI Platform
+
 skinparam {
     SequenceArrowThickness 1.5
     SequenceGroupBodyBackgroundColor #F5F5F5
