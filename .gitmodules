@@ -1,15 +1,18 @@
 [submodule "opencl/api"]
 	path = opencl/api
-	url = https://github.com/rcn-ee/ti-opencl.git
-	branch = v01.02.00.02-bb.org
+	url = https://github.com/NguyenTrongPhuc552003/ti-opencl.git
+	branch = v01.02
+
 [submodule "tidl/api"]
 	path = tidl/api
-	url = https://github.com/rcn-ee/tidl-api.git
-	branch = v01.04.00-bb.org
+	url = https://github.com/NguyenTrongPhuc552003/tidl-api.git
+	branch = v01.04
+
 [submodule "tidl/utils"]
 	path = tidl/utils
-	url = git://git.ti.com/tidl/tidl-utils.git
+	url = https://github.com/NguyenTrongPhuc552003/tidl-utils.git
 	branch = master
+
 [submodule "report/thesis"]
 	path = report/thesis
 	url = git@github.com:NguyenTrongPhuc552003/final-hexapod-thesis.git
