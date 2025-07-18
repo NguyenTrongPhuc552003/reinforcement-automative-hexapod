@@ -1,13 +1,13 @@
 # Base image for building PyTD3 reinforcement learning module
-FROM debian:buster
+FROM debian:bullseye
 
 # Set noninteractive installation
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Global build environment variables
 ENV KERNEL_VERSION=4.14.108-ti-r144 \
-    DEBIAN_VERSION=buster \
-    GCC_VERSION=8 \
+    DEBIAN_VERSION=bullseye \
+    GCC_VERSION=10 \
     BUILD_TYPE=pytd3 \
     INSTALL_DIR=/build/deploy
 

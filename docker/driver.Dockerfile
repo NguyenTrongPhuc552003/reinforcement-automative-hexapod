@@ -4,15 +4,18 @@ FROM debian:bullseye
 # Set noninteractive installation
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Global build environment variables - Define KERNEL_VERSION first so it's available to other variables
-ENV KERNEL_VERSION=4.14.108-ti-r144
-ENV DEBIAN_VERSION=buster \
+# Global build environment variables
+ENV DEBIAN_VERSION=bullseye \
     GCC_VERSION=10 \
     ARCH=arm \
     CROSS_COMPILE=arm-linux-gnueabihf- \
-    KERNEL_DIR=/build/kernel/usr/src/linux-headers-${KERNEL_VERSION} \
     BUILD_TYPE=module \
     INSTALL_DIR=/build/deploy
+
+# Kernel headers package name and its version
+ENV KERNEL_VERSION=4.14.108-ti-r144
+ENV KERNEL_DIR=/build/kernel/usr/src/linux-headers-${KERNEL_VERSION} \
+    KERNEL_HEADER=linux-headers-${KERNEL_VERSION}_1${DEBIAN_VERSION}_armhf.deb
 
 # Install essential build tools
 RUN apt-get update && apt-get install -y \
@@ -46,9 +49,9 @@ RUN mkdir -p /build/kernel /build/module /build/deploy
 
 # Download and extract kernel headers for BeagleBone AI
 RUN echo "Downloading kernel headers for version ${KERNEL_VERSION}" && \
-    wget https://rcn-ee.com/repos/debian/pool/main/l/linux-upstream/linux-headers-${KERNEL_VERSION}_1${DEBIAN_VERSION}_armhf.deb && \
-    dpkg -x linux-headers-${KERNEL_VERSION}_1${DEBIAN_VERSION}_armhf.deb /build/kernel && \
-    rm linux-headers-${KERNEL_VERSION}_1${DEBIAN_VERSION}_armhf.deb
+    wget https://rcn-ee.com/repos/debian/pool/main/l/linux-upstream/${KERNEL_HEADER} && \
+    dpkg -x ${KERNEL_HEADER} /build/kernel && \
+    rm ${KERNEL_HEADER}
 
 # Verify kernel headers directory exists
 RUN test -d ${KERNEL_DIR} || (echo "Kernel headers directory ${KERNEL_DIR} not found!" && exit 1)

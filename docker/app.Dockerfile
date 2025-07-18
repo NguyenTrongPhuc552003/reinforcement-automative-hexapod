@@ -1,13 +1,13 @@
 # Base image for building hexapod user space applications
-FROM debian:buster
+FROM debian:bullseye
 
 # Set noninteractive installation
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Global build environment variables
 ENV KERNEL_VERSION=4.14.108-ti-r144 \
-    DEBIAN_VERSION=buster \
-    GCC_VERSION=8 \
+    DEBIAN_VERSION=bullseye \
+    GCC_VERSION=10 \
     ARCH=arm \
     CROSS_COMPILE=arm-linux-gnueabihf- \
     BUILD_TYPE=user \
