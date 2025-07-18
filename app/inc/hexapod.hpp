@@ -156,45 +156,48 @@ namespace hexapod
     class ImuData
     {
     public:
-        int16_t accel_x;     ///< Raw X-axis acceleration
-        int16_t accel_y;     ///< Raw Y-axis acceleration
-        int16_t accel_z;     ///< Raw Z-axis acceleration
-        int16_t gyro_x;      ///< Raw X-axis angular velocity (0 for ADXL345)
-        int16_t gyro_y;      ///< Raw Y-axis angular velocity (0 for ADXL345)
-        int16_t gyro_z;      ///< Raw Z-axis angular velocity (0 for ADXL345)
-        uint8_t sensor_type; ///< Which sensor provided the data
+        int16_t accel_x = 0;     ///< X-axis acceleration (initialized to 0)
+        int16_t accel_y = 0;     ///< Y-axis acceleration (initialized to 0)
+        int16_t accel_z = 0;     ///< Z-axis acceleration (initialized to 0)
+        int16_t gyro_x = 0;      ///< X-axis gyroscope (initialized to 0)
+        int16_t gyro_y = 0;      ///< Y-axis gyroscope (initialized to 0)
+        int16_t gyro_z = 0;      ///< Z-axis gyroscope (initialized to 0)
+        uint8_t sensor_type = 0; ///< Sensor type indicator (initialized to 0)
 
-        // Helper methods to convert raw data to physical units
+        /**
+         * @brief Default constructor - ensures all members are initialized
+         */
+        ImuData() : accel_x(0), accel_y(0), accel_z(0), gyro_x(0), gyro_y(0), gyro_z(0), sensor_type(0) {}
+
+        /**
+         * @brief Get sensor type
+         */
+        SensorType getSensorType() const { return static_cast<SensorType>(sensor_type); }
+
+        /**
+         * @brief Convert raw accelerometer values to g units
+         */
         float getAccelX() const
         {
             return accel_x / (getSensorType() == SensorType::ADXL345 ? 256.0f : 16384.0f);
-        } ///< Convert to g's
-
+        }
+        
         float getAccelY() const
         {
             return accel_y / (getSensorType() == SensorType::ADXL345 ? 256.0f : 16384.0f);
-        } ///< Convert to g's
-
+        }
+        
         float getAccelZ() const
         {
             return accel_z / (getSensorType() == SensorType::ADXL345 ? 256.0f : 16384.0f);
-        } ///< Convert to g's
+        }
 
+        /**
+         * @brief Convert raw gyroscope values to degrees/second
+         */
         float getGyroX() const { return gyro_x / 65.5f; } ///< Convert to degrees/second
         float getGyroY() const { return gyro_y / 65.5f; } ///< Convert to degrees/second
         float getGyroZ() const { return gyro_z / 65.5f; } ///< Convert to degrees/second
-
-        /**
-         * @brief Check if gyroscope data is available
-         * @return true if sensor provides gyroscope data
-         */
-        bool hasGyro() const { return getSensorType() == SensorType::MPU6050; }
-
-        /**
-         * @brief Get the sensor type that provided this data
-         * @return SensorType enum value
-         */
-        SensorType getSensorType() const { return static_cast<SensorType>(sensor_type); }
     };
 
     /**
