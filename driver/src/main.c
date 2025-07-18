@@ -1345,8 +1345,12 @@ static void __exit hexapod_exit(void)
 }
 
 /* Register module init and exit functions */
-module_init(hexapod_init);
-module_exit(hexapod_exit);
+// module_init(hexapod_init);
+// module_exit(hexapod_exit);
+
+/* Properly declare alias functions to avoid -Wmissing-attributes */
+int init_module(void) __attribute__((alias("hexapod_init"))) __attribute__((cold));
+void cleanup_module(void) __attribute__((alias("hexapod_exit"))) __attribute__((cold));
 
 /*============================================================================
  * Module Information
