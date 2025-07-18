@@ -527,7 +527,7 @@
   },
   "schematic": {
     "annotate_start_num": 0,
-    "bom_export_filename": "${PROJECTNAME}.csv",
+    "bom_export_filename": "..\\..\\BOM\\Automative_Hexapod.csv",
     "bom_fmt_presets": [],
     "bom_fmt_settings": {
       "field_delimiter": ",",
@@ -621,7 +621,7 @@
           "show": false
         },
         {
-          "group_by": false,
+          "group_by": true,
           "label": "Supply URL",
           "name": "Supply URL",
           "show": true
@@ -636,6 +636,18 @@
           "group_by": false,
           "label": "#",
           "name": "${ITEM_NUMBER}",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Supply part number",
+          "name": "Supply part number",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Supply name",
+          "name": "Supply name",
           "show": false
         }
       ],
