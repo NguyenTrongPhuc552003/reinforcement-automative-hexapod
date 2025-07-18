@@ -1,5 +1,5 @@
 # Base image for building hexapod kernel modules
-FROM debian:buster
+FROM debian:bullseye
 
 # Set noninteractive installation
 ENV DEBIAN_FRONTEND=noninteractive
@@ -7,7 +7,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Global build environment variables - Define KERNEL_VERSION first so it's available to other variables
 ENV KERNEL_VERSION=4.14.108-ti-r144
 ENV DEBIAN_VERSION=buster \
-    GCC_VERSION=8 \
+    GCC_VERSION=10 \
     ARCH=arm \
     CROSS_COMPILE=arm-linux-gnueabihf- \
     KERNEL_DIR=/build/kernel/usr/src/linux-headers-${KERNEL_VERSION} \
