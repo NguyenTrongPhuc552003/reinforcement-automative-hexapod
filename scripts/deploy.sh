@@ -2,6 +2,7 @@
 
 # Configuration
 BEAGLEBONE_IP="beaglebone.local"  # BeagleBone IP or hostname
+BEAGLEBONE_MAC="80:91:33:49:FB:D1"
 BEAGLEBONE_USER="debian"
 DEPLOY_DIR="../deploy"
 
@@ -30,9 +31,9 @@ usage() {
     echo "  -h, --help           Show this help message"
     echo ""
     echo "Examples:"
-    echo "  $0                    Deploy all files without running install.sh"
-    echo "  $0 -i                 Deploy all files and run install.sh"
-    echo "  $0 -f hexapod_driver.ko  Deploy only the specified kernel module"
+    echo "  $0                   Deploy all files without running install.sh"
+    echo "  $0 -i                Deploy all files and run install.sh"
+    echo "  $0 -f hexapod_app    Deploy only the specified hexapod application"
     echo ""
     exit 1
 }
@@ -75,7 +76,7 @@ fi
 # WSL2 workaround: resolve IP from MAC via PowerShell
 if grep -qEi "(microsoft|wsl)" /proc/version; then
     echo -e "${YELLOW}WSL2 detected. Attempting to resolve BeagleBone IP via MAC...${NC}"
-    BB_REAL_IP=$(powershell.exe -Command "Get-NetNeighbor -AddressFamily IPv4 | Where-Object { \$_.LinkLayerAddress -ieq '80-91-33-49-FB-D1' } | Select-Object -ExpandProperty IPAddress" | tr -d '\r')
+    BB_REAL_IP=$(powershell.exe -Command "Get-NetNeighbor -AddressFamily IPv4 | Where-Object { \$_.LinkLayerAddress -ieq '${BEAGLEBONE_MAC}' } | Select-Object -ExpandProperty IPAddress" | tr -d '\r')
     if [[ -n "$BB_REAL_IP" ]]; then
         echo -e "${GREEN}Resolved BeagleBone IP: $BB_REAL_IP${NC}"
         BEAGLEBONE_IP="$BB_REAL_IP"
