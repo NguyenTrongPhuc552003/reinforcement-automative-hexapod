@@ -4,7 +4,7 @@
 
 This document describes the hardware components of the hexapod robot and provides detailed specifications, wiring diagrams, and configuration information.
 
-![Hexapod Hardware Overview](../hardware/README.md)
+![Hexapod Hardware Overview](../../hardware/README.md)
 
 For detailed visual representation of hardware organization, see the [Component Diagram](diagrams/image/component.png) and [Deployment Diagram](diagrams/image/deployment.png).
 
