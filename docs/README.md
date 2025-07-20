@@ -4,24 +4,24 @@ This directory contains comprehensive documentation for the reinforcement learni
 
 ## Documentation Overview
 
-| File                               | Description                                                                   |
-|------------------------------------|-------------------------------------------------------------------------------|
-| [architecture.md](architecture.md) | Detailed software architecture, design patterns, and component interactions   |
-| [hardware.md](hardware.md)         | Hardware specifications, wiring diagrams, and component assembly instructions |
-| [quickstart.md](quickstart.md)     | Getting started guide for new users to quickly set up and operate the hexapod |
+| File                                        | Description                                                                   |
+|---------------------------------------------|-------------------------------------------------------------------------------|
+| [architecture.md](overview/architecture.md) | Detailed software architecture, design patterns, and component interactions   |
+| [hardware.md](overview/hardware.md)         | Hardware specifications, wiring diagrams, and component assembly instructions |
+| [quickstart.md](overview/quickstart.md)     | Getting started guide for new users to quickly set up and operate the hexapod |
 
 ## Diagram Documentation
 
 The `diagrams/` directory contains PlantUML source files that generate various system diagrams:
 
-| Diagram                                         | Description                                                |
-|-------------------------------------------------|------------------------------------------------------------|
-| [class.puml](diagrams/src/class.puml)           | Class diagrams showing software component relationships    |
-| [component.puml](diagrams/src/component.puml)   | Component diagrams illustrating system modules             |
-| [sequence.puml](diagrams/src/sequence.puml)     | Sequence diagrams for key interactions and processes       |
-| [state.puml](diagrams/src/state.puml)           | State machine diagrams for robot control states            |
-| [deployment.puml](diagrams/src/deployment.puml) | Deployment diagrams showing hardware/software distribution |
-| [building.puml](diagrams/src/building.puml)     | Diagrams explaining the build and compilation process      |
+| Diagram                                        | Description                                                |
+|------------------------------------------------|------------------------------------------------------------|
+| [class.puml](diagram/src/class.puml)           | Class diagrams showing software component relationships    |
+| [component.puml](diagram/src/component.puml)   | Component diagrams illustrating system modules             |
+| [sequence.puml](diagram/src/sequence.puml)     | Sequence diagrams for key interactions and processes       |
+| [state.puml](diagram/src/state.puml)           | State machine diagrams for robot control states            |
+| [deployment.puml](diagram/src/deployment.puml) | Deployment diagrams showing hardware/software distribution |
+| [building.puml](diagram/src/building.puml)     | Diagrams explaining the build and compilation process      |
 
 ## Generating Diagrams
 
@@ -35,7 +35,7 @@ sudo apt install plantuml
 ./scripts/build.sh -l
 ```
 
-Generated diagrams will be saved in the docs/diagrams/image/ directory as their source files with `.png` extensions.
+Generated diagrams will be saved in the docs/diagram/image/ directory as their source files with `.png` extensions.
 
 ## Viewing Documentation
 

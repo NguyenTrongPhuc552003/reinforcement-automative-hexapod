@@ -31,14 +31,14 @@ This project implements a complete software stack for controlling a 6-legged rob
 
 ## System Architecture
 
-The system follows a layered architecture with hardware abstraction. For visual reference, see the architecture diagrams in the `/docs/diagrams/image` directory:
+The system follows a layered architecture with hardware abstraction. For visual reference, see the architecture diagrams in the `/docs/diagram/image` directory:
 
-- [Deployment Diagram](docs/diagrams/image/deployment.png): Hardware and software deployment
-- [Component Diagram](docs/diagrams/image/component.png): Hardware component interactions
-- [Sequence Diagram](docs/diagrams/image/sequence.png): Runtime interactions
-- [State Diagram](docs/diagrams/image/state.png): Hardware state transitions
-- [Class Diagram](docs/diagrams/image/class.png): Software class structure
-- [Building Process](docs/diagrams/image/building.png): Build and deployment process
+- [Deployment Diagram](docs/diagram/image/deployment.png): Hardware and software deployment
+- [Component Diagram](docs/diagram/image/component.png): Hardware component interactions
+- [Sequence Diagram](docs/diagram/image/sequence.png): Runtime interactions
+- [State Diagram](docs/diagram/image/state.png): Hardware state transitions
+- [Class Diagram](docs/diagram/image/class.png): Software class structure
+- [Building Process](docs/diagram/image/building.png): Build and deployment process
 
 ```t
 .
@@ -92,6 +92,7 @@ The system follows a layered architecture with hardware abstraction. For visual 
 See individual README files in subdirectories for detailed development guides:
 - [Kernel Driver README](driver/README.md)
 - [User Space README](app/README.md)
+- [Python TD3 README](pytd3/README.md)
 - [Hardware Overview README](hardware/README.md)
 - [Cross-compile Environment README](docker/README.md)
 - [Documentation](docs/README.md)
@@ -119,9 +120,9 @@ Individual tests:
 
 ## Documentation
 
-- [Hardware Setup](docs/hardware.md)
-- [Software Architecture](docs/architecture.md)
-- [Quick Start Guide](docs/quickstart.md)
+- [Hardware Setup](docs/overview/hardware.md)
+- [Software Architecture](docs/overview/architecture.md)
+- [Quick Start Guide](docs/overview/quickstart.md)
 
 ## Contributing
 

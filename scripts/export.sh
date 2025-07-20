@@ -8,7 +8,7 @@ NC='\033[0m' # No Color
 
 # Directories
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-DIAGRAM_DIR="${SCRIPT_DIR}/../docs/diagrams"
+DIAGRAM_DIR="${SCRIPT_DIR}/../docs/diagram"
 SRC_DIR="${DIAGRAM_DIR}/src"
 BUILD_DIR="${DIAGRAM_DIR}/build"
 IMAGE_DIR="${DIAGRAM_DIR}/image"

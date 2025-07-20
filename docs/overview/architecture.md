@@ -6,7 +6,7 @@ This document describes the architecture of the reinforcement learning-enabled h
 
 The hexapod robot system is a multi-layered architecture that combines hardware control, kinematics, gait generation, and high-level control with reinforcement learning capabilities. The system is designed to be modular, extensible, and robust to environmental changes.
 
-![Architecture Overview](diagrams/image/class.png)
+![Architecture Overview](../diagram/image/class.png)
 
 ## Architectural Layers
 
