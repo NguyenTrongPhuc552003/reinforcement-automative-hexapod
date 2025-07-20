@@ -47,7 +47,7 @@ if [ $CLEAN_MODE -eq 1 ]; then
 fi
 
 # Using PlantUML jar file
-PLANTUML_JAR="${DIAGRAM_DIR}/plantuml-1.2025.2.jar"
+PLANTUML_JAR="${SCRIPT_DIR}/../utils/plantuml-1.2025.2.jar"
 if [ ! -f "${PLANTUML_JAR}" ]; then
     echo -e "${RED}PlantUML jar file not found! Please ensure it is in the script directory.${NC}"
     exit 1
