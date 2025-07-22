@@ -1020,12 +1020,70 @@ namespace cpg
 
     void Controller::updateTerrainFeedback(double roughness, double slope, double stability)
     {
-        // TODO: Implement adaptive gait selection based on terrain
+        if (!pImpl)
+            return;
+
+        // Store terrain parameters for adaptive gait selection
+        // Can be used to modify gait parameters based on terrain conditions
+        if (pImpl->m_config.adaptive_gait && roughness > 0.5)
+        {
+            // Switch to more stable gait on rough terrain
+            if (pImpl->m_currentCommand.gait_type == "tripod")
+            {
+                pImpl->m_currentCommand.gait_type = "wave"; // More stable
+                pImpl->m_currentCommand.duty_factor = 0.7;  // Longer stance phase
+            }
+        }
     }
 
     void Controller::updateBalanceFeedback(double roll, double pitch, const std::vector<double> &angular_velocity)
     {
-        // TODO: Implement balance feedback control
+        if (!pImpl || !pImpl->m_config.balance_control)
+            return;
+
+        // Convert roll/pitch from radians to degrees for easier threshold checking
+        double roll_deg = roll * 180.0 / M_PI;
+        double pitch_deg = pitch * 180.0 / M_PI;
+
+        // Balance thresholds
+        const double tilt_threshold = 15.0; // degrees
+        const double critical_tilt = 30.0;  // degrees
+
+        // Check for critical tilt - emergency stop
+        if (std::abs(roll_deg) > critical_tilt || std::abs(pitch_deg) > critical_tilt)
+        {
+            pImpl->emergencyStop();
+            pImpl->setLastError("Critical tilt detected - emergency stop activated");
+            return;
+        }
+
+        // Apply balance corrections for moderate tilt
+        if (std::abs(roll_deg) > tilt_threshold || std::abs(pitch_deg) > tilt_threshold)
+        {
+            // Reduce velocity when tilted
+            double tilt_factor = std::max(0.3, 1.0 - (std::max(std::abs(roll_deg), std::abs(pitch_deg)) / critical_tilt));
+
+            if (isWalking())
+            {
+                pImpl->m_currentCommand.linear_velocity *= tilt_factor;
+                pImpl->m_currentCommand.angular_velocity *= tilt_factor;
+
+                // Adjust step height and duty factor for stability
+                pImpl->m_currentCommand.step_height = std::max(0.5, pImpl->m_currentCommand.step_height * 0.8);
+                pImpl->m_currentCommand.duty_factor = std::min(0.8, pImpl->m_currentCommand.duty_factor + 0.1);
+            }
+        }
+
+        // Update stability margin based on IMU data
+        double angular_vel_magnitude = 0.0;
+        for (double vel : angular_velocity)
+        {
+            angular_vel_magnitude += vel * vel;
+        }
+        angular_vel_magnitude = std::sqrt(angular_vel_magnitude);
+
+        // Update performance metrics
+        pImpl->updatePerformanceMetrics(0.02); // Assume 50Hz update rate
     }
 
     //--------------------------------------------------------------------------

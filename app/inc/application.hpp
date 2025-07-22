@@ -27,7 +27,7 @@
 #include <chrono>
 #include <atomic>
 #include "hexapod.hpp"
-#include "controller.hpp"
+#include "cpg/controller.hpp"
 
 /**
  * @brief Hexapod application system

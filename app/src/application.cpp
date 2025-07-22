@@ -26,7 +26,13 @@
 #include <thread>
 #include <atomic>
 #include <sstream>
+#include <cmath>
 #include "application.hpp"
+#include "ultrasonic.hpp"
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 namespace application
 {
@@ -62,11 +68,17 @@ namespace application
             : m_currentMode(ControlMode::MANUAL),
               m_hexapod(nullptr),
               m_controller(nullptr),
+              m_ultrasonicSensor(nullptr),
               m_updateInterval(0.01f), // 10ms default update interval
               m_frameCount(0),
               m_totalFrameTime(0),
               m_maxFrameTime(0),
-              m_performanceMonitoringEnabled(true)
+              m_performanceMonitoringEnabled(true),
+              m_autonomousMode(false),
+              m_obstacleDetectionEnabled(true),
+              m_safeDistance(30.0f), // 30cm safe distance
+              m_lastObstacleCheck(std::chrono::high_resolution_clock::now()),
+              m_obstacleCheckInterval(100) // Check every 100ms
         {
             // Initialize performance tracking variables
             m_lastUpdateTime = std::chrono::high_resolution_clock::now();
@@ -137,10 +149,10 @@ namespace application
                     return false;
                 }
 
-                m_controller = std::make_unique<controller::Controller>(*m_hexapod);
-                if (!m_controller->init())
+                m_controller = std::make_unique<cpg::Controller>();
+                if (!m_controller->initialize())
                 {
-                    m_lastError = "Failed to initialize controller";
+                    m_lastError = "Failed to initialize CPG controller";
                     return false;
                 }
                 return true;
@@ -149,6 +161,42 @@ namespace application
             {
                 m_lastError = std::string("Controller initialization exception: ") + e.what();
                 return false;
+            }
+        }
+
+        /**
+         * @brief Initialize the ultrasonic sensor for obstacle detection
+         *
+         * @return true if initialization successful
+         * @return false if initialization failed
+         */
+        bool initializeUltrasonicSensor()
+        {
+            try
+            {
+                std::cout << "Initializing ultrasonic sensor for obstacle detection..." << std::endl;
+                m_ultrasonicSensor = std::make_unique<UltrasonicSensor>();
+
+                if (!m_ultrasonicSensor->init())
+                {
+                    std::cerr << "Warning: Failed to initialize ultrasonic sensor: "
+                              << m_ultrasonicSensor->getLastError() << std::endl;
+                    std::cerr << "Obstacle detection will be disabled." << std::endl;
+                    m_obstacleDetectionEnabled = false;
+                    m_ultrasonicSensor.reset();
+                    return true; // Not critical failure, continue without sensor
+                }
+
+                std::cout << "Ultrasonic sensor initialized successfully" << std::endl;
+                return true;
+            }
+            catch (const std::exception &e)
+            {
+                std::cerr << "Warning: Ultrasonic sensor initialization exception: " << e.what() << std::endl;
+                std::cerr << "Obstacle detection will be disabled." << std::endl;
+                m_obstacleDetectionEnabled = false;
+                m_ultrasonicSensor.reset();
+                return true; // Not critical, continue without sensor
             }
         }
 
@@ -191,43 +239,104 @@ namespace application
         {
             // Basic movement controls
             registerKeyCommand('w', [this]()
-                               { return m_controller->processKey('w'); });
+                               { 
+                                   // Forward movement
+                                   m_controller->setLinearVelocity(0.5);
+                                   m_controller->setAngularVelocity(0.0);
+                                   if (!m_controller->isWalking()) {
+                                       cpg::LocomotionCommand cmd = cpg::controller_utils::createWalkCommand(0.5, 0.0, m_controller->getCurrentGait());
+                                       return m_controller->startLocomotion(cmd);
+                                   }
+                                   return true; });
             registerKeyCommand('s', [this]()
-                               { return m_controller->processKey('s'); });
+                               { 
+                                   // Backward movement
+                                   m_controller->setLinearVelocity(-0.5);
+                                   m_controller->setAngularVelocity(0.0);
+                                   if (!m_controller->isWalking()) {
+                                       cpg::LocomotionCommand cmd = cpg::controller_utils::createWalkCommand(-0.5, 0.0, m_controller->getCurrentGait());
+                                       return m_controller->startLocomotion(cmd);
+                                   }
+                                   return true; });
             registerKeyCommand('a', [this]()
-                               { return m_controller->processKey('a'); });
+                               { 
+                                   // Turn left
+                                   m_controller->setLinearVelocity(0.0);
+                                   m_controller->setAngularVelocity(0.5);
+                                   if (!m_controller->isWalking()) {
+                                       cpg::LocomotionCommand cmd = cpg::controller_utils::createWalkCommand(0.0, 0.5, m_controller->getCurrentGait());
+                                       return m_controller->startLocomotion(cmd);
+                                   }
+                                   return true; });
             registerKeyCommand('d', [this]()
-                               { return m_controller->processKey('d'); });
+                               { 
+                                   // Turn right
+                                   m_controller->setLinearVelocity(0.0);
+                                   m_controller->setAngularVelocity(-0.5);
+                                   if (!m_controller->isWalking()) {
+                                       cpg::LocomotionCommand cmd = cpg::controller_utils::createWalkCommand(0.0, -0.5, m_controller->getCurrentGait());
+                                       return m_controller->startLocomotion(cmd);
+                                   }
+                                   return true; });
 
-            // Height and tilt controls
+            // Height and tilt controls - these might need adaptation
             registerKeyCommand('i', [this]()
-                               { return m_controller->processKey('i'); });
+                               { 
+                                   std::cout << "Height increase - not yet implemented for CPG" << std::endl;
+                                   return true; });
             registerKeyCommand('k', [this]()
-                               { return m_controller->processKey('k'); });
+                               { 
+                                   std::cout << "Height decrease - not yet implemented for CPG" << std::endl;
+                                   return true; });
             registerKeyCommand('j', [this]()
-                               { return m_controller->processKey('j'); });
+                               { 
+                                   std::cout << "Tilt left - not yet implemented for CPG" << std::endl;
+                                   return true; });
             registerKeyCommand('l', [this]()
-                               { return m_controller->processKey('l'); });
+                               { 
+                                   std::cout << "Tilt right - not yet implemented for CPG" << std::endl;
+                                   return true; });
 
             // Gait controls
             registerKeyCommand('1', [this]()
-                               { return m_controller->processKey('1'); });
+                               { return m_controller->switchGait("tripod", 1.0); });
             registerKeyCommand('2', [this]()
-                               { return m_controller->processKey('2'); });
+                               { return m_controller->switchGait("wave", 1.0); });
             registerKeyCommand('3', [this]()
-                               { return m_controller->processKey('3'); });
+                               { return m_controller->switchGait("ripple", 1.0); });
 
-            // Speed controls
+            // Speed controls - need to adjust current velocity
             registerKeyCommand('+', [this]()
-                               { return m_controller->processKey('+'); });
+                               { 
+                                   double current_linear = m_controller->getLinearVelocity();
+                                   double current_angular = m_controller->getAngularVelocity();
+                                   m_controller->setLinearVelocity(std::min(1.0, current_linear * 1.1));
+                                   m_controller->setAngularVelocity(std::min(1.0, current_angular * 1.1));
+                                   return true; });
             registerKeyCommand('-', [this]()
-                               { return m_controller->processKey('-'); });
+                               { 
+                                   double current_linear = m_controller->getLinearVelocity();
+                                   double current_angular = m_controller->getAngularVelocity();
+                                   m_controller->setLinearVelocity(std::max(-1.0, current_linear * 0.9));
+                                   m_controller->setAngularVelocity(std::max(-1.0, current_angular * 0.9));
+                                   return true; });
 
             // System controls
             registerKeyCommand(' ', [this]()
-                               { return m_controller->processKey(' '); });
+                               { 
+                                   // Stop movement
+                                   if (m_controller->isWalking()) {
+                                       return m_controller->stopLocomotion();
+                                   }
+                                   return true; });
             registerKeyCommand('u', [this]()
-                               { return m_controller->processKey('u'); });
+                               { 
+                                   // Toggle updates/resume
+                                   if (m_controller->isWalking()) {
+                                       return m_controller->pauseLocomotion();
+                                   } else {
+                                       return m_controller->resumeLocomotion();
+                                   } });
             registerKeyCommand('q', [this]()
                                { 
             Application::m_running = false; 
@@ -249,21 +358,10 @@ namespace application
 
             registerKeyCommand('m', [this]()
                                {
-            std::cout << "Running servo mapping diagnostics..." << std::endl;
-            if (m_controller->validateServoMapping()) {
-                std::cout << "Servo mapping validation passed!" << std::endl;
-            } else {
-                std::cout << "Servo mapping validation failed!" << std::endl;
-            }
-            
-            std::cout << m_controller->getServoMappingSummary() << std::endl;
-            
-            std::cout << "Testing controller connectivity..." << std::endl;
-            m_controller->detectControllerIssues();
-            
-            std::cout << "Testing servo responses..." << std::endl;
-            m_controller->testServoConnectivity();
-            
+            std::cout << "Running CPG controller diagnostics..." << std::endl;
+            // CPG controller doesn't have servo mapping validation
+            // These features would need to be implemented or moved to hexapod layer
+            std::cout << "Diagnostics not yet implemented for CPG controller" << std::endl;
             return true; });
 
             registerKeyCommand('h', [this]()
@@ -279,26 +377,30 @@ namespace application
                       << std::endl;
             return true; });
 
-            // Add balance mode controls
+            // Add balance mode controls - now implemented for CPG
             registerKeyCommand('b', [this]()
-                               {
-                if (m_controller)
-                    m_controller->setBalanceEnabled(!m_controller->isBalanceEnabled());
-                return true; });
+                               { return toggleBalanceMode(); });
 
             registerKeyCommand('[', [this]()
-                               {
-                if (m_controller) {
-                    auto config = m_controller->getBalanceConfig();
-                    m_controller->setBalanceResponseFactor(config.response_factor - 0.1);
-                }
-                return true; });
+                               { return decreaseBalanceResponse(); });
 
             registerKeyCommand(']', [this]()
+                               { return increaseBalanceResponse(); });
+
+            // Autonomous mode controls
+            registerKeyCommand('z', [this]()
+                               { return toggleAutonomousMode(); });
+
+            registerKeyCommand('x', [this]()
+                               { return toggleObstacleDetection(); });
+
+            registerKeyCommand('v', [this]()
                                {
-                if (m_controller) {
-                    auto config = m_controller->getBalanceConfig();
-                    m_controller->setBalanceResponseFactor(config.response_factor + 0.1);
+                // Emergency stop - works in both manual and autonomous mode
+                std::cout << "EMERGENCY STOP - All movement halted" << std::endl;
+                m_autonomousMode = false;
+                if (m_controller->isWalking()) {
+                    return m_controller->stopLocomotion();
                 }
                 return true; });
         }
@@ -319,6 +421,10 @@ namespace application
                       << "  1: Tripod Gait\n"
                       << "  2: Wave Gait\n"
                       << "  3: Ripple Gait\n\n"
+                      << "Autonomous Controls:\n"
+                      << "  Z: Toggle autonomous mode\n"
+                      << "  X: Toggle obstacle detection\n"
+                      << "  V: Emergency stop\n\n"
                       << "System Controls:\n"
                       << "  Space: Stop and center\n"
                       << "  U: Toggle ultrasonic sensor\n"
@@ -389,11 +495,274 @@ namespace application
         {
             // Calculate time delta for physics/animation
             auto now = std::chrono::high_resolution_clock::now();
-            [[maybe_unused]] float deltaTime = std::chrono::duration<float>(now - m_lastUpdateTime).count();
+            float deltaTime = std::chrono::duration<float>(now - m_lastUpdateTime).count();
             m_lastUpdateTime = now;
 
-            // Update controller state
-            return m_controller->update();
+            // Update IMU feedback for balance control
+            if (!updateIMUFeedback())
+            {
+                std::cerr << "Warning: Failed to update IMU feedback" << std::endl;
+            }
+
+            // Handle autonomous mode
+            if (m_autonomousMode)
+            {
+                if (!handleAutonomousMode())
+                {
+                    std::cerr << "Warning: Autonomous mode error" << std::endl;
+                }
+            }
+
+            // Update controller state with time delta
+            return m_controller->update(deltaTime);
+        }
+
+        /**
+         * @brief Update IMU feedback for balance control
+         *
+         * @return true if update successful
+         * @return false if update failed
+         */
+        bool updateIMUFeedback()
+        {
+            if (!m_hexapod || !m_controller)
+                return false;
+
+            hexapod::ImuData imuData;
+            if (m_hexapod->getImuData(imuData))
+            {
+                // Convert accelerometer data to orientation angles using getter methods (in g units)
+                double ax = imuData.getAccelX();
+                double ay = imuData.getAccelY();
+                double az = imuData.getAccelZ();
+
+                // Simple roll/pitch calculation from accelerometer
+                double roll = atan2(ay, az);
+                double pitch = atan2(-ax, sqrt(ay * ay + az * az));
+
+                // Create angular velocity vector from gyroscope data (in deg/s)
+                std::vector<double> angular_velocity = {
+                    imuData.getGyroX(),
+                    imuData.getGyroY(),
+                    imuData.getGyroZ()};
+
+                // Update CPG controller with balance feedback
+                m_controller->updateBalanceFeedback(roll, pitch, angular_velocity);
+
+                return true;
+            }
+            return false;
+        }
+
+        /**
+         * @brief Handle autonomous navigation with obstacle avoidance
+         *
+         * @return true if handling successful
+         * @return false if handling failed
+         */
+        bool handleAutonomousMode()
+        {
+            auto now = std::chrono::high_resolution_clock::now();
+
+            // Check for obstacles periodically
+            if (m_obstacleDetectionEnabled &&
+                std::chrono::duration_cast<std::chrono::milliseconds>(now - m_lastObstacleCheck).count() >= m_obstacleCheckInterval)
+            {
+                m_lastObstacleCheck = now;
+
+                if (m_ultrasonicSensor)
+                {
+                    auto measurement = m_ultrasonicSensor->measure();
+                    if (measurement.valid)
+                    {
+                        return handleObstacleDetection(measurement.distance);
+                    }
+                }
+            }
+
+            // Enhanced autonomous behavior with IMU feedback
+            if (!m_controller->isWalking())
+            {
+                // Get current IMU state for navigation decisions
+                hexapod::ImuData imuData;
+                if (m_hexapod->getImuData(imuData))
+                {
+                    // Check stability before starting movement
+                    double ax = imuData.getAccelX();
+                    double ay = imuData.getAccelY();
+                    double az = imuData.getAccelZ();
+
+                    double roll = atan2(ay, az) * 180.0 / M_PI;
+                    double pitch = atan2(-ax, sqrt(ax * ax + ay * ay)) * 180.0 / M_PI;
+
+                    // Only start movement if hexapod is stable
+                    if (std::abs(roll) < 20.0 && std::abs(pitch) < 20.0)
+                    {
+                        // Smart gait selection based on stability
+                        std::string gait_type = "tripod"; // Default
+                        double velocity = 0.2;            // Default speed
+
+                        if (std::abs(roll) > 10.0 || std::abs(pitch) > 10.0)
+                        {
+                            // Use more stable gait when tilted
+                            gait_type = "wave";
+                            velocity = 0.1; // Slower speed for safety
+                        }
+
+                        cpg::LocomotionCommand cmd = cpg::controller_utils::createWalkCommand(velocity, 0.0, gait_type);
+                        m_controller->startLocomotion(cmd);
+                    }
+                    else
+                    {
+                        // Too unstable - wait for stabilization
+                        std::cout << "Waiting for stabilization (Roll: " << roll
+                                  << "°, Pitch: " << pitch << "°)" << std::endl;
+                    }
+                }
+                else
+                {
+                    // Fallback if IMU unavailable
+                    cpg::LocomotionCommand cmd = cpg::controller_utils::createWalkCommand(0.15, 0.0, "wave");
+                    m_controller->startLocomotion(cmd);
+                }
+            }
+
+            return true;
+        }
+
+        /**
+         * @brief Handle obstacle detection and avoidance
+         *
+         * @param distance Distance to obstacle in cm
+         * @return true if handling successful
+         * @return false if handling failed
+         */
+        bool handleObstacleDetection(float distance)
+        {
+            if (distance < m_safeDistance)
+            {
+                std::cout << "Obstacle detected at " << distance << "cm - initiating smart avoidance maneuver" << std::endl;
+
+                // Stop current movement
+                m_controller->stopLocomotion();
+                std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+                // Get IMU data to determine best avoidance strategy
+                hexapod::ImuData imuData;
+                bool has_imu = m_hexapod->getImuData(imuData);
+
+                // Determine turn direction and speed based on stability
+                double turn_velocity = -0.3; // Default turn right
+                std::string gait_type = "tripod";
+
+                if (has_imu)
+                {
+                    double ax = imuData.getAccelX();
+                    double ay = imuData.getAccelY();
+                    double az = imuData.getAccelZ();
+
+                    double roll = atan2(ay, az) * 180.0 / M_PI;
+                    double pitch = atan2(-ax, sqrt(ax * ax + ay * ay)) * 180.0 / M_PI;
+
+                    // Adjust maneuver based on current stability
+                    if (std::abs(roll) > 10.0 || std::abs(pitch) > 10.0)
+                    {
+                        // Use more stable gait and slower speed when unstable
+                        gait_type = "wave";
+                        turn_velocity = turn_velocity * 0.5; // Slower turn
+                    }
+
+                    // Choose turn direction based on current tilt (turn away from tilt)
+                    if (roll > 5.0)
+                        turn_velocity = 0.3; // Turn left if tilted right
+                    else if (roll < -5.0)
+                        turn_velocity = -0.3; // Turn right if tilted left
+
+                    std::cout << "IMU-guided avoidance: Roll=" << roll << "°, Pitch=" << pitch
+                              << "°, Turn=" << turn_velocity << " rad/s" << std::endl;
+                }
+
+                // Execute turn maneuver
+                cpg::LocomotionCommand turnCommand = cpg::controller_utils::createWalkCommand(0.0, turn_velocity, gait_type);
+                m_controller->startLocomotion(turnCommand);
+                std::this_thread::sleep_for(std::chrono::milliseconds(800));
+
+                // Stop and stabilize
+                m_controller->stopLocomotion();
+                std::this_thread::sleep_for(std::chrono::milliseconds(300));
+
+                // Move forward cautiously with stability monitoring
+                double forward_speed = has_imu ? 0.15 : 0.1; // Slower if no IMU
+                cpg::LocomotionCommand forwardCommand = cpg::controller_utils::createWalkCommand(forward_speed, 0.0, gait_type);
+                m_controller->startLocomotion(forwardCommand);
+
+                return true;
+            }
+            else if (distance < m_safeDistance * 1.5)
+            {
+                // Slow down when approaching obstacle
+                m_controller->setLinearVelocity(0.1);
+                if (!m_controller->isWalking())
+                {
+                    cpg::LocomotionCommand slowCommand = cpg::controller_utils::createWalkCommand(0.1, 0.0, "tripod");
+                    m_controller->startLocomotion(slowCommand);
+                }
+            }
+
+            return true;
+        }
+
+        /**
+         * @brief Toggle autonomous mode
+         *
+         * @return true if toggle successful
+         * @return false if toggle failed
+         */
+        bool toggleAutonomousMode()
+        {
+            m_autonomousMode = !m_autonomousMode;
+
+            if (m_autonomousMode)
+            {
+                std::cout << "Autonomous mode ENABLED - Robot will navigate and avoid obstacles automatically" << std::endl;
+                if (!m_obstacleDetectionEnabled)
+                {
+                    std::cout << "Warning: Obstacle detection is disabled" << std::endl;
+                }
+            }
+            else
+            {
+                std::cout << "Autonomous mode DISABLED - Manual control restored" << std::endl;
+                // Stop any current movement
+                if (m_controller && m_controller->isWalking())
+                {
+                    m_controller->stopLocomotion();
+                }
+            }
+
+            return true;
+        }
+
+        /**
+         * @brief Toggle obstacle detection
+         *
+         * @return true if toggle successful
+         * @return false if toggle failed
+         */
+        bool toggleObstacleDetection()
+        {
+            if (m_ultrasonicSensor)
+            {
+                m_obstacleDetectionEnabled = !m_obstacleDetectionEnabled;
+                std::cout << "Obstacle detection "
+                          << (m_obstacleDetectionEnabled ? "ENABLED" : "DISABLED")
+                          << std::endl;
+            }
+            else
+            {
+                std::cout << "Obstacle detection unavailable - sensor not initialized" << std::endl;
+            }
+            return true;
         }
 
         /**
@@ -434,27 +803,44 @@ namespace application
                           << " Z=" << std::setw(6) << imuData.gyro_z << "\n";
 
                 // Display controller state
-                controller::ControllerState state = m_controller->getState();
                 std::cout << "Controller state: ";
-                switch (state)
+                if (m_controller->isWalking())
                 {
-                case controller::ControllerState::IDLE:
-                    std::cout << "IDLE";
-                    break;
-                case controller::ControllerState::WALKING:
                     std::cout << "WALKING";
-                    break;
-                case controller::ControllerState::ROTATING:
-                    std::cout << "ROTATING";
-                    break;
-                case controller::ControllerState::TILTING:
-                    std::cout << "TILTING";
-                    break;
-                default:
-                    std::cout << "UNKNOWN";
-                    break;
+                }
+                else if (m_controller->isTransitioning())
+                {
+                    std::cout << "TRANSITIONING";
+                }
+                else
+                {
+                    std::cout << "IDLE";
                 }
                 std::cout << "\n";
+
+                // Display autonomous mode status
+                std::cout << "Mode: " << (m_autonomousMode ? "AUTONOMOUS" : "MANUAL") << "\n";
+                std::cout << "Obstacle Detection: " << (m_obstacleDetectionEnabled ? "ENABLED" : "DISABLED") << "\n";
+
+                // Display distance sensor data if available
+                if (m_obstacleDetectionEnabled && m_ultrasonicSensor)
+                {
+                    auto measurement = m_ultrasonicSensor->measure();
+                    if (measurement.valid)
+                    {
+                        std::cout << "Distance: " << std::fixed << std::setprecision(1)
+                                  << measurement.distance << "cm";
+                        if (measurement.distance < m_safeDistance)
+                        {
+                            std::cout << " [OBSTACLE DETECTED!]";
+                        }
+                        std::cout << "\n";
+                    }
+                    else
+                    {
+                        std::cout << "Distance: INVALID\n";
+                    }
+                }
 
                 // Show current system status
                 double avgFrameTime = m_frameCount > 0 ? (m_totalFrameTime / m_frameCount) / 1000.0 : 0;
@@ -463,17 +849,16 @@ namespace application
                           << "Max frame: " << (m_maxFrameTime / 1000.0) << "ms, "
                           << "FPS: " << (1000.0 / std::max(1.0, avgFrameTime)) << "\n";
 
-                // Add balance mode status to telemetry
+                // CPG-specific status information
                 if (m_controller)
                 {
-                    std::cout << "Balance: "
-                              << (m_controller->isBalanceEnabled() ? "ENABLED" : "disabled")
-                              << " (Response: " << m_controller->getBalanceConfig().response_factor
-                              << ", Deadzone: " << m_controller->getBalanceConfig().deadzone
-                              << "°)\n";
+                    std::cout << "CPG Gait: " << m_controller->getCurrentGait() << "\n";
+                    std::cout << "Linear Vel: " << m_controller->getLinearVelocity() << " m/s\n";
+                    std::cout << "Angular Vel: " << m_controller->getAngularVelocity() << " rad/s\n";
                 }
 
                 std::cout << "\nPress 'h' for help, 'q' to quit, 't' to hide telemetry\n";
+                std::cout << "Press 'z' to toggle autonomous mode, 'v' for emergency stop\n";
             }
         }
 
@@ -545,12 +930,113 @@ namespace application
             // Cleanup current mode - ensure clean transition
             if (m_controller)
             {
-                m_controller->processKey(' '); // Stop and center legs between mode switches
+                m_controller->stopLocomotion(); // Stop movement and center legs between mode switches
             }
 
             // Initialize new mode
             m_currentMode = mode;
             return true;
+        }
+
+        /**
+         * @brief Toggle balance mode for CPG controller
+         *
+         * @return true if toggle successful
+         * @return false if toggle failed
+         */
+        bool toggleBalanceMode()
+        {
+            if (!m_controller)
+            {
+                std::cout << "Balance mode unavailable - controller not initialized" << std::endl;
+                return false;
+            }
+
+            auto config = m_controller->getConfiguration();
+            config.balance_control = !config.balance_control;
+
+            if (m_controller->configure(config))
+            {
+                std::cout << "Balance mode "
+                          << (config.balance_control ? "ENABLED" : "DISABLED")
+                          << " - CPG controller will "
+                          << (config.balance_control ? "use" : "ignore")
+                          << " IMU feedback for stability" << std::endl;
+                return true;
+            }
+            else
+            {
+                std::cout << "Failed to toggle balance mode" << std::endl;
+                return false;
+            }
+        }
+
+        /**
+         * @brief Decrease balance response sensitivity
+         *
+         * @return true if decrease successful
+         * @return false if decrease failed
+         */
+        bool decreaseBalanceResponse()
+        {
+            if (!m_controller)
+            {
+                std::cout << "Balance control unavailable - controller not initialized" << std::endl;
+                return false;
+            }
+
+            auto config = m_controller->getConfiguration();
+            if (config.balance_control)
+            {
+                // Increase stability threshold (less sensitive)
+                config.stability_threshold = std::min(config.stability_threshold + 0.05, 0.5);
+
+                if (m_controller->configure(config))
+                {
+                    std::cout << "Balance response decreased - Stability threshold: "
+                              << config.stability_threshold << std::endl;
+                    return true;
+                }
+            }
+            else
+            {
+                std::cout << "Balance mode is disabled - enable it first with 'b'" << std::endl;
+            }
+            return false;
+        }
+
+        /**
+         * @brief Increase balance response sensitivity
+         *
+         * @return true if increase successful
+         * @return false if increase failed
+         */
+        bool increaseBalanceResponse()
+        {
+            if (!m_controller)
+            {
+                std::cout << "Balance control unavailable - controller not initialized" << std::endl;
+                return false;
+            }
+
+            auto config = m_controller->getConfiguration();
+            if (config.balance_control)
+            {
+                // Decrease stability threshold (more sensitive)
+                config.stability_threshold = std::max(config.stability_threshold - 0.05, 0.05);
+
+                if (m_controller->configure(config))
+                {
+                    std::cout << "Balance response increased - Stability threshold: "
+                              << config.stability_threshold << std::endl;
+                    return true;
+                }
+            }
+            else
+            {
+                std::cout << "Balance mode is disabled - enable it first with 'b'" << std::endl;
+            }
+            return false;
         }
 
         // Member variables
@@ -559,7 +1045,8 @@ namespace application
 
         // Core components
         std::unique_ptr<hexapod::Hexapod> m_hexapod;
-        std::unique_ptr<controller::Controller> m_controller;
+        std::unique_ptr<cpg::Controller> m_controller;
+        std::unique_ptr<UltrasonicSensor> m_ultrasonicSensor;
 
         // Key command handling
         std::unordered_map<char, KeyCommand> m_keyCommands;
@@ -571,6 +1058,13 @@ namespace application
         unsigned long m_totalFrameTime; // microseconds
         unsigned long m_maxFrameTime;   // microseconds
         bool m_performanceMonitoringEnabled;
+
+        // Autonomous mode variables
+        bool m_autonomousMode;
+        bool m_obstacleDetectionEnabled;
+        float m_safeDistance; // Safe distance from obstacles in cm
+        std::chrono::high_resolution_clock::time_point m_lastObstacleCheck;
+        int m_obstacleCheckInterval; // Obstacle check interval in milliseconds
     };
 
     //==============================================================================
@@ -729,7 +1223,7 @@ namespace application
         if (pImpl->m_controller)
         {
             std::cout << "Stopping movement and centering legs..." << std::endl;
-            pImpl->m_controller->processKey(' '); // Use spacebar command to stop and center legs
+            pImpl->m_controller->stopLocomotion(); // Stop movement and center legs
 
             // Give some time for the command to complete
             std::this_thread::sleep_for(std::chrono::milliseconds(500));

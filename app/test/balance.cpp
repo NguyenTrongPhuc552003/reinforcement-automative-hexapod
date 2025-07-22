@@ -24,7 +24,7 @@
 #include <atomic>
 #include <cmath>
 #include "hexapod.hpp"
-#include "controller.hpp"
+#include "cpg/controller.hpp"
 #include "common.hpp"
 
 // Global running flag for signal handling
@@ -40,23 +40,19 @@ void signalHandler(int signal)
 // Display test menu
 static void print_menu()
 {
-    std::cout << "\nBalance Test Program - Commands\n"
-              << "===============================\n"
+    std::cout << "\nCPG Balance Test Program - Commands\n"
+              << "===================================\n"
               << "  1: Test IMU sensor readings\n"
-              << "  2: Test balance adjustments\n"
+              << "  2: Test balance adjustments with CPG\n"
               << "  3: Continuous balance mode\n"
-              << "  4: Manual tilt test\n"
-              << "  5: Response sensitivity test\n"
-              << "  6: Deadzone calibration\n"
-              << "  7: Balance stress test\n"
-              << "  8: IMU calibration\n"
-              << "  b: Toggle balance mode\n"
-              << "  +/-: Adjust response factor\n"
-              << "  [/]: Adjust deadzone\n"
-              << "  s: Show balance status\n"
+              << "  4: Manual tilt test with IMU\n"
+              << "  5: Autonomous walking test\n"
+              << "  6: Obstacle avoidance test\n"
+              << "  s: Show CPG controller status\n"
               << "  c: Center all legs\n"
               << "  h: Show this help\n"
-              << "  q: Quit\n\n";
+              << "  q: Quit\n"
+              << std::endl;
 }
 
 // Test IMU sensor readings
@@ -158,27 +154,42 @@ bool test_imu_readings(hexapod::Hexapod &hexapod, double duration)
     return successful_reads > 0;
 }
 
-// Test balance adjustments
-bool test_balance_adjustments(controller::Controller &controller, double duration)
+// Test balance adjustments with CPG
+bool test_balance_adjustments(cpg::Controller &controller, double duration)
 {
     common::ErrorReporter::reportInfo("Balance-Test", "Testing balance adjustments for " +
                                                           common::StringUtils::formatDuration(duration));
 
-    // Enable balance mode
-    controller.setBalanceEnabled(true);
+    hexapod::Hexapod hexapod;
+    if (!hexapod.init())
+    {
+        common::ErrorReporter::reportError("Balance-Test", "Hexapod Init", hexapod.getLastErrorMessage());
+        return false;
+    }
 
     common::PerformanceMonitor perfMonitor;
     auto start_time = common::getCurrentTime();
     auto end_time = start_time + duration;
 
-    std::cout << "Balance mode enabled. Tilt the robot to test adjustments..." << std::endl;
+    std::cout << "CPG balance feedback test. Tilt the robot to test adjustments..." << std::endl;
     std::cout << "Press 'q' to stop test" << std::endl;
 
     while (running.load() && common::getCurrentTime() < end_time)
     {
         perfMonitor.startFrame();
 
-        if (!controller.update())
+        // Read IMU data and provide balance feedback to CPG controller
+        hexapod::ImuData imuData;
+        if (hexapod.getImuData(imuData))
+        {
+            double roll = atan2(imuData.getAccelY(), imuData.getAccelZ());
+            double pitch = atan2(-imuData.getAccelX(), sqrt(imuData.getAccelY() * imuData.getAccelY() + imuData.getAccelZ() * imuData.getAccelZ()));
+
+            std::vector<double> angular_velocity = {imuData.getGyroX(), imuData.getGyroY(), imuData.getGyroZ()};
+            controller.updateBalanceFeedback(roll, pitch, angular_velocity);
+        }
+
+        if (!controller.update(0.01)) // 10ms update rate
         {
             common::ErrorReporter::reportError("Balance-Test", "Controller Update", "Failed to update controller");
             return false;
@@ -210,225 +221,91 @@ bool test_balance_adjustments(controller::Controller &controller, double duratio
     return true;
 }
 
-// Manual tilt test
-bool test_manual_tilt(controller::Controller &controller)
+// Autonomous walking test
+bool test_autonomous_walking(cpg::Controller &controller, double duration)
 {
-    common::ErrorReporter::reportInfo("Balance-Test", "Running manual tilt test");
-
-    std::vector<std::pair<double, double>> test_tilts = {
-        {0.0, 0.0},   // Center
-        {10.0, 0.0},  // Forward tilt
-        {-10.0, 0.0}, // Backward tilt
-        {0.0, 10.0},  // Right tilt
-        {0.0, -10.0}, // Left tilt
-        {5.0, 5.0},   // Forward-right
-        {-5.0, -5.0}, // Backward-left
-        {0.0, 0.0}    // Return to center
-    };
-
-    std::cout << "Testing manual tilt positions..." << std::endl;
-
-    common::PerformanceMonitor perfMonitor;
-
-    for (size_t i = 0; i < test_tilts.size(); i++)
-    {
-        double tiltX = test_tilts[i].first;
-        double tiltY = test_tilts[i].second;
-
-        std::cout << "Setting tilt: X=" << common::StringUtils::formatNumber(tiltX, 1)
-                  << "° Y=" << common::StringUtils::formatNumber(tiltY, 1) << "°..." << std::flush;
-
-        perfMonitor.startFrame();
-        controller.setTilt(tiltX, tiltY);
-
-        // Update controller to apply the tilt
-        for (int j = 0; j < 10; j++) // Allow time for tilt to be applied
-        {
-            if (!controller.update())
-            {
-                std::cout << " FAILED" << std::endl;
-                common::ErrorReporter::reportError("Balance-Test", "Manual Tilt", "Controller update failed");
-                return false;
-            }
-            common::sleepMs(50);
-        }
-        perfMonitor.endFrame();
-
-        std::cout << " OK (" << common::StringUtils::formatNumber(perfMonitor.getAverageFrameTime()) << "ms)" << std::endl;
-
-        // Check for user abort
-        char key;
-        if (common::TerminalManager::readChar(key) && (key == 'q' || key == 27))
-        {
-            std::cout << "Manual tilt test aborted by user" << std::endl;
-            return false;
-        }
-
-        // Pause between positions
-        common::sleepMs(1000);
-    }
-
-    std::cout << "Manual tilt test completed successfully" << std::endl;
-    return true;
-}
-
-// Response sensitivity test
-bool test_response_sensitivity(controller::Controller &controller)
-{
-    common::ErrorReporter::reportInfo("Balance-Test", "Testing response sensitivity");
-
-    std::vector<double> response_factors = {0.2, 0.5, 0.8, 1.0};
-
-    std::cout << "Testing different response sensitivity levels..." << std::endl;
-
-    for (double factor : response_factors)
-    {
-        std::cout << "Testing response factor: " << common::StringUtils::formatNumber(factor, 1) << std::endl;
-
-        controller.setBalanceResponseFactor(factor);
-        controller.setBalanceEnabled(true);
-
-        // Run for a short period with this setting
-        auto start_time = common::getCurrentTime();
-        auto end_time = start_time + 3.0; // 3 seconds per test
-
-        common::PerformanceMonitor perfMonitor;
-        int updates = 0;
-
-        while (running.load() && common::getCurrentTime() < end_time)
-        {
-            perfMonitor.startFrame();
-            if (!controller.update())
-            {
-                common::ErrorReporter::reportError("Balance-Test", "Sensitivity Test", "Controller update failed");
-                return false;
-            }
-            perfMonitor.endFrame();
-            updates++;
-            common::sleepMs(50);
-        }
-
-        perfMonitor.printReport("  Response factor " + common::StringUtils::formatNumber(factor, 1) + " ");
-        std::cout << "  Updates: " << updates << std::endl;
-
-        // Brief pause between tests
-        common::sleepMs(500);
-    }
-
-    std::cout << "Response sensitivity test completed" << std::endl;
-    return true;
-}
-
-// Deadzone calibration test
-bool test_deadzone_calibration(controller::Controller &controller)
-{
-    common::ErrorReporter::reportInfo("Balance-Test", "Testing deadzone calibration");
-
-    std::vector<double> deadzone_values = {0.5, 1.0, 2.0, 5.0};
-
-    std::cout << "Testing different deadzone values..." << std::endl;
-
-    for (double deadzone : deadzone_values)
-    {
-        std::cout << "Testing deadzone: " << common::StringUtils::formatNumber(deadzone, 1) << "°" << std::endl;
-
-        controller.setBalanceDeadzone(deadzone);
-        controller.setBalanceEnabled(true);
-
-        // Run for a short period with this setting
-        auto start_time = common::getCurrentTime();
-        auto end_time = start_time + 3.0;
-
-        while (running.load() && common::getCurrentTime() < end_time)
-        {
-            if (!controller.update())
-            {
-                common::ErrorReporter::reportError("Balance-Test", "Deadzone Test", "Controller update failed");
-                return false;
-            }
-            common::sleepMs(50);
-        }
-
-        std::cout << "  Deadzone " << common::StringUtils::formatNumber(deadzone, 1) << "° completed" << std::endl;
-        common::sleepMs(500);
-    }
-
-    std::cout << "Deadzone calibration test completed" << std::endl;
-    return true;
-}
-
-// Balance stress test
-bool test_balance_stress(controller::Controller &controller, double duration)
-{
-    common::ErrorReporter::reportInfo("Balance-Test", "Running balance stress test for " +
+    common::ErrorReporter::reportInfo("Balance-Test", "Testing autonomous walking for " +
                                                           common::StringUtils::formatDuration(duration));
 
-    controller.setBalanceEnabled(true);
+    hexapod::Hexapod hexapod;
+    if (!hexapod.init())
+    {
+        common::ErrorReporter::reportError("Balance-Test", "Hexapod Init", hexapod.getLastErrorMessage());
+        return false;
+    }
 
-    common::PerformanceMonitor perfMonitor;
     auto start_time = common::getCurrentTime();
     auto end_time = start_time + duration;
 
-    int successful_updates = 0;
-    int total_updates = 0;
+    std::cout << "Starting autonomous walking with IMU balance feedback..." << std::endl;
+    std::cout << "Press 'q' to stop test" << std::endl;
 
-    std::cout << "Running continuous balance updates for " << common::StringUtils::formatDuration(duration) << "..." << std::endl;
-    std::cout << "Press 'q' to abort early" << std::endl;
+    // Start walking with CPG
+    cpg::LocomotionCommand walkCommand(0.1, 0.0, "tripod"); // Slow forward walk
+    if (!controller.startLocomotion(walkCommand))
+    {
+        common::ErrorReporter::reportError("Balance-Test", "Walking", "Failed to start walking");
+        return false;
+    }
 
     while (running.load() && common::getCurrentTime() < end_time)
     {
-        perfMonitor.startFrame();
-
-        if (controller.update())
+        // Read IMU and provide balance feedback
+        hexapod::ImuData imuData;
+        if (hexapod.getImuData(imuData))
         {
-            successful_updates++;
+            double roll = atan2(imuData.getAccelY(), imuData.getAccelZ());
+            double pitch = atan2(-imuData.getAccelX(), sqrt(imuData.getAccelY() * imuData.getAccelY() + imuData.getAccelZ() * imuData.getAccelZ()));
+
+            std::vector<double> angular_velocity = {imuData.getGyroX(), imuData.getGyroY(), imuData.getGyroZ()};
+            controller.updateBalanceFeedback(roll, pitch, angular_velocity);
         }
-        total_updates++;
 
-        perfMonitor.endFrame();
-
-        // Show progress every 100 updates
-        if (total_updates % 100 == 0)
+        // Update CPG controller
+        if (!controller.update(0.02))
         {
-            double progress = (common::getCurrentTime() - start_time) / duration;
-            common::ProgressBar::displayPercent(progress, 40, "Stress test");
+            common::ErrorReporter::reportError("Balance-Test", "Walking Update", "Failed to update controller");
+            break;
         }
+
+        // Show controller state
+        auto state = controller.getControllerState();
+        std::cout << "\rWalking | Gait: " << state.current_gait
+                  << " | Freq: " << common::StringUtils::formatNumber(state.current_frequency, 2) << "Hz"
+                  << " | Vel: " << common::StringUtils::formatNumber(state.actual_linear_velocity, 2) << "m/s" << std::flush;
 
         // Check for user abort
         char key;
         if (common::TerminalManager::readChar(key) && (key == 'q' || key == 27))
         {
-            std::cout << "\nStress test aborted by user" << std::endl;
+            std::cout << "\nWalking test aborted by user" << std::endl;
             break;
         }
 
-        common::sleepMs(10); // 100Hz update rate for stress test
+        common::sleepMs(20);
     }
 
-    common::ProgressBar::clear();
-    perfMonitor.printReport("Balance stress test ");
-
-    std::cout << "Stress test results:" << std::endl;
-    std::cout << "  Total updates: " << total_updates << std::endl;
-    std::cout << "  Successful: " << successful_updates << std::endl;
-    std::cout << "  Success rate: " << common::StringUtils::formatNumber((successful_updates * 100.0) / total_updates, 1)
-              << "%" << std::endl;
-
-    return (successful_updates * 100.0) / total_updates > 95.0; // 95% success rate threshold
+    // Stop walking
+    controller.stopLocomotion();
+    std::cout << "\nAutonomous walking test completed" << std::endl;
+    return true;
 }
 
-// Show balance status
-void show_balance_status(controller::Controller &controller)
+// Show CPG controller status
+void show_controller_status(cpg::Controller &controller)
 {
-    std::cout << "\nBalance System Status" << std::endl;
+    auto state = controller.getControllerState();
+
+    std::cout << "\nCPG Controller Status:" << std::endl;
     std::cout << "=====================" << std::endl;
-
-    auto config = controller.getBalanceConfig();
-
-    std::cout << "Balance mode: " << (controller.isBalanceEnabled() ? "ENABLED" : "disabled") << std::endl;
-    std::cout << "Response factor: " << common::StringUtils::formatNumber(config.response_factor, 2) << std::endl;
-    std::cout << "Deadzone: " << common::StringUtils::formatNumber(config.deadzone, 1) << "°" << std::endl;
-    std::cout << "Max adjustment: " << common::StringUtils::formatNumber(config.max_tilt_adjustment, 1) << "°" << std::endl;
+    std::cout << "  Active: " << (state.is_active ? "Yes" : "No") << std::endl;
+    std::cout << "  Walking: " << (state.is_walking ? "Yes" : "No") << std::endl;
+    std::cout << "  Current Gait: " << state.current_gait << std::endl;
+    std::cout << "  Frequency: " << common::StringUtils::formatNumber(state.current_frequency, 2) << " Hz" << std::endl;
+    std::cout << "  Linear Velocity: " << common::StringUtils::formatNumber(state.actual_linear_velocity, 2) << " m/s" << std::endl;
+    std::cout << "  Angular Velocity: " << common::StringUtils::formatNumber(state.actual_angular_velocity, 2) << " rad/s" << std::endl;
+    std::cout << "  Stability Margin: " << common::StringUtils::formatNumber(state.stability_margin, 3) << std::endl;
+    std::cout << "  Energy Consumption: " << common::StringUtils::formatNumber(state.energy_consumption, 2) << " W" << std::endl;
     std::cout << std::endl;
 }
 
@@ -437,39 +314,30 @@ int main()
     // Setup graceful shutdown handling using common utilities
     common::SignalManager::setupGracefulShutdown(running, signalHandler);
 
-    // Initialize performance monitoring
-    common::PerformanceMonitor perfMonitor;
-
     // Setup terminal for immediate input using common utilities
     if (!common::TerminalManager::setupImmediate())
     {
         common::ErrorReporter::reportWarning("Balance-Test", "Failed to setup immediate terminal input");
     }
 
-    std::cout << "Balance Test Program" << std::endl;
-    std::cout << "====================" << std::endl;
-    std::cout << "Testing hexapod balance and IMU systems" << std::endl;
+    std::cout << "CPG Balance Test Program" << std::endl;
+    std::cout << "========================" << std::endl;
+    std::cout << "Testing hexapod CPG balance and IMU systems" << std::endl;
 
     // Initialize hexapod
     hexapod::Hexapod hexapod;
-
-    perfMonitor.startFrame();
     if (!hexapod.init())
     {
         common::ErrorReporter::reportError("Balance-Test", "Initialization", hexapod.getLastErrorMessage());
         common::TerminalManager::restore();
         return 1;
     }
-    perfMonitor.endFrame();
 
-    common::ErrorReporter::reportInfo("Balance-Test", "Hexapod initialized successfully in " +
-                                                          common::StringUtils::formatNumber(perfMonitor.getAverageFrameTime()) + "ms");
-
-    // Initialize controller
-    controller::Controller controller(hexapod);
-    if (!controller.init())
+    // Initialize CPG controller
+    cpg::Controller controller;
+    if (!controller.initialize())
     {
-        common::ErrorReporter::reportError("Balance-Test", "Controller Init", "Failed to initialize controller");
+        common::ErrorReporter::reportError("Balance-Test", "Controller Init", "Failed to initialize CPG controller");
         common::TerminalManager::restore();
         return 1;
     }
@@ -481,9 +349,10 @@ int main()
         common::ErrorReporter::reportWarning("Balance-Test", "Failed to center legs");
     }
 
+    // Show main menu
     print_menu();
 
-    // Main test loop
+    // Main interactive loop
     while (running.load())
     {
         std::cout << "Enter command (h for help): ";
@@ -506,11 +375,20 @@ int main()
                 std::cout << "Continuous balance mode activated. Tilt the robot to see adjustments." << std::endl;
                 std::cout << "Press any key to stop..." << std::endl;
 
-                controller.setBalanceEnabled(true);
-
                 while (running.load())
                 {
-                    if (!controller.update())
+                    // Read IMU and update balance feedback
+                    hexapod::ImuData imuData;
+                    if (hexapod.getImuData(imuData))
+                    {
+                        double roll = atan2(imuData.getAccelY(), imuData.getAccelZ());
+                        double pitch = atan2(-imuData.getAccelX(), sqrt(imuData.getAccelY() * imuData.getAccelY() + imuData.getAccelZ() * imuData.getAccelZ()));
+
+                        std::vector<double> angular_velocity = {imuData.getGyroX(), imuData.getGyroY(), imuData.getGyroZ()};
+                        controller.updateBalanceFeedback(roll, pitch, angular_velocity);
+                    }
+
+                    if (!controller.update(0.02)) // 20ms update
                     {
                         common::ErrorReporter::reportError("Balance-Test", "Continuous Mode", "Controller update failed");
                         break;
@@ -525,65 +403,48 @@ int main()
                     common::sleepMs(20);
                 }
 
-                controller.setBalanceEnabled(false);
                 std::cout << "Continuous balance mode stopped" << std::endl;
                 break;
             }
 
-            case '4': // Manual tilt test
-                test_manual_tilt(controller);
-                break;
-
-            case '5': // Response sensitivity test
-                test_response_sensitivity(controller);
-                break;
-
-            case '6': // Deadzone calibration
-                test_deadzone_calibration(controller);
-                break;
-
-            case '7': // Stress test
-                test_balance_stress(controller, 30.0);
-                break;
-
-            case '8': // IMU calibration
-                std::cout << "IMU calibration not yet implemented" << std::endl;
-                break;
-
-            case 'b': // Toggle balance mode
-                controller.setBalanceEnabled(!controller.isBalanceEnabled());
-                break;
-
-            case '+': // Increase response factor
+            case '4': // Manual tilt test with IMU
             {
-                auto config = controller.getBalanceConfig();
-                controller.setBalanceResponseFactor(std::min(1.0, config.response_factor + 0.1));
+                std::cout << "Manual tilt test - tilt the robot and observe CPG response" << std::endl;
+                auto start_time = common::getCurrentTime();
+                auto end_time = start_time + 10.0;
+
+                while (running.load() && common::getCurrentTime() < end_time)
+                {
+                    hexapod::ImuData imuData;
+                    if (hexapod.getImuData(imuData))
+                    {
+                        double roll = atan2(imuData.getAccelY(), imuData.getAccelZ()) * 180.0 / M_PI;
+                        double pitch = atan2(-imuData.getAccelX(), sqrt(imuData.getAccelY() * imuData.getAccelY() + imuData.getAccelZ() * imuData.getAccelZ())) * 180.0 / M_PI;
+
+                        std::cout << "\rRoll: " << std::setw(6) << common::StringUtils::formatNumber(roll, 1) << "°"
+                                  << " Pitch: " << std::setw(6) << common::StringUtils::formatNumber(pitch, 1) << "°" << std::flush;
+
+                        std::vector<double> angular_velocity = {imuData.getGyroX(), imuData.getGyroY(), imuData.getGyroZ()};
+                        controller.updateBalanceFeedback(roll * M_PI / 180.0, pitch * M_PI / 180.0, angular_velocity);
+                    }
+
+                    controller.update(0.05);
+                    common::sleepMs(50);
+                }
+                std::cout << "\nManual tilt test completed" << std::endl;
                 break;
             }
 
-            case '-': // Decrease response factor
-            {
-                auto config = controller.getBalanceConfig();
-                controller.setBalanceResponseFactor(std::max(0.1, config.response_factor - 0.1));
+            case '5': // Autonomous walking test
+                test_autonomous_walking(controller, 20.0);
                 break;
-            }
 
-            case '[': // Decrease deadzone
-            {
-                auto config = controller.getBalanceConfig();
-                controller.setBalanceDeadzone(std::max(0.0, config.deadzone - 0.5));
+            case '6': // Obstacle avoidance test
+                std::cout << "Obstacle avoidance test - not yet implemented for CPG" << std::endl;
                 break;
-            }
-
-            case ']': // Increase deadzone
-            {
-                auto config = controller.getBalanceConfig();
-                controller.setBalanceDeadzone(std::min(10.0, config.deadzone + 0.5));
-                break;
-            }
 
             case 's': // Show status
-                show_balance_status(controller);
+                show_controller_status(controller);
                 break;
 
             case 'c': // Center legs
@@ -603,7 +464,7 @@ int main()
                 break;
 
             case 'q': // Quit
-                std::cout << "Exiting balance test program..." << std::endl;
+                std::cout << "Exiting CPG balance test program..." << std::endl;
                 running.store(false);
                 break;
 
@@ -617,14 +478,13 @@ int main()
         common::sleepMs(50);
     }
 
-    // Final safety - disable balance and center legs before exit
-    std::cout << "Disabling balance mode and centering legs for safe shutdown..." << std::endl;
-    controller.setBalanceEnabled(false);
+    // Final safety - center legs before exit
+    std::cout << "Centering legs for safe shutdown..." << std::endl;
     hexapod.centerAll();
 
     // Restore terminal settings
     common::TerminalManager::restore();
 
-    std::cout << "Balance test program completed." << std::endl;
+    std::cout << "CPG balance test program completed." << std::endl;
     return 0;
 }
