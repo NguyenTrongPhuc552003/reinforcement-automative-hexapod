@@ -53,7 +53,6 @@ namespace cpg
         constexpr double MIN_FREQUENCY_SCALE = 0.1;
         constexpr double MAX_FREQUENCY_SCALE = 3.0;
         constexpr double EMERGENCY_STOP_TIME = 0.5;    // 500ms emergency stop
-        constexpr double SMOOTH_TRANSITION_TIME = 2.0; // 2s smooth transition
 
         // Performance thresholds
         constexpr double MIN_STABILITY_MARGIN = 0.05;       // 5% minimum stability
@@ -169,7 +168,7 @@ namespace cpg
                 // Switch to requested gait if needed
                 if (command.gait_type != "tripod")
                 {
-                    if (!m_cpgNetwork->switchGait(command.gait_type, SMOOTH_TRANSITION_TIME))
+                    if (!m_cpgNetwork->switchGait(command.gait_type))
                     {
                         setLastError("Failed to switch to gait: " + command.gait_type);
                         return false;
@@ -212,11 +211,11 @@ namespace cpg
             switch (m_mode)
             {
             case ControllerMode::IDLE:
-                handleIdleMode(dt);
+                handleIdleMode();
                 break;
 
             case ControllerMode::INITIALIZING:
-                handleInitializingMode(dt);
+                handleInitializingMode();
                 break;
 
             case ControllerMode::WALKING:
@@ -259,7 +258,7 @@ namespace cpg
         /**
          * @brief Handle idle mode
          */
-        void handleIdleMode(double dt)
+        void handleIdleMode()
         {
             // Keep joints at neutral positions
             std::fill(m_jointAngles.begin(), m_jointAngles.end(), 0.0);
@@ -270,7 +269,7 @@ namespace cpg
         /**
          * @brief Handle initializing mode
          */
-        void handleInitializingMode(double dt)
+        void handleInitializingMode()
         {
             // Wait for network to stabilize
             if (m_cpgNetwork->isStable())
@@ -383,7 +382,7 @@ namespace cpg
                     {
                         // Apply joint-specific scaling and offsets
                         double cpg_output = network_output.joint_positions[joint_index];
-                        double joint_angle = mapCpgToJoint(cpg_output, leg, joint);
+                        double joint_angle = mapCpgToJoint(cpg_output, joint);
 
                         // Apply limits
                         joint_angle = std::clamp(joint_angle, -MAX_JOINT_ANGLE, MAX_JOINT_ANGLE);
@@ -416,7 +415,7 @@ namespace cpg
         /**
          * @brief Map CPG output to specific joint angle
          */
-        double mapCpgToJoint(double cpg_output, size_t leg_id, size_t joint_id) const
+        double mapCpgToJoint(double cpg_output, size_t joint_id) const
         {
             // Joint-specific mapping
             switch (joint_id)
@@ -806,23 +805,11 @@ namespace cpg
         }
     }
 
-    bool Controller::pauseLocomotion()
-    {
-        // TODO: Implement pause functionality
-        return stopLocomotion(false);
-    }
-
-    bool Controller::resumeLocomotion()
-    {
-        // TODO: Implement resume functionality
-        return true;
-    }
-
     //--------------------------------------------------------------------------
     // Gait Control
     //--------------------------------------------------------------------------
 
-    bool Controller::switchGait(const std::string &gait_type, double transition_time)
+    bool Controller::switchGait(const std::string &gait_type)
     {
         if (!pImpl->m_cpgNetwork)
         {
@@ -830,9 +817,7 @@ namespace cpg
             return false;
         }
 
-        double actual_transition_time = (transition_time < 0.0) ? pImpl->m_config.transition_time : transition_time;
-
-        bool success = pImpl->m_cpgNetwork->switchGait(gait_type, actual_transition_time);
+        bool success = pImpl->m_cpgNetwork->switchGait(gait_type);
 
         if (success && pImpl->m_gaitTransitionCallback)
         {
@@ -1018,7 +1003,7 @@ namespace cpg
         return pImpl->m_config.adaptive_gait;
     }
 
-    void Controller::updateTerrainFeedback(double roughness, double slope, double stability)
+    void Controller::updateTerrainFeedback(double roughness)
     {
         if (!pImpl)
             return;
@@ -1192,22 +1177,8 @@ namespace cpg
     }
 
     //--------------------------------------------------------------------------
-    // Configuration Save/Load (Placeholder implementations)
+    // Debugging and Visualization
     //--------------------------------------------------------------------------
-
-    bool Controller::saveConfiguration(const std::string &filename) const
-    {
-        // TODO: Implement configuration file saving
-        pImpl->setLastError("saveConfiguration not yet implemented");
-        return false;
-    }
-
-    bool Controller::loadConfiguration(const std::string &filename)
-    {
-        // TODO: Implement configuration file loading
-        pImpl->setLastError("loadConfiguration not yet implemented");
-        return false;
-    }
 
     //--------------------------------------------------------------------------
     // Debugging and Visualization
@@ -1281,9 +1252,7 @@ namespace cpg
             return power;
         }
 
-        double computeStabilityMargin(const std::vector<bool> &stance_legs,
-                                      const std::vector<double> &center_of_mass,
-                                      const std::vector<std::vector<double>> &support_polygon)
+        double computeStabilityMargin(const std::vector<bool> &stance_legs)
         {
             // Simplified stability calculation
             size_t supporting_legs = std::count(stance_legs.begin(), stance_legs.end(), true);

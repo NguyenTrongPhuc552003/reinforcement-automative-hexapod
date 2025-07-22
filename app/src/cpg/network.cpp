@@ -655,7 +655,7 @@ namespace cpg
         return pImpl->m_gaitParams;
     }
 
-    bool Network::switchGait(const std::string &gait_type, double transition_time)
+    bool Network::switchGait(const std::string &gait_type)
     {
         // TODO: Implement smooth gait transition
         return pImpl->configureForHexapod(gait_type);
@@ -861,24 +861,6 @@ namespace cpg
     void Network::clearLastError()
     {
         pImpl->clearLastError();
-    }
-
-    //--------------------------------------------------------------------------
-    // File I/O and Configuration
-    //--------------------------------------------------------------------------
-
-    bool Network::saveConfiguration(const std::string &filename) const
-    {
-        // TODO: Implement configuration file saving
-        pImpl->setLastError("saveConfiguration not yet implemented");
-        return false;
-    }
-
-    bool Network::loadConfiguration(const std::string &filename)
-    {
-        // TODO: Implement configuration file loading
-        pImpl->setLastError("loadConfiguration not yet implemented");
-        return false;
     }
 
     //--------------------------------------------------------------------------

@@ -259,22 +259,6 @@ namespace cpg
          */
         bool stopLocomotion(bool emergency = false);
 
-        /**
-         * @brief Pause locomotion (can be resumed)
-         *
-         * @return true if paused successfully
-         * @return false if pause failed
-         */
-        bool pauseLocomotion();
-
-        /**
-         * @brief Resume paused locomotion
-         *
-         * @return true if resumed successfully
-         * @return false if resume failed
-         */
-        bool resumeLocomotion();
-
         //--------------------------------------------------------------------------
         // Gait Control
         //--------------------------------------------------------------------------
@@ -287,7 +271,7 @@ namespace cpg
          * @return true if gait switch initiated
          * @return false if gait type invalid
          */
-        bool switchGait(const std::string &gait_type, double transition_time = -1.0);
+        bool switchGait(const std::string &gait_type);
 
         /**
          * @brief Set step frequency
@@ -483,7 +467,7 @@ namespace cpg
          * @param slope Terrain slope in radians
          * @param stability Current stability margin
          */
-        void updateTerrainFeedback(double roughness, double slope, double stability);
+        void updateTerrainFeedback(double roughness);
 
         /**
          * @brief Provide balance feedback for control adjustment
@@ -592,24 +576,6 @@ namespace cpg
         // Configuration Save/Load
         //--------------------------------------------------------------------------
 
-        /**
-         * @brief Save controller configuration to file
-         *
-         * @param filename Path to save configuration
-         * @return true if saving successful
-         * @return false if saving failed
-         */
-        bool saveConfiguration(const std::string &filename) const;
-
-        /**
-         * @brief Load controller configuration from file
-         *
-         * @param filename Path to configuration file
-         * @return true if loading successful
-         * @return false if loading failed
-         */
-        bool loadConfiguration(const std::string &filename);
-
         //--------------------------------------------------------------------------
         // Debugging and Visualization
         //--------------------------------------------------------------------------
@@ -698,9 +664,7 @@ namespace cpg
          * @param support_polygon Support polygon vertices
          * @return double Stability margin [0,1]
          */
-        double computeStabilityMargin(const std::vector<bool> &stance_legs,
-                                      const std::vector<double> &center_of_mass,
-                                      const std::vector<std::vector<double>> &support_polygon);
+        double computeStabilityMargin(const std::vector<bool> &stance_legs);
 
         /**
          * @brief Select optimal gait for conditions

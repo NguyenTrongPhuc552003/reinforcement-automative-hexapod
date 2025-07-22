@@ -316,7 +316,7 @@ namespace cpg
          * @return true if gait switch initiated successfully
          * @return false if gait_type is invalid
          */
-        bool switchGait(const std::string &gait_type, double transition_time = 1.0);
+        bool switchGait(const std::string &gait_type);
 
         /**
          * @brief Set global frequency scaling

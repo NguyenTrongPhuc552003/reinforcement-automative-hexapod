@@ -299,11 +299,11 @@ namespace application
 
             // Gait controls
             registerKeyCommand('1', [this]()
-                               { return m_controller->switchGait("tripod", 1.0); });
+                               { return m_controller->switchGait("tripod"); });
             registerKeyCommand('2', [this]()
-                               { return m_controller->switchGait("wave", 1.0); });
+                               { return m_controller->switchGait("wave"); });
             registerKeyCommand('3', [this]()
-                               { return m_controller->switchGait("ripple", 1.0); });
+                               { return m_controller->switchGait("ripple"); });
 
             // Speed controls - need to adjust current velocity
             registerKeyCommand('+', [this]()
@@ -329,14 +329,6 @@ namespace application
                                        return m_controller->stopLocomotion();
                                    }
                                    return true; });
-            registerKeyCommand('u', [this]()
-                               { 
-                                   // Toggle updates/resume
-                                   if (m_controller->isWalking()) {
-                                       return m_controller->pauseLocomotion();
-                                   } else {
-                                       return m_controller->resumeLocomotion();
-                                   } });
             registerKeyCommand('q', [this]()
                                { 
             Application::m_running = false; 
@@ -355,14 +347,6 @@ namespace application
                                {
             std::cout << "Centering all legs..." << std::endl;
             return m_hexapod->centerAll(); });
-
-            registerKeyCommand('m', [this]()
-                               {
-            std::cout << "Running CPG controller diagnostics..." << std::endl;
-            // CPG controller doesn't have servo mapping validation
-            // These features would need to be implemented or moved to hexapod layer
-            std::cout << "Diagnostics not yet implemented for CPG controller" << std::endl;
-            return true; });
 
             registerKeyCommand('h', [this]()
                                {
@@ -432,7 +416,6 @@ namespace application
                       << "  T: Toggle telemetry\n"
                       << "  P: Toggle performance monitoring\n"
                       << "  C: Center all legs\n"
-                      << "  M: Run servo mapping diagnostics\n"
                       << "  H: Show this help\n"
                       << "  Q: Quit\n"
                       << "  B: Toggle balance mode\n"
