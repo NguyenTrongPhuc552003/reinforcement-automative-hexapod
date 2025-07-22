@@ -46,8 +46,8 @@ BIN_DIR = bin
 OBJ_DIR = obj
 DEP_DIR = deps
 
-# Source files - all .cpp files in src directory
-SRCS = $(wildcard $(SRC_DIR)/*.cpp)
+# Source files - all .cpp files in src directory and cpg subdirectory
+SRCS = $(wildcard $(SRC_DIR)/*.cpp) $(wildcard $(SRC_DIR)/cpg/*.cpp)
 OBJS = $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 DEPS = $(SRCS:$(SRC_DIR)/%.cpp=$(DEP_DIR)/%.d)
 
@@ -58,7 +58,7 @@ TEST_OBJS = $(TEST_SRCS:$(TEST_DIR)/%.cpp=$(OBJ_DIR)/test_%.o)
 TEST_DEPS = $(TEST_SRCS:$(TEST_DIR)/%.cpp=$(DEP_DIR)/test_%.d)
 
 # Common source files (exclude main.cpp)
-COMMON_SRCS = $(filter-out $(SRC_DIR)/main.cpp, $(wildcard $(SRC_DIR)/*.cpp))
+COMMON_SRCS = $(filter-out $(SRC_DIR)/main.cpp, $(wildcard $(SRC_DIR)/*.cpp)) $(wildcard $(SRC_DIR)/cpg/*.cpp)
 COMMON_OBJS = $(COMMON_SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
 # Main program object and binary
@@ -72,7 +72,7 @@ ALL_DEPS = $(DEPS) $(TEST_DEPS)
 all: dirs $(TEST_BINS) $(MAIN_PROG)
 
 dirs:
-	@mkdir -p $(BIN_DIR) $(OBJ_DIR) $(DEP_DIR)
+	@mkdir -p $(BIN_DIR) $(OBJ_DIR) $(DEP_DIR) $(OBJ_DIR)/cpg $(DEP_DIR)/cpg
 
 # Include dependency files
 -include $(ALL_DEPS)
@@ -80,6 +80,10 @@ dirs:
 # Compile source files
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -MMD -MP -MF $(DEP_DIR)/$*.d -c $< -o $@
+
+# Compile CPG source files
+$(OBJ_DIR)/cpg/%.o: $(SRC_DIR)/cpg/%.cpp
+	$(CXX) $(CXXFLAGS) -MMD -MP -MF $(DEP_DIR)/cpg/$*.d -c $< -o $@
 
 # Compile test files
 $(OBJ_DIR)/test_%.o: $(TEST_DIR)/%.cpp
