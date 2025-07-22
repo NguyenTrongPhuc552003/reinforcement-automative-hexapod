@@ -549,7 +549,7 @@ namespace cpg
 
             state.is_active = (m_mode != ControllerMode::IDLE && m_mode != ControllerMode::ERROR);
             state.is_walking = (m_mode == ControllerMode::WALKING || m_mode == ControllerMode::TRANSITIONING);
-            state.current_gait = m_cpgNetwork ? m_cpgNetwork->getGaitParams().gait_name : "unknown";
+            state.current_gait = m_cpgNetwork ? m_currentCommand.gait_type : "unknown";
             state.current_frequency = m_cpgNetwork ? m_cpgNetwork->getGlobalFrequency() : 0.0;
 
             state.actual_linear_velocity = m_currentCommand.linear_velocity;
@@ -999,7 +999,7 @@ namespace cpg
     {
         if (pImpl->m_cpgNetwork)
         {
-            return pImpl->m_cpgNetwork->getGaitParams().gait_name;
+            return pImpl->m_currentCommand.gait_type;
         }
         return "unknown";
     }
