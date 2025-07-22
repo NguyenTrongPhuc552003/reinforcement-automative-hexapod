@@ -21,75 +21,73 @@
 #define CPG_OSCILLATOR_HPP
 
 #include <memory>
-#include <string>
-#include <chrono>
-#include <cstdint>
+#include <vector>
+#include <functional>
+#include "cpg/parameters.hpp"
 
 /**
- * @brief Central Pattern Generator (CPG) system for hexapod locomotion
+ * @brief Central Pattern Generator (CPG) oscillator implementation
  *
- * This namespace contains classes and functions for implementing
- * neural oscillators that generate rhythmic patterns for robot locomotion.
+ * This namespace contains classes and functions for implementing individual
+ * oscillators within the CPG network, based on Hopf oscillator dynamics.
  */
 namespace cpg
 {
 
     //==============================================================================
-    // Constants and Types
+    // Oscillator State and Output
     //==============================================================================
 
     /**
-     * @brief Oscillator types supported by the CPG system
-     */
-    enum class OscillatorType : uint8_t
-    {
-        HOPF,           ///< Hopf oscillator (stable limit cycle)
-        VAN_DER_POL,    ///< Van der Pol oscillator (self-sustaining)
-        KURAMOTO,       ///< Kuramoto oscillator (phase coupling)
-        MATSUOKA        ///< Matsuoka oscillator (mutual inhibition)
-    };
-
-    /**
-     * @brief Oscillator state information
+     * @brief Oscillator state vector
+     *
+     * Represents the current state of a single oscillator in the CPG network.
      */
     struct OscillatorState
     {
-        double x;           ///< X component (position/activity)
-        double y;           ///< Y component (velocity/recovery)
-        double phase;       ///< Current phase (0-2π)
-        double amplitude;   ///< Current amplitude
-        double frequency;   ///< Current frequency (Hz)
-        double timestamp;   ///< Last update timestamp
-        bool active;        ///< Whether oscillator is active
+        double x;         ///< X component (position-like)
+        double y;         ///< Y component (velocity-like)
+        double phase;     ///< Current phase (radians)
+        double amplitude; ///< Current amplitude
+        double frequency; ///< Current frequency (Hz)
 
         /**
-         * @brief Default constructor with safe initial values
+         * @brief Default constructor
          */
-        OscillatorState() : x(0.0), y(0.0), phase(0.0), amplitude(1.0), 
-                           frequency(1.0), timestamp(0.0), active(false) {}
+        OscillatorState()
+            : x(0.0), y(0.0), phase(0.0), amplitude(1.0), frequency(1.0)
+        {
+        }
+
+        /**
+         * @brief Parameterized constructor
+         */
+        OscillatorState(double x_val, double y_val, double ph = 0.0,
+                        double amp = 1.0, double freq = 1.0)
+            : x(x_val), y(y_val), phase(ph), amplitude(amp), frequency(freq)
+        {
+        }
     };
 
     /**
-     * @brief Oscillator configuration parameters
+     * @brief Oscillator output structure
+     *
+     * Contains the computed output values from an oscillator.
      */
-    struct OscillatorConfig
+    struct OscillatorOutput
     {
-        OscillatorType type;        ///< Type of oscillator
-        double frequency;           ///< Base frequency in Hz
-        double amplitude;           ///< Target amplitude
-        double damping;             ///< Damping coefficient (0.0-1.0)
-        double coupling_strength;   ///< Coupling strength with other oscillators
-        double phase_offset;        ///< Initial phase offset in radians
-        double convergence_rate;    ///< Rate of convergence to limit cycle
-        double noise_level;         ///< Noise injection level (0.0-1.0)
-        bool adaptive;              ///< Enable adaptive frequency adjustment
-        
+        double raw_output;    ///< Raw oscillator output
+        double scaled_output; ///< Scaled and offset output
+        double phase_output;  ///< Phase-based output
+        bool is_stance_phase; ///< Whether in stance phase (for gait)
+
         /**
-         * @brief Default constructor with sensible defaults
+         * @brief Default constructor
          */
-        OscillatorConfig() : type(OscillatorType::HOPF), frequency(1.0), amplitude(1.0),
-                           damping(0.1), coupling_strength(0.5), phase_offset(0.0),
-                           convergence_rate(1.0), noise_level(0.0), adaptive(false) {}
+        OscillatorOutput()
+            : raw_output(0.0), scaled_output(0.0), phase_output(0.0), is_stance_phase(false)
+        {
+        }
     };
 
     //==============================================================================
@@ -104,11 +102,10 @@ namespace cpg
     //==============================================================================
 
     /**
-     * @brief Neural oscillator for Central Pattern Generation
+     * @brief Individual CPG oscillator
      *
-     * Implements various types of neural oscillators that can generate
-     * rhythmic patterns for robot locomotion. Uses PIMPL idiom for
-     * implementation hiding and better compilation times.
+     * Implements a single Hopf oscillator with configurable parameters and
+     * coupling capabilities for use in CPG networks.
      */
     class Oscillator
     {
@@ -116,237 +113,239 @@ namespace cpg
         /**
          * @brief Construct a new Oscillator object
          *
-         * @param config Configuration parameters for the oscillator
+         * @param id Unique identifier for this oscillator
+         * @param params Initial parameters for the oscillator
          */
-        explicit Oscillator(const OscillatorConfig& config = OscillatorConfig());
+        Oscillator(size_t id, const OscillatorParams &params = OscillatorParams());
 
         /**
          * @brief Destroy the Oscillator object
-         *
-         * Ensures proper cleanup of internal resources
          */
         ~Oscillator();
 
-        // Non-copyable but movable for performance
-        Oscillator(const Oscillator&) = delete;
-        Oscillator& operator=(const Oscillator&) = delete;
-        Oscillator(Oscillator&& other) noexcept;
-        Oscillator& operator=(Oscillator&& other) noexcept;
+        // Non-copyable
+        Oscillator(const Oscillator &) = delete;
+        Oscillator &operator=(const Oscillator &) = delete;
+
+        // Move semantics
+        Oscillator(Oscillator &&other) noexcept;
+        Oscillator &operator=(Oscillator &&other) noexcept;
 
         //--------------------------------------------------------------------------
-        // Lifecycle Methods
-        //--------------------------------------------------------------------------
-
-        /**
-         * @brief Initialize the oscillator
-         *
-         * Sets up internal state and prepares for operation
-         *
-         * @return true if initialization successful
-         * @return false if initialization failed (check getLastError())
-         */
-        bool init();
-
-        /**
-         * @brief Reset the oscillator to initial state
-         *
-         * @param preserve_config Whether to preserve current configuration
-         */
-        void reset(bool preserve_config = true);
-
-        /**
-         * @brief Check if oscillator is properly initialized
-         *
-         * @return true if oscillator is ready for operation
-         * @return false if oscillator needs initialization
-         */
-        bool isInitialized() const;
-
-        //--------------------------------------------------------------------------
-        // Core Oscillator Operations
+        // Basic Properties
         //--------------------------------------------------------------------------
 
         /**
-         * @brief Update the oscillator state
+         * @brief Get the oscillator ID
          *
-         * Advances the oscillator by one time step using numerical integration
-         *
-         * @param dt Time step in seconds
-         * @return true if update successful
-         * @return false if update failed
+         * @return size_t Oscillator identifier
          */
-        bool update(double dt);
+        size_t getId() const;
 
         /**
-         * @brief Update with current system time
+         * @brief Set oscillator parameters
          *
-         * Automatically calculates time step from last update
-         *
-         * @return true if update successful
-         * @return false if update failed
+         * @param params New parameters for the oscillator
+         * @return true if parameters were set successfully
+         * @return false if parameters are invalid
          */
-        bool update();
+        bool setParameters(const OscillatorParams &params);
 
         /**
-         * @brief Get the current output value
+         * @brief Get current oscillator parameters
          *
-         * @return double Current oscillator output (-1.0 to 1.0)
+         * @return OscillatorParams Current parameters
          */
-        double getOutput() const;
-
-        /**
-         * @brief Get the normalized output value
-         *
-         * @param min_val Minimum output value
-         * @param max_val Maximum output value
-         * @return double Scaled output value
-         */
-        double getScaledOutput(double min_val, double max_val) const;
+        OscillatorParams getParameters() const;
 
         //--------------------------------------------------------------------------
-        // State Access
+        // State Management
         //--------------------------------------------------------------------------
 
         /**
-         * @brief Get the current oscillator state
+         * @brief Get current oscillator state
          *
-         * @return OscillatorState Current internal state
+         * @return OscillatorState Current state
          */
         OscillatorState getState() const;
 
         /**
-         * @brief Set the oscillator state
+         * @brief Set oscillator state
          *
          * @param state New state to set
          * @return true if state was set successfully
          * @return false if state is invalid
          */
-        bool setState(const OscillatorState& state);
+        bool setState(const OscillatorState &state);
 
         /**
-         * @brief Get the current phase in radians
+         * @brief Reset oscillator to initial state
          *
-         * @return double Phase value (0 to 2π)
+         * @param random_phase If true, use random initial phase
+         */
+        void reset(bool random_phase = false);
+
+        //--------------------------------------------------------------------------
+        // Integration and Update
+        //--------------------------------------------------------------------------
+
+        /**
+         * @brief Update oscillator state by one time step
+         *
+         * Performs numerical integration using 4th-order Runge-Kutta method.
+         *
+         * @param dt Time step size (seconds)
+         * @param coupling_input External coupling input
+         * @return true if update was successful
+         * @return false if update failed
+         */
+        bool update(double dt, double coupling_input = 0.0);
+
+        /**
+         * @brief Get current output values
+         *
+         * @return OscillatorOutput Current output structure
+         */
+        OscillatorOutput getOutput() const;
+
+        /**
+         * @brief Get raw output value
+         *
+         * @return double Raw oscillator output [-amplitude, +amplitude]
+         */
+        double getRawOutput() const;
+
+        /**
+         * @brief Get scaled output value
+         *
+         * @return double Scaled output including offset and amplitude scaling
+         */
+        double getScaledOutput() const;
+
+        /**
+         * @brief Get phase-based output
+         *
+         * @return double Phase output [0, 1] representing gait phase
+         */
+        double getPhaseOutput() const;
+
+        //--------------------------------------------------------------------------
+        // Phase and Frequency Control
+        //--------------------------------------------------------------------------
+
+        /**
+         * @brief Get current phase
+         *
+         * @return double Current phase in radians [0, 2π)
          */
         double getPhase() const;
 
         /**
-         * @brief Set the current phase
+         * @brief Set phase directly
          *
-         * @param phase Phase value in radians
+         * @param phase New phase in radians
+         * @return true if phase was set successfully
+         * @return false if phase is invalid
          */
-        void setPhase(double phase);
+        bool setPhase(double phase);
+
+        /**
+         * @brief Get current frequency
+         *
+         * @return double Current frequency in Hz
+         */
+        double getFrequency() const;
+
+        /**
+         * @brief Set frequency
+         *
+         * @param frequency New frequency in Hz
+         * @return true if frequency was set successfully
+         * @return false if frequency is invalid
+         */
+        bool setFrequency(double frequency);
+
+        /**
+         * @brief Get current amplitude
+         *
+         * @return double Current amplitude
+         */
+        double getAmplitude() const;
+
+        /**
+         * @brief Set amplitude
+         *
+         * @param amplitude New amplitude
+         * @return true if amplitude was set successfully
+         * @return false if amplitude is invalid
+         */
+        bool setAmplitude(double amplitude);
 
         //--------------------------------------------------------------------------
-        // Configuration Management
-        //--------------------------------------------------------------------------
-
-        /**
-         * @brief Get the current configuration
-         *
-         * @return OscillatorConfig Current configuration parameters
-         */
-        OscillatorConfig getConfig() const;
-
-        /**
-         * @brief Update configuration parameters
-         *
-         * @param config New configuration to apply
-         * @return true if configuration was applied successfully
-         * @return false if configuration is invalid
-         */
-        bool setConfig(const OscillatorConfig& config);
-
-        /**
-         * @brief Set the oscillator frequency
-         *
-         * @param frequency New frequency in Hz (must be positive)
-         */
-        void setFrequency(double frequency);
-
-        /**
-         * @brief Set the oscillator amplitude
-         *
-         * @param amplitude New amplitude (must be positive)
-         */
-        void setAmplitude(double amplitude);
-
-        /**
-         * @brief Set the coupling strength
-         *
-         * @param strength Coupling strength (0.0 to 1.0)
-         */
-        void setCouplingStrength(double strength);
-
-        //--------------------------------------------------------------------------
-        // Coupling and Synchronization
+        // Gait-specific Methods
         //--------------------------------------------------------------------------
 
         /**
-         * @brief Apply coupling force from another oscillator
+         * @brief Check if oscillator is in stance phase
          *
-         * @param other_phase Phase of the coupled oscillator
-         * @param coupling_strength Strength of the coupling (0.0 to 1.0)
-         * @param phase_difference Desired phase difference in radians
+         * @return true if in stance phase
+         * @return false if in swing phase
          */
-        void applyCoupling(double other_phase, double coupling_strength, 
-                          double phase_difference = 0.0);
+        bool isStancePhase() const;
 
         /**
-         * @brief Apply external driving force
+         * @brief Get stance phase progress
          *
-         * @param force_magnitude Magnitude of external force
-         * @param force_phase Phase of external force
+         * @return double Progress through stance phase [0.0, 1.0]
          */
-        void applyExternalForce(double force_magnitude, double force_phase);
+        double getStanceProgress() const;
 
         /**
-         * @brief Synchronize to an external signal
+         * @brief Get swing phase progress
          *
-         * @param external_frequency Target frequency to synchronize to
-         * @param sync_strength Synchronization strength (0.0 to 1.0)
+         * @return double Progress through swing phase [0.0, 1.0]
          */
-        void synchronizeToSignal(double external_frequency, double sync_strength);
+        double getSwingProgress() const;
 
         //--------------------------------------------------------------------------
-        // Adaptive Behavior
+        // Coupling Interface
         //--------------------------------------------------------------------------
 
         /**
-         * @brief Enable or disable adaptive frequency adjustment
+         * @brief Add coupling input from another oscillator
          *
-         * @param enabled Whether to enable adaptive behavior
+         * @param coupling_strength Strength of coupling [0.0, 1.0]
+         * @param phase_difference Phase difference from coupling oscillator
+         * @param weight Connection weight
          */
-        void setAdaptive(bool enabled);
+        void addCouplingInput(double coupling_strength, double phase_difference, double weight = 1.0);
 
         /**
-         * @brief Set adaptation parameters
-         *
-         * @param learning_rate Rate of frequency adaptation (0.0 to 1.0)
-         * @param target_energy Target energy level for adaptation
+         * @brief Clear all coupling inputs
          */
-        void setAdaptationParameters(double learning_rate, double target_energy);
+        void clearCouplingInputs();
+
+        /**
+         * @brief Get total coupling input
+         *
+         * @return double Sum of all coupling inputs
+         */
+        double getTotalCouplingInput() const;
 
         //--------------------------------------------------------------------------
-        // Diagnostics and Monitoring
+        // Validation and Diagnostics
         //--------------------------------------------------------------------------
 
         /**
-         * @brief Get the last error message
+         * @brief Validate current oscillator state
          *
-         * @return std::string Description of last error
+         * @return true if state is valid
+         * @return false if state is invalid or unstable
          */
-        std::string getLastError() const;
+        bool validateState() const;
 
         /**
-         * @brief Get oscillator performance statistics
-         *
-         * @return std::string Formatted performance information
-         */
-        std::string getPerformanceStats() const;
-
-        /**
-         * @brief Check oscillator stability
+         * @brief Check if oscillator is stable
          *
          * @return true if oscillator is in stable limit cycle
          * @return false if oscillator is unstable or diverging
@@ -354,40 +353,34 @@ namespace cpg
         bool isStable() const;
 
         /**
-         * @brief Get energy level of the oscillator
+         * @brief Get last error message
          *
-         * @return double Current energy level
+         * @return std::string Error message
          */
-        double getEnergy() const;
+        std::string getLastErrorMessage() const;
+
+        /**
+         * @brief Clear last error
+         */
+        void clearLastError();
 
         //--------------------------------------------------------------------------
-        // Utility Methods
+        // Debugging and Analysis
         //--------------------------------------------------------------------------
 
         /**
-         * @brief Get string representation of oscillator type
+         * @brief Get oscillator statistics
          *
-         * @param type Oscillator type enum
-         * @return std::string Human-readable type name
+         * @return std::string Formatted statistics string
          */
-        static std::string getTypeName(OscillatorType type);
+        std::string getStatistics() const;
 
         /**
-         * @brief Validate configuration parameters
+         * @brief Enable/disable debug output
          *
-         * @param config Configuration to validate
-         * @return true if configuration is valid
-         * @return false if configuration contains invalid values
+         * @param enable True to enable debug output
          */
-        static bool validateConfig(const OscillatorConfig& config);
-
-        /**
-         * @brief Create default configuration for a specific type
-         *
-         * @param type Oscillator type
-         * @return OscillatorConfig Default configuration for the type
-         */
-        static OscillatorConfig createDefaultConfig(OscillatorType type);
+        void setDebugMode(bool enable);
 
     private:
         /**
@@ -401,37 +394,63 @@ namespace cpg
     //==============================================================================
 
     /**
-     * @brief Calculate phase difference between two oscillators
-     *
-     * @param phase1 First oscillator phase
-     * @param phase2 Second oscillator phase
-     * @return double Phase difference in range [-π, π]
+     * @brief Oscillator utility functions
      */
-    double calculatePhaseDifference(double phase1, double phase2);
+    namespace oscillator_utils
+    {
+        /**
+         * @brief Normalize phase to [0, 2π) range
+         *
+         * @param phase Input phase in radians
+         * @return double Normalized phase
+         */
+        double normalizePhase(double phase);
 
-    /**
-     * @brief Normalize phase to [0, 2π] range
-     *
-     * @param phase Phase value to normalize
-     * @return double Normalized phase value
-     */
-    double normalizePhase(double phase);
+        /**
+         * @brief Compute phase difference between two phases
+         *
+         * @param phase1 First phase
+         * @param phase2 Second phase
+         * @return double Phase difference in range [-π, π]
+         */
+        double phaseDifference(double phase1, double phase2);
 
-    /**
-     * @brief Calculate coupling force using Kuramoto model
-     *
-     * @param phase_diff Phase difference between oscillators
-     * @param coupling_strength Strength of coupling
-     * @return double Coupling force magnitude
-     */
-    double kuramotoCoupling(double phase_diff, double coupling_strength);
+        /**
+         * @brief Convert phase to gait progress [0, 1]
+         *
+         * @param phase Phase in radians
+         * @param duty_cycle Duty cycle [0, 1]
+         * @return double Gait progress
+         */
+        double phaseToGaitProgress(double phase, double duty_cycle);
+
+        /**
+         * @brief Check if phase is in stance portion of gait
+         *
+         * @param phase Phase in radians
+         * @param duty_cycle Duty cycle [0, 1]
+         * @return true if in stance phase
+         */
+        bool isStancePhase(double phase, double duty_cycle);
+
+        /**
+         * @brief Validate oscillator parameters
+         *
+         * @param params Parameters to validate
+         * @return true if parameters are valid
+         */
+        bool validateParameters(const OscillatorParams &params);
+
+        /**
+         * @brief Create default parameters for specific gait
+         *
+         * @param gait_type Type of gait ("tripod", "wave", "ripple")
+         * @param leg_id Leg identifier (0-5)
+         * @return OscillatorParams Default parameters for the gait
+         */
+        OscillatorParams createGaitParameters(const std::string &gait_type, size_t leg_id);
+    }
 
 } // namespace cpg
 
-// For backward compatibility, import main types into global namespace
-using cpg::Oscillator;
-using cpg::OscillatorConfig;
-using cpg::OscillatorState;
-using cpg::OscillatorType;
-
-#endif /* CPG_OSCILLATOR_HPP */
+#endif // CPG_OSCILLATOR_HPP
