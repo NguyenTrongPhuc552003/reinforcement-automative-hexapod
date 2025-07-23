@@ -20,7 +20,7 @@
 @startuml state
 !theme plain
 
-title <font size=20><b>Hexapod Robot - Hardware States</b></font>
+title <font size=20><b>Hexapod Robot - System States with CPG Integration</b></font>
 left header Version 1.0 - Reinforcement Learning Autonomous Hexapod
 right header BeagleBone AI Platform
 
@@ -124,6 +124,61 @@ state "Hardware System" as SystemState {
     end note
 }
 
+' CPG System States
+state "CPG (Central Pattern Generator)" as CPGState {
+    state "Uninitialized" as CPG_UNINIT
+    state "Network Setup" as CPG_SETUP
+    state "Oscillator Sync" as CPG_SYNC
+    state "Active Locomotion" as CPG_ACTIVE
+    state "Autonomous Mode" as CPG_AUTONOMOUS
+    state "Gait Transition" as CPG_TRANSITION
+    state "Balance Adjustment" as CPG_BALANCE
+    
+    ' CPG Transitions
+    [*] --> CPG_UNINIT
+    CPG_UNINIT --> CPG_SETUP : cpg::Controller::initialize()
+    CPG_SETUP --> CPG_SYNC : Network created with 6 oscillators
+    CPG_SYNC --> CPG_ACTIVE : Oscillators synchronized
+    CPG_ACTIVE --> CPG_AUTONOMOUS : Enable autonomous navigation
+    CPG_AUTONOMOUS --> CPG_BALANCE : IMU feedback received
+    CPG_BALANCE --> CPG_AUTONOMOUS : Balance adjustments applied
+    CPG_ACTIVE --> CPG_TRANSITION : Gait change requested
+    CPG_TRANSITION --> CPG_ACTIVE : New gait established
+    CPG_AUTONOMOUS --> CPG_ACTIVE : Manual override
+    CPG_ACTIVE --> CPG_SYNC : Reset network
+}
+
+note bottom of CPGState
+  Hopf Oscillator Network:
+  • 6 coupled oscillators (one per leg)
+  • Phase relationships for gait coordination
+  • Real-time balance feedback integration
+  • Autonomous obstacle avoidance
+  
+  Supported Gaits:
+  • Tripod (fast, alternating triangles)
+  • Wave (slow, sequential leg movement)
+  • Ripple (medium, ripple-like progression)
+end note
+
+' Ultrasonic Sensor States
+state "Ultrasonic Sensor (HC-SR04)" as UltrasonicState {
+    state "Idle" as US_IDLE
+    state "Trigger Pulse" as US_TRIGGER
+    state "Wait Echo" as US_WAIT
+    state "Measure Distance" as US_MEASURE
+    state "Process Data" as US_PROCESS
+    
+    ' Ultrasonic transitions
+    [*] --> US_IDLE
+    US_IDLE --> US_TRIGGER : Measurement request
+    US_TRIGGER --> US_WAIT : 10μs trigger pulse sent
+    US_WAIT --> US_MEASURE : Echo pulse received
+    US_MEASURE --> US_PROCESS : Calculate distance
+    US_PROCESS --> US_IDLE : Data ready
+    US_WAIT --> US_IDLE : Timeout (no echo)
+}
+
 ' I2C Bus states
 state "I2C Bus" as I2CBus {
     state "Idle" as I2C_IDLE
@@ -144,15 +199,19 @@ state "I2C Bus" as I2CBus {
 
 ' Global transitions between major components
 PWMState -[#336600,dashed]-> ServoState : PWM signals
-IMUState -[#0066CC,dashed]-> SystemState : Orientation data
-SystemState -[#993399,dashed]-> ServoState : Leg position commands
+IMUState -[#0066CC,dashed]-> CPGState : Orientation feedback
+CPGState -[#FF6600,dashed]-> ServoState : CPG-generated positions
+UltrasonicState -[#9933CC,dashed]-> CPGState : Obstacle data
+SystemState -[#993399,dashed]-> ServoState : Legacy position commands
 
 ' Main system states
-state "System States" as MainSystemState {
+state "Application Control States" as MainSystemState {
     state "Uninitialized" as SYS_UNINIT
     state "Initialization" as SYS_INIT
     state "Ready" as SYS_READY
-    state "Active Operation" as SYS_ACTIVE
+    state "Manual Control" as SYS_MANUAL
+    state "Autonomous Mode" as SYS_AUTONOMOUS
+    state "Calibration Mode" as SYS_CALIBRATION
     state "Error" as SYS_ERROR
     state "Shutdown" as SYS_SHUTDOWN
     
@@ -160,22 +219,35 @@ state "System States" as MainSystemState {
     [*] --> SYS_UNINIT
     SYS_UNINIT --> SYS_INIT : hexapod_init()
     SYS_INIT --> SYS_READY : all subsystems initialized
-    SYS_READY --> SYS_ACTIVE : first command received
-    SYS_ACTIVE --> SYS_ERROR : hardware error detected
+    SYS_READY --> SYS_MANUAL : Manual mode selected
+    SYS_READY --> SYS_AUTONOMOUS : Autonomous mode selected
+    SYS_READY --> SYS_CALIBRATION : Calibration mode selected
+    SYS_MANUAL --> SYS_AUTONOMOUS : Switch to autonomous
+    SYS_AUTONOMOUS --> SYS_MANUAL : Manual override
+    SYS_MANUAL --> SYS_ERROR : hardware error detected
+    SYS_AUTONOMOUS --> SYS_ERROR : hardware error detected
     SYS_ERROR --> SYS_READY : error recovery
-    SYS_ACTIVE --> SYS_READY : operation complete
+    SYS_MANUAL --> SYS_READY : operation complete
+    SYS_AUTONOMOUS --> SYS_READY : operation complete
+    SYS_CALIBRATION --> SYS_READY : calibration complete
     SYS_READY --> SYS_SHUTDOWN : hexapod_cleanup()
     SYS_SHUTDOWN --> [*]
 }
 
 ' Comprehensive legend with hardware info
 legend right
-  <b>Hexapod Hardware State Diagram</b>
+  <b>Hexapod System State Diagram with CPG Integration</b>
   --
   <b>Hardware Components:</b>
   • 2× PCA9685 PWM Controllers (I2C addresses 0x40, 0x41)
   • 1× MPU6050 IMU Sensor (I2C address 0x68)
+  • 1× HC-SR04 Ultrasonic Sensor (autonomous navigation)
   • 18× Servo Motors (3 per leg × 6 legs)
+  
+  <b>CPG System:</b>
+  • 6 Hopf oscillators with biological coordination
+  • Real-time balance feedback and obstacle avoidance
+  • Support for tripod, wave, and ripple gaits
   
   <b>I2C Communication:</b>
   • Bus 3 on BeagleBone AI (SCL: P9_19, SDA: P9_20)

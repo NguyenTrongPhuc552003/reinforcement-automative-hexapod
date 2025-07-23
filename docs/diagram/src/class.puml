@@ -252,6 +252,205 @@ package "Control Layer" {
     }
 }
 
+package "Central Pattern Generator (CPG)" {
+    class "cpg::Controller" <<Controller>> {
+        -pImpl: unique_ptr<ControllerImpl>
+        +Controller()
+        +~Controller()
+        +initialize(config: ControllerConfig): bool
+        +shutdown(): void
+        +executeCommand(command: LocomotionCommand): bool
+        +startLocomotion(): bool
+        +stopLocomotion(): bool
+        +updateBalanceFeedback(imuData: ImuData): void
+        +handleAutonomousMode(): bool
+        +getControllerState(): ControllerState
+        +getCurrentGait(): string
+        +isActive(): bool
+        +getOutputs(): vector<LegOutput>
+        +enableAutonomousNavigation(enable: bool): void
+        +processObstacleAvoidance(): bool
+    }
+
+    class "cpg::Network" <<PIMPL>> {
+        -pImpl: unique_ptr<NetworkImpl>
+        +Network(networkParams: NetworkParams, gaitParams: GaitParams)
+        +~Network()
+        +initialize(numOscillators: size_t, gaitType: string): bool
+        +configureForHexapod(gaitType: string): bool
+        +addOscillator(params: OscillatorParams): size_t
+        +removeOscillator(id: size_t): bool
+        +addCoupling(from: size_t, to: size_t, params: CouplingParams): bool
+        +removeCoupling(from: size_t, to: size_t): bool
+        +update(dt: double): bool
+        +reset(randomPhases: bool): void
+        +getNetworkState(): NetworkState
+        +getNetworkOutput(): NetworkOutput
+        +getRawOutputs(): vector<double>
+        +getPhaseOutputs(): vector<double>
+        +getStancePhases(): vector<bool>
+        +switchGait(gaitType: string): bool
+        +setGlobalFrequency(scale: double): bool
+        +isSynchronized(tolerance: double): bool
+        +isStable(): bool
+        +validateConfiguration(): bool
+    }
+
+    class "cpg::Oscillator" <<PIMPL>> {
+        -pImpl: unique_ptr<OscillatorImpl>
+        +Oscillator(id: size_t, params: OscillatorParams)
+        +~Oscillator()
+        +update(dt: double, couplingInput: double): bool
+        +reset(randomPhase: bool): void
+        +getId(): size_t
+        +setParameters(params: OscillatorParams): bool
+        +getParameters(): OscillatorParams
+        +getState(): OscillatorState
+        +setState(state: OscillatorState): bool
+        +getOutput(): OscillatorOutput
+        +getRawOutput(): double
+        +getScaledOutput(): double
+        +getPhaseOutput(): double
+        +getPhase(): double
+        +setPhase(phase: double): bool
+        +getFrequency(): double
+        +setFrequency(frequency: double): bool
+        +getAmplitude(): double
+        +setAmplitude(amplitude: double): bool
+        +isStancePhase(): bool
+        +getStanceProgress(): double
+        +getSwingProgress(): double
+        +addCouplingInput(strength: double, phaseDiff: double, weight: double): void
+        +clearCouplingInputs(): void
+        +getTotalCouplingInput(): double
+        +validateState(): bool
+        +isStable(): bool
+    }
+
+    class "cpg::Parameters" <<PIMPL>> {
+        -pImpl: unique_ptr<ParametersImpl>
+        +Parameters()
+        +~Parameters()
+        +loadFromFile(filename: string): bool
+        +saveToFile(filename: string): bool
+        +getOscillatorParams(gaitType: string, legId: size_t): OscillatorParams
+        +getCouplingParams(from: size_t, to: size_t): CouplingParams
+        +getGaitParams(gaitType: string): GaitParams
+        +getNetworkParams(): NetworkParams
+        +setOscillatorParams(gaitType: string, legId: size_t, params: OscillatorParams): void
+        +setCouplingParams(from: size_t, to: size_t, params: CouplingParams): void
+        +setGaitParams(gaitType: string, params: GaitParams): void
+        +setNetworkParams(params: NetworkParams): void
+        +validateAll(): bool
+        +reset(): void
+    }
+
+    struct "cpg::OscillatorParams" {
+        +frequency: double
+        +amplitude: double
+        +phase: double
+        +offset: double
+        +duty_cycle: double
+        +OscillatorParams()
+        +OscillatorParams(freq: double, amp: double, ph: double, off: double, duty: double)
+    }
+
+    struct "cpg::CouplingParams" {
+        +strength: double
+        +phase_offset: double
+        +weight: double
+        +coupling_type: string
+        +is_symmetric: bool
+        +CouplingParams()
+        +CouplingParams(str: double, phase: double, w: double)
+    }
+
+    struct "cpg::GaitParams" {
+        +gait_type: string
+        +step_frequency: double
+        +step_height: double
+        +duty_factor: double
+        +stance_duration: double
+        +swing_duration: double
+        +coupling_strength: double
+        +phase_offsets: vector<double>
+        +GaitParams()
+        +GaitParams(type: string, freq: double, height: double, duty: double)
+    }
+
+    struct "cpg::NetworkParams" {
+        +num_oscillators: size_t
+        +update_frequency: double
+        +global_frequency_scale: double
+        +synchronization_threshold: double
+        +stability_threshold: double
+        +max_coupling_strength: double
+        +NetworkParams()
+    }
+
+    struct "cpg::OscillatorState" {
+        +x: double
+        +y: double
+        +phase: double
+        +amplitude: double
+        +frequency: double
+        +OscillatorState()
+        +OscillatorState(x_val: double, y_val: double, ph: double, amp: double, freq: double)
+    }
+
+    struct "cpg::OscillatorOutput" {
+        +raw_output: double
+        +scaled_output: double
+        +phase_output: double
+        +is_stance_phase: bool
+        +OscillatorOutput()
+    }
+
+    struct "cpg::NetworkState" {
+        +oscillator_states: vector<OscillatorState>
+        +network_time: double
+        +global_frequency: double
+        +is_synchronized: bool
+        +NetworkState()
+    }
+
+    struct "cpg::NetworkOutput" {
+        +joint_positions: vector<double>
+        +joint_velocities: vector<double>
+        +stance_phases: vector<bool>
+        +gait_progress: vector<double>
+        +step_frequency: double
+        +is_stable: bool
+        +NetworkOutput()
+    }
+
+    struct "cpg::ConnectionTopology" {
+        +from_oscillator: size_t
+        +to_oscillator: size_t
+        +coupling: CouplingParams
+        +is_active: bool
+        +ConnectionTopology()
+        +ConnectionTopology(from: size_t, to: size_t, params: CouplingParams)
+    }
+
+    class "cpg::oscillator_utils" <<Utilities>> {
+        +normalizePhase(phase: double): double
+        +phaseDifference(phase1: double, phase2: double): double
+        +phaseToGaitProgress(phase: double, dutyCycle: double): double
+        +isStancePhase(phase: double, dutyCycle: double): bool
+        +validateParameters(params: OscillatorParams): bool
+        +createGaitParameters(gaitType: string, legId: size_t): OscillatorParams
+    }
+
+    class "cpg::network_utils" <<Utilities>> {
+        +validateGaitType(gaitType: string): bool
+        +createDefaultCouplingMatrix(gaitType: string): vector<vector<double>>
+        +cpgToJointAngle(cpgOutputs: vector<double>, legId: size_t, jointId: size_t): double
+        +computeSynchronizationIndex(phases: vector<double>): double
+        +generateHexapodCouplingMatrix(couplingStrength: double): vector<vector<double>>
+    }
+}
+
 package "Application Layer" {
     class Application <<Singleton>> {
         -pImpl: unique_ptr<ApplicationImpl>
@@ -270,7 +469,8 @@ package "Application Layer" {
     class ApplicationImpl <<PIMPL>> {
         -currentMode: ControlMode
         -hexapod: unique_ptr<Hexapod>
-        -controller: unique_ptr<Controller>
+        -controller: unique_ptr<cpg::Controller>
+        -legacyController: unique_ptr<Controller>
         -keyCommands: unordered_map<char, KeyCommand>
         -frameCount: unsigned long
         -totalFrameTime: unsigned long
@@ -409,9 +609,38 @@ ControllerImpl "1" *-- "1" UltrasonicSensor : optional
 ControllerImpl "1" *-- "1" BalanceConfig : configured_by
 ControllerImpl -- ControllerState
 
+' CPG System Relationships
+cpg::Controller "1" *-- "1" cpg::Network : manages
+cpg::Controller "1" *-- "1" cpg::Parameters : uses
+cpg::Controller --> Hexapod : controls
+cpg::Controller ..> ImuData : processes
+
+cpg::Network "1" *-- "6" cpg::Oscillator : contains
+cpg::Network "1" *-- "*" cpg::ConnectionTopology : manages
+cpg::Network ..> cpg::NetworkState : produces
+cpg::Network ..> cpg::NetworkOutput : generates
+
+cpg::Oscillator "1" *-- "1" cpg::OscillatorState : maintains
+cpg::Oscillator "1" *-- "1" cpg::OscillatorParams : configured_by
+cpg::Oscillator ..> cpg::OscillatorOutput : generates
+
+cpg::Parameters "1" *-- "*" cpg::GaitParams : manages
+cpg::Parameters "1" *-- "*" cpg::OscillatorParams : manages
+cpg::Parameters "1" *-- "*" cpg::CouplingParams : manages
+cpg::Parameters "1" *-- "1" cpg::NetworkParams : manages
+
+cpg::ConnectionTopology "1" *-- "1" cpg::CouplingParams : configured_by
+
+' Enhanced Application Relationships
+ApplicationImpl "1" *-- "1" cpg::Controller : primary_controller
+ApplicationImpl "1" *-- "1" Controller : legacy_support
+ApplicationImpl --> cpg::oscillator_utils : uses
+ApplicationImpl --> cpg::network_utils : uses
+
 Application ||--|| ApplicationImpl : pImpl
 ApplicationImpl "1" *-- "1" Hexapod : manages
-ApplicationImpl "1" *-- "1" Controller : uses
+ApplicationImpl "1" *-- "1" cpg::Controller : uses
+ApplicationImpl "1" *-- "1" Controller : legacy_support
 Application -- ControlMode
 Application -- ExecutionResult
 

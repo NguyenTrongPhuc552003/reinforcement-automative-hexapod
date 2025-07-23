@@ -51,11 +51,19 @@ package "User Space Applications" <<UserSpace>> {
         component [Calibration Manager] <<Application>> as CalMgr
     }
     
-    package "Motion Control Layer" {
+    package "Central Pattern Generator (CPG)" {
+        component [CPG Controller] <<Control>> as CPGCtrl
+        component [CPG Network] <<Control>> as CPGNet
+        component [CPG Oscillators] <<Control>> as CPGOsc
+        component [CPG Parameters] <<Control>> as CPGParams
+        component [Autonomous Navigation] <<Control>> as AutoNav
+    }
+    
+    package "Legacy Motion Control" {
+        component [Legacy Controller] <<Control>> as Ctrl
         component [Gait Generator] <<Control>> as GaitGen
         component [Kinematics Engine] <<Control>> as KinematicsEng
         component [Balance System] <<Control>> as BalSys
-        component [Controller] <<Control>> as Ctrl
     }
     
     package "Hardware Interface Layer" {
@@ -97,10 +105,21 @@ package "External Systems" <<External>> {
 
 ' Application Layer Connections
 AppCtrl --> UI : "user commands"
-AppCtrl --> Ctrl : "robot control"
+AppCtrl --> CPGCtrl : "CPG robot control"
+AppCtrl --> Ctrl : "legacy robot control"
 AppCtrl --> CalMgr : "calibration data"
 
-' Control Layer Connections
+' CPG Control Layer Connections
+CPGCtrl --> CPGNet : "network management"
+CPGNet --> CPGOsc : "oscillator coordination"
+CPGCtrl --> CPGParams : "parameter management"
+CPGOsc --> HexHW : "biological gait patterns"
+CPGCtrl --> AutoNav : "autonomous control"
+AutoNav --> USSensor : "obstacle detection"
+AutoNav --> BalSys : "balance feedback"
+BalSys --> CPGCtrl : "tilt compensation"
+
+' Legacy Control Layer Connections
 Ctrl --> GaitGen : "gait parameters"
 Ctrl --> BalSys : "balance control"
 Ctrl --> HexHW : "hardware commands"
@@ -111,6 +130,7 @@ BalSys --> HexHW : "tilt corrections"
 ' Hardware Interface Connections
 HexHW --> KernelDriver : "/dev/hexapod\nIOCTL calls"
 USSensor --> GPIO : "GPIO control"
+AutoNav --> USSensor : "distance sensing"
 Ctrl --> USSensor : "distance sensing"
 
 ' AI System Connections
@@ -144,6 +164,23 @@ CommonUtil --> AppCtrl : "terminal mgmt,\nperformance monitoring"
 CommonUtil --> Ctrl : "error reporting,\nvalidation"
 
 ' Notes for key components
+note right of CPGCtrl
+  - Central Pattern Generator Control
+  - Biological-inspired Hopf oscillators  
+  - Adaptive gait coordination
+  - Real-time balance integration
+  - Autonomous navigation capabilities
+  - Support for tripod, wave, ripple gaits
+end note
+
+note right of AutoNav
+  - Ultrasonic obstacle detection
+  - Adaptive path planning
+  - Emergency stop on obstacles
+  - Smooth direction adjustments
+  - Integration with CPG network
+end note
+
 note right of KernelDriver
   - Device file: /dev/hexapod
   - IOCTL commands for servo control
@@ -172,26 +209,28 @@ note bottom of BBB
 end note
 
 legend right
-  <b>Hexapod Robot - Component Legend</b>
+  <b>Hexapod Robot - Component Architecture with CPG</b>
   --
   <b>Hardware Components:</b>
-  • BeagleBone AI
-  • PCA9685 PWM Controllers
+  • BeagleBone AI (ARM Cortex-A15)
+  • 2× PCA9685 PWM Controllers
   • MPU6050 IMU Sensor
-  • ADXL345 Accelerometer
-  • Ultrasonic Sensor
-  • Servo Motors
+  • ADXL345 Accelerometer (alternative)
+  • HC-SR04 Ultrasonic Sensor
+  • 18× Servo Motors (6 legs × 3 joints)
 
-  <b>Software Components:</b>
-  • Linux Kernel
-  • Device Drivers
-  • User Space Applications
-  • Python TD3 (Optional)
+  <b>CPG System Features:</b>
+  • 6 coupled Hopf oscillators (biological-inspired)
+  • Real-time gait coordination and adaptation
+  • Autonomous navigation with obstacle avoidance
+  • Integrated balance feedback system
+  • Support for multiple gait patterns
 
   <b>Communication Protocols:</b>
-  • I2C
-  • PWM
-  • GPIO
-end legend
+  • I2C (PWM controllers and sensors)
+  • PWM (servo control signals)
+  • GPIO (ultrasonic sensor interface)
+  • IOCTL (kernel driver communication)
+endlegend
 
 @enduml

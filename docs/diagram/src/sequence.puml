@@ -46,7 +46,10 @@ skinparam {
 actor "User" as User
 box "Software Layer" #EEEEFF
     participant "Application" as App
-    participant "Controller" as Controller
+    participant "CPG Controller" as CPGCtrl
+    participant "CPG Network" as CPGNet
+    participant "CPG Oscillators" as CPGOsc
+    participant "Legacy Controller" as Controller
     participant "Gait Generator" as Gait
     participant "Kinematics Engine" as Kinematics
     participant "Hardware Interface" as Hexapod
@@ -86,7 +89,22 @@ group "System Initialization"
     Hexapod --> App: hardware interface ready
     deactivate Hexapod
     
-    App -> Controller: initialize motion controller
+    App -> CPGCtrl: initialize CPG controller
+    activate CPGCtrl
+    CPGCtrl -> CPGNet: initialize oscillator network
+    activate CPGNet
+    CPGNet -> CPGOsc: create 6 coupled oscillators
+    activate CPGOsc
+    note right of CPGOsc: Each oscillator represents one leg\nwith Hopf dynamics for biological gait patterns
+    CPGOsc --> CPGNet: oscillators ready
+    deactivate CPGOsc
+    note right of CPGNet: Sets up hexapod topology with\ncoupling matrix for coordinated locomotion
+    CPGNet --> CPGCtrl: network initialized
+    deactivate CPGNet
+    CPGCtrl --> App: CPG controller ready
+    deactivate CPGCtrl
+    
+    App -> Controller: initialize legacy motion controller
     activate Controller
     Controller -> Gait: initialize gait patterns
     activate Gait
@@ -124,10 +142,57 @@ group "Operation Cycle"
         User -> App: input command (key press)
         activate App
         
-        App -> Controller: update(input, deltaTime)
-        activate Controller
-        
-        alt Walking Mode
+        alt Autonomous Mode (CPG-based)
+            App -> CPGCtrl: update(deltaTime)
+            activate CPGCtrl
+            
+            CPGCtrl -> CPGNet: update network state
+            activate CPGNet
+            
+            loop for each oscillator (6 legs)
+                CPGNet -> CPGOsc: update oscillator with coupling
+                activate CPGOsc
+                note right of CPGOsc: Hopf oscillator dynamics:\nẋ = (μ - r²)x - ωy + coupling_input\nẏ = (μ - r²)y + ωx
+                CPGOsc --> CPGNet: oscillator output
+                deactivate CPGOsc
+            end
+            
+            CPGNet -> CPGNet: compute network synchronization
+            CPGNet --> CPGCtrl: network output (joint positions)
+            deactivate CPGNet
+            
+            CPGCtrl -> CPGCtrl: apply balance feedback from IMU
+            
+            loop for each leg (6 legs)
+                CPGCtrl -> Hexapod: setLegPosition(leg, cpg_angles)
+                activate Hexapod
+                
+                Hexapod -> Driver: ioctl(HEXAPOD_IOCTL_SET_LEG, leg_cmd)
+                activate Driver
+                note right of Driver: Driver converts CPG outputs\nto PWM timing values
+                
+                Driver -> Hardware: set PWM signals for leg servos
+                activate Hardware
+                note right of Hardware: Biologically-inspired coordination:\n- Phase relationships ensure stability\n- Smooth transitions between gaits\n- Natural obstacle response
+                Hardware --> Driver: PWM signals updated
+                deactivate Hardware
+                
+                Driver --> Hexapod: leg position updated
+                deactivate Driver
+                Hexapod --> CPGCtrl: position set
+                deactivate Hexapod
+            end
+            
+            CPGCtrl -> CPGCtrl: handle autonomous navigation
+            note right of CPGCtrl: Process ultrasonic sensor data\nfor obstacle avoidance
+            
+            CPGCtrl --> App: CPG cycle complete
+            deactivate CPGCtrl
+            
+        else Manual Mode (Legacy)
+            App -> Controller: update(input, deltaTime)
+            activate Controller
+            
             Controller -> Gait: update(direction, speed)
             activate Gait
             
@@ -160,57 +225,9 @@ group "Operation Cycle"
             
             Gait --> Controller: gait cycle updated
             deactivate Gait
-            
-        else Balance Mode
-            ' IMU sensor reading - important hardware interaction
-            Controller -> Hexapod: read orientation sensors
-            activate Hexapod
-            
-            Hexapod -> Driver: ioctl(HEXAPOD_IOCTL_GET_IMU)
-            activate Driver
-            
-            note right of Driver: Driver reads data from MPU6050 IMU sensor\nvia I2C bus (address 0x68)
-            
-            Driver -> Hardware: read acceleration and gyroscope data
-            activate Hardware
-            note right of Hardware: I2C read registers 0x3B-0x48:\n- 3 acceleration axes (X,Y,Z)\n- 3 rotation rate axes (X,Y,Z)
-            Hardware --> Driver: raw sensor values
-            deactivate Hardware
-            
-            Driver --> Hexapod: IMU data structure
-            deactivate Driver
-            
-            Hexapod --> Controller: orientation data
-            deactivate Hexapod
-            
-            Controller -> Controller: calculate tilt compensation
-            
-            ' Apply balance adjustments to legs
-            loop for each leg
-                Controller -> Kinematics: calculate compensated joint angles
-                activate Kinematics
-                Kinematics --> Controller: adjusted angles
-                deactivate Kinematics
-                
-                Controller -> Hexapod: setLegPosition with balance adjustment
-                activate Hexapod
-                
-                Hexapod -> Driver: ioctl(HEXAPOD_IOCTL_SET_LEG)
-                activate Driver
-                Driver -> Hardware: update servo positions
-                activate Hardware
-                Hardware --> Driver: servo positions updated
-                deactivate Hardware
-                Driver --> Hexapod: leg adjusted
-                deactivate Driver
-                
-                Hexapod --> Controller: adjustment applied
-                deactivate Hexapod
-            end
+            Controller --> App: control cycle complete
+            deactivate Controller
         end
-        
-        Controller --> App: control cycle complete
-        deactivate Controller
         
         App -> App: update telemetry display
         
@@ -273,8 +290,16 @@ legend right
   Hardware Layer Details:
   • 18 Servos (3 per leg) via PCA9685 PWM controllers
   • MPU6050 IMU for orientation sensing
+  • HC-SR04 Ultrasonic sensor for obstacle detection
   • I2C bus communication (address 0x40, 0x41, 0x68)
   • 50Hz PWM signal for servo control (1-2ms pulse width)
+  
+  CPG System Features:
+  • Biological-inspired Hopf oscillators for each leg
+  • Adaptive coupling for gait coordination
+  • Real-time balance feedback integration
+  • Autonomous navigation with obstacle avoidance
+  • Smooth gait transitions (tripod, wave, ripple)
 endlegend
 
 @enduml
