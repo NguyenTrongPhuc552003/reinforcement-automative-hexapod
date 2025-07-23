@@ -23,4 +23,3 @@ fi
 echo "Hexapod Robot Control System removed successfully"
 
 exit 0
-exit 0
