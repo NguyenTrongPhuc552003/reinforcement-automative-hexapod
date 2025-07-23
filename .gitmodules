@@ -16,4 +16,4 @@
 [submodule "report/thesis"]
 	path = report/thesis
 	url = git@github.com:NguyenTrongPhuc552003/final-hexapod-thesis.git
-	branch = main
+	branch = CPG
