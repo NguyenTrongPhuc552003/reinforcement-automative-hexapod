@@ -28,9 +28,6 @@ The `diagrams/` directory contains PlantUML source files that generate various s
 The PlantUML diagrams can be generated into visual formats using the following commands:
 
 ```bash
-# Install PlantUML (Debian/Ubuntu)
-sudo apt install plantuml
-
 # Generate all diagrams
 ./scripts/build.sh -l
 ```
