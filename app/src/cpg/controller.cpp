@@ -1180,10 +1180,6 @@ namespace cpg
     // Debugging and Visualization
     //--------------------------------------------------------------------------
 
-    //--------------------------------------------------------------------------
-    // Debugging and Visualization
-    //--------------------------------------------------------------------------
-
     void Controller::setDebugMode(bool enable)
     {
         pImpl->m_debugMode = enable;
