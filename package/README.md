@@ -31,14 +31,14 @@ This installation package includes:
 
 2. **Run Main Application**
    ```bash
-   ./hexapod_app
+   hexapod_app
    ```
 
 3. **Test Hardware Components**
    ```bash
-   ./test_mpu6050    # Test IMU sensor
-   ./test_servo      # Test servo motors
-   ./test_balance    # Test balance system
+   test_mpu6050    # Test IMU sensor
+   test_servo      # Test servo motors
+   test_balance    # Test balance system
    ```
 
 ## Hardware Requirements
