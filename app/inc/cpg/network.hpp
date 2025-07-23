@@ -464,28 +464,6 @@ namespace cpg
         void clearLastError();
 
         //--------------------------------------------------------------------------
-        // File I/O and Configuration
-        //--------------------------------------------------------------------------
-
-        /**
-         * @brief Save network configuration to file
-         *
-         * @param filename Path to save configuration
-         * @return true if saving successful
-         * @return false if saving failed
-         */
-        bool saveConfiguration(const std::string &filename) const;
-
-        /**
-         * @brief Load network configuration from file
-         *
-         * @param filename Path to configuration file
-         * @return true if loading successful
-         * @return false if loading failed
-         */
-        bool loadConfiguration(const std::string &filename);
-
-        //--------------------------------------------------------------------------
         // Debugging and Visualization
         //--------------------------------------------------------------------------
 
