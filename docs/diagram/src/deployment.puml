@@ -217,7 +217,7 @@ legend right
   <b>Hexapod Robot - Deployment Legend</b>
   --
   <b>Hardware Components:</b>
-  • BeagleBone AI
+  • BeagleBone Black
   • PCA9685 PWM Controllers
   • MPU6050 IMU Sensor
   • ADXL345 Accelerometer
