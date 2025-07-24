@@ -16,19 +16,31 @@ This directory contains the kernel-level driver for the hexapod robot platform. 
 
 ## Hardware Components
 
-The driver interfaces with the following hardware components:
+The driver interfaces with the following hardware components connected via I2C Bus 2 on BeagleBone Black:
 
 | Component | Description               | Interface | Address (configurable) |
 |-----------|---------------------------|-----------|------------------------|
-| PCA9685_1 | 16-channel PWM controller | I2C       | 0x40                   |
-| PCA9685_2 | 16-channel PWM controller | I2C       | 0x41                   |
-| MPU6050   | 6-axis IMU sensor         | I2C       | 0x68                   |
-| ADXL345   | 3-axis accelerometer      | I2C       | 0x53                   |
+| PCA9685_1 | 16-channel PWM controller | I2C2      | 0x40                   |
+| PCA9685_2 | 16-channel PWM controller | I2C2      | 0x41                   |
+| MPU6050   | 6-axis IMU sensor         | I2C2      | 0x68                   |
+| ADXL345   | 3-axis accelerometer      | I2C2      | 0x53                   |
+
+### BeagleBone Black I2C Pin Configuration
+
+I2C Bus 2 is used for all sensor and actuator communication:
+- **SCL (Clock)**: P9_19
+- **SDA (Data)**: P9_20
+- **VCC**: P9_3 (3.3V) or P9_5/P9_6 (VDD_5V)
+- **GND**: P9_1 or P9_2
 
 ## Directory Structure
 
 ```t
 driver/
+├── dts/
+│   └── Black/
+│       ├── BBB-MPU6050-overlay.dts    # MPU6050 device tree overlay for BeagleBone Black
+│       └── BBB-PCA9685-overlay.dts    # PCA9685 device tree overlay for BeagleBone Black
 ├── inc/
 │   ├── mpu6050.h          # MPU6050 IMU sensor data structures
 │   └── pca9685.h          # PCA9685 PWM controller data structures
@@ -50,12 +62,28 @@ driver/
 
 - Linux kernel headers
 - Cross-compilation toolchain
-- BeagleBone AI device tree (unused yet)
+- BeagleBone Black device tree overlays
 
 ### Build Commands
 
 ```bash
 ./scripts/build.sh -b driver
+```
+
+### Device Tree Overlay Setup
+
+Before loading the driver, install and enable the device tree overlays:
+
+```bash
+# Copy overlay files to /lib/firmware
+sudo cp driver/dts/Black/*.dtbo /lib/firmware/
+
+# Enable overlays in /boot/uEnv.txt
+sudo echo "dtb_overlay=/lib/firmware/BBB-PCA9685-overlay.dtbo" >> /boot/uEnv.txt
+sudo echo "dtb_overlay=/lib/firmware/BBB-MPU6050-overlay.dtbo" >> /boot/uEnv.txt
+
+# Reboot to apply overlays
+sudo reboot
 ```
 
 ### Installation Steps

@@ -31,7 +31,7 @@
 #include <linux/types.h>
 
 /* I2C Bus and Addresses */
-#define PCA9685_I2C_BUS 3       /* BeagleBone I2C3 */
+#define PCA9685_I2C_BUS 2       /* BeagleBone Black I2C2 */
 #define PCA9685_I2C_ADDR_1 0x40 /* Primary address */
 #define PCA9685_I2C_ADDR_2 0x41 /* Secondary address */
 
