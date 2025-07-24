@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define I2C port
-I2C_PORT=3
+I2C_PORT=2
 
 # Define the driver name
 DRIVER_NAME=hexapod_driver
