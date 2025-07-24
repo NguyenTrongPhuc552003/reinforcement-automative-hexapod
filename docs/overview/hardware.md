@@ -17,7 +17,7 @@ For detailed visual representation of hardware organization, see the [Component 
 | Operating Voltage     | 6V (servos), 5V (logic)                    |
 | Power Consumption     | 2-10A depending on movement                |
 | Maximum Speed         | ~0.3m/s                                    |
-| Control Board         | BeagleBone AI/Black                        |
+| Control Board         | BeagleBone Black                           |
 | Servo Motors          | 18× MG996R (or compatible)                 |
 | Degrees of Freedom    | 18 (3 per leg)                             |
 | Operating Time        | ~1 hour (with 2800mAh battery)             |
@@ -27,7 +27,7 @@ For detailed visual representation of hardware organization, see the [Component 
 
 | Component Description     | Quantity | Notes                            |
 |---------------------------|----------|----------------------------------|
-| BeagleBone AI/Black       | 1        | Main control board               |
+| BeagleBone Black          | 1        | Main control board               |
 | MG996R Servo Motors       | 18       | 3 per leg (hip, knee, ankle)     |
 | PCA9685 PWM Controller    | 2        | 16-channel PWM controller        |
 | MPU6050 IMU Sensor        | 1        | 6-axis accelerometer + gyroscope |
@@ -75,15 +75,15 @@ The hexapod follows a standard hexapod design with 6 legs arranged radially arou
 
 ### Control System
 
-- **Main Controller**: BeagleBone AI/Black
-  - AM5729 processor
-  - 1GB DDR3 RAM
-  - 16GB onboard eMMC
+- **Main Controller**: BeagleBone Black
+  - AM3358 processor (ARM Cortex-A8)
+  - 512MB DDR3 RAM
+  - 4GB onboard eMMC
   - Linux operating system
 
 - **Servo Control**: Via PCA9685 PWM controllers
   - 2× PCA9685 boards (primary and secondary)
-  - I2C communication from BeagleBone
+  - I2C communication from BeagleBone Black
   - 50Hz PWM signal generation
 
 - **Sensing**:
@@ -92,13 +92,13 @@ The hexapod follows a standard hexapod design with 6 legs arranged radially arou
 
 ## I2C Bus Configuration
 
-The I2C bus 2 on BeagleBone is used for connecting sensors and actuators:
+The I2C bus 2 on BeagleBone Black is used for connecting sensors and actuators:
 
 | Device Description | I2C Address | Bus | Description               |
 |------------------- |-------------|-----|---------------------------|
-| MPU6050            | 0x68        | 3   | 6-axis IMU sensor         |
-| PCA9685 Primary    | 0x40        | 3   | 16-channel PWM controller |
-| PCA9685 Secondary  | 0x71        | 3   | 16-channel PWM controller |
+| MPU6050            | 0x68        | 2   | 6-axis IMU sensor         |
+| PCA9685 Primary    | 0x40        | 2   | 16-channel PWM controller |
+| PCA9685 Secondary  | 0x41        | 2   | 16-channel PWM controller |
 
 ### BeagleBone Pin Configuration
 

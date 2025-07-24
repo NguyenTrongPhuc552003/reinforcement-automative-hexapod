@@ -22,7 +22,7 @@
 
 title <font size=20><b>Hexapod Robot - Build and Deployment Process</b></font>
 left header Version 1.0 - Reinforcement Learning Autonomous Hexapod
-right header BeagleBone AI Platform
+right header BeagleBone Black Platform
 
 skinparam {
     ArrowColor #333333
@@ -71,7 +71,7 @@ rectangle "Development Host" as dev_host <<source>> {
 rectangle "Build Environment (Docker)" as build_env <<build>> {
     rectangle "Cross-Compilation Tools" as tools {
         component "ARM Cross-Compiler" as cross
-        component "BeagleBone Kernel Headers" as kernel_headers
+        component "BeagleBone Black Kernel Headers" as kernel_headers
         component "Build System" as build_system
     }
     
@@ -87,11 +87,11 @@ rectangle "Build Environment (Docker)" as build_env <<build>> {
 }
 
 ' Target device
-rectangle "BeagleBone AI (Target)" as target <<target>> {
+rectangle "BeagleBone Black (Target)" as target <<target>> {
     rectangle "Kernel Space" as kernel_space {
         component "Loaded Kernel Modules" as loaded_modules
         file "/dev/hexapod" as dev_hexapod
-        file "/dev/i2c-3" as dev_i2c
+        file "/dev/i2c-2" as dev_i2c
     }
     
     rectangle "User Space" as user_space {
@@ -154,9 +154,9 @@ end note
 note right of tools
   <b>Docker-based Build Environment:</b>
   • ARM GCC 8+ cross-compiler
-  • BeagleBone kernel headers
+  • BeagleBone Black kernel headers
   • Host: x86_64 Linux
-  • Target: ARM Cortex-A15
+  • Target: ARM Cortex-A8
 end note
 
 note right of deploy
@@ -172,7 +172,7 @@ note right of hardware
   • 2× PCA9685 PWM controllers (I2C)
   • MPU6050 IMU sensor (I2C)
   • 18 servo motors (3 per leg × 6 legs)
-  • BeagleBone AI processor
+  • BeagleBone Black processor
 end note
 
 ' Build pipeline activity diagram
@@ -216,10 +216,10 @@ legend right
   <b>Build Environment:</b>
   • Debian-based Docker container
   • ARM cross-compiler toolchain (GCC 8+)
-  • BeagleBone AI kernel headers
+  • BeagleBone Black kernel headers
   
   <b>Target Hardware:</b>
-  • BeagleBone AI (ARM Cortex-A15)
+  • BeagleBone Black (ARM Cortex-A8)
   • I2C-connected peripherals
   • 18 PWM-controlled servos
 endlegend

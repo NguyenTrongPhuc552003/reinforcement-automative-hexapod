@@ -22,7 +22,7 @@
 
 title <font size=20><b>Hexapod Robot - Hardware States</b></font>
 left header Version 1.0 - Reinforcement Learning Autonomous Hexapod
-right header BeagleBone AI Platform
+right header BeagleBone Black Platform
 
 skinparam {
     stateBackgroundColor #E2F0FF
@@ -178,7 +178,7 @@ legend right
   • 18× Servo Motors (3 per leg × 6 legs)
   
   <b>I2C Communication:</b>
-  • Bus 3 on BeagleBone AI (SCL: P9_19, SDA: P9_20)
+  • Bus 2 on BeagleBone Black (SCL: P9_19, SDA: P9_20)
   • 100kHz I2C clock frequency
   
   <b>Signal Legend:</b>

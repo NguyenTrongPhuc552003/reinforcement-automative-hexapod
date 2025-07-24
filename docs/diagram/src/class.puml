@@ -23,7 +23,7 @@
 
 title <font size=20><b>Hexapod Robot - Class Diagram</b></font>
 left header Version 1.0 - Reinforcement Learning Autonomous Hexapod
-right header BeagleBone AI Platform
+right header BeagleBone Black Platform
 
 skinparam class {
     BackgroundColor<<Actuators>> #D1C4E9
@@ -422,7 +422,7 @@ CalibrationManager ..> CalibrationException : throws
 UltrasonicSensor "1" *-- "1" UltrasonicSensor::Measurement : produces
 
 ' Constants and Configuration
-note top of Hexapod : Hardware Bus:\nI2C Bus 3 on BeagleBone AI\nSCL: P9_19, SDA: P9_20, 100kHz\n\nPhysical Organization:\n- 6 legs with 3 servos each\n- 2 PWM controllers (primary/secondary)\n- 1 IMU for orientation sensing
+note top of Hexapod : Hardware Bus:\nI2C Bus 2 on BeagleBone Black\nSCL: P9_19, SDA: P9_20, 100kHz\n\nPhysical Organization:\n- 6 legs with 3 servos each\n- 2 PWM controllers (primary/secondary)\n- 1 IMU for orientation sensing
 
 legend right
   <b>Hexapod Robot - Class Legend</b>
@@ -435,7 +435,7 @@ legend right
   <back:#FFE6E6>■</back> Control Layer
   
   <b>Hardware Bus:</b>
-  I2C Bus 3 on BeagleBone AI
+  I2C Bus 2 on BeagleBone Black
   SCL: P9_19, SDA: P9_20, 100kHz
   
   <b>Physical Organization:</b>
