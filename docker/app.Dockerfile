@@ -5,7 +5,8 @@ FROM debian:bullseye
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Global build environment variables
-ENV KERNEL_VERSION=4.14.108-ti-r144 \
+# ENV KERNEL_VERSION=4.14.108-ti-r144
+ENV KERNEL_VERSION=5.10.168-ti-r71 \
     DEBIAN_VERSION=bullseye \
     GCC_VERSION=10 \
     ARCH=arm \

@@ -48,7 +48,7 @@ RUN ln -s /usr/bin/arm-linux-gnueabihf-gcc-${GCC_VERSION} /usr/bin/arm-linux-gnu
 WORKDIR /build
 RUN mkdir -p /build/kernel /build/module /build/deploy
 
-# Download and extract kernel headers for BeagleBone AI
+# Download and extract kernel headers for BeagleBone Black
 RUN echo "Downloading kernel headers for version ${KERNEL_VERSION}" && \
     wget https://rcn-ee.com/repos/debian/pool/main/l/linux-upstream/${KERNEL_HEADER} && \
     dpkg -x ${KERNEL_HEADER} /build/kernel && \
