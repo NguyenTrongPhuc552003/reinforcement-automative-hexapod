@@ -22,7 +22,7 @@
 
 title <font size=20><b>Hexapod Robot - Component Architecture</b></font>
 left header Version 1.0 - Reinforcement Learning Autonomous Hexapod
-right header BeagleBone AI Platform
+right header BeagleBone Black Platform
 
 skinparam {
     componentStyle rectangle
@@ -212,8 +212,8 @@ legend right
   <b>Hexapod Robot - Component Architecture with CPG</b>
   --
   <b>Hardware Components:</b>
-  • BeagleBone AI (ARM Cortex-A15)
-  • 2× PCA9685 PWM Controllers
+  • BeagleBone Black
+  • 2x PCA9685 PWM Controllers
   • MPU6050 IMU Sensor
   • ADXL345 Accelerometer (alternative)
   • HC-SR04 Ultrasonic Sensor

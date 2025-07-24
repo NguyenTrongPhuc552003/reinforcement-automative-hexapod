@@ -37,7 +37,7 @@ If PyTD3 reinforcement learning module is installed:
 
 ## System Integration
 These utilities are designed to work with:
-- BeagleBone AI hardware platform
+- BeagleBone Black hardware platform
 - Debian-based Linux distributions  
 - I2C hardware interface
 - GPIO control systems
@@ -59,4 +59,4 @@ sudo ./install.sh -r && sudo ./install.sh
 For technical support:
 - Check system logs: `journalctl -u hexapod`
 - Review hardware connections
-- Verify I2C functionality: `i2cdetect -r 1`
+- Verify I2C functionality: `i2cdetect -r 2`

@@ -1,3 +1,22 @@
+/*
+ * Hexapod Project - A Reinforcement Learning-based Autonomous Hexapod
+ * Copyright (C) 2025  Nguyen Trong Phuc
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+
 /**
  * @file pca9685.c
  * @brief Kernel-space driver for the PCA9685 PWM controller
@@ -282,24 +301,24 @@ int pca9685_init(void)
     mutex_lock(&pca9685_state.lock);
 
     /* Primary controller */
-    pca9685_state.controllers[0].client = i2c_new_dummy(adapter, PCA9685_I2C_ADDR_1);
-    if (!pca9685_state.controllers[0].client)
+    pca9685_state.controllers[0].client = i2c_new_dummy_device(adapter, PCA9685_I2C_ADDR_1);
+    if (IS_ERR(pca9685_state.controllers[0].client))
     {
         pr_err("PCA9685: Failed to create primary I2C client\n");
         mutex_unlock(&pca9685_state.lock);
         i2c_put_adapter(adapter);
-        return -ENOMEM;
+        return PTR_ERR(pca9685_state.controllers[0].client);
     }
 
     /* Secondary controller */
-    pca9685_state.controllers[1].client = i2c_new_dummy(adapter, PCA9685_I2C_ADDR_2);
-    if (!pca9685_state.controllers[1].client)
+    pca9685_state.controllers[1].client = i2c_new_dummy_device(adapter, PCA9685_I2C_ADDR_2);
+    if (IS_ERR(pca9685_state.controllers[1].client))
     {
         pr_err("PCA9685: Failed to create secondary I2C client\n");
         i2c_unregister_device(pca9685_state.controllers[0].client);
         mutex_unlock(&pca9685_state.lock);
         i2c_put_adapter(adapter);
-        return -ENOMEM;
+        return PTR_ERR(pca9685_state.controllers[1].client);
     }
 
     /* Safe to release adapter now that both clients are created */

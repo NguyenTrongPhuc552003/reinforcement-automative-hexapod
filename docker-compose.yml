@@ -4,9 +4,10 @@ version: '3.8'
 x-common-settings: &common-settings
   restart: "no"
   environment: &common-env
-    KERNEL_VERSION: 4.14.108-ti-r144
-    DEBIAN_VERSION: buster
-    GCC_VERSION: 8
+    # KERNEL_VERSION: 4.14.108-ti-r144
+    KERNEL_VERSION: 5.10.168-ti-r71    
+    DEBIAN_VERSION: bullseye
+    GCC_VERSION: 10
 
 services:
   # Build environment for kernel modules

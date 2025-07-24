@@ -511,9 +511,9 @@ set -e
 echo "Installing Hexapod Robot Control System..."
 
 # Copy kernel module
-if [ -f "lib/modules/4.14.108-ti-r144/extra/hexapod_driver.ko" ]; then
+if [ -f "lib/modules/5.10.168-ti-r71/extra/hexapod_driver.ko" ]; then
     mkdir -p "/lib/modules/$(uname -r)/extra"
-    cp "lib/modules/4.14.108-ti-r144/extra/hexapod_driver.ko" "/lib/modules/$(uname -r)/extra/"
+    cp "lib/modules/5.10.168-ti-r71/extra/hexapod_driver.ko" "/lib/modules/$(uname -r)/extra/"
     depmod -a
     modprobe hexapod_driver || true
     echo "hexapod_driver" >> /etc/modules || true
@@ -600,8 +600,8 @@ user space applications, and reinforcement learning modules.
 rm -rf %{buildroot}
 
 # Install kernel module
-mkdir -p %{buildroot}/lib/modules/4.14.108-ti-r144/extra
-cp lib/modules/4.14.108-ti-r144/extra/* %{buildroot}/lib/modules/4.14.108-ti-r144/extra/
+mkdir -p %{buildroot}/lib/modules/5.10.168-ti-r71/extra
+cp lib/modules/5.10.168-ti-r71/extra/* %{buildroot}/lib/modules/5.10.168-ti-r71/extra/
 
 # Install executables
 mkdir -p %{buildroot}/usr/local/bin
@@ -612,7 +612,7 @@ mkdir -p %{buildroot}/opt/hexapod
 cp opt/hexapod/* %{buildroot}/opt/hexapod/
 
 %files
-/lib/modules/4.14.108-ti-r144/extra/*
+/lib/modules/5.10.168-ti-r71/extra/*
 /usr/local/bin/*
 /opt/hexapod/*
 
@@ -654,9 +654,9 @@ create_package_structure() {
     log "${YELLOW}" "Creating package structure..."
     
     # Create kernel module directory
-    mkdir -p "${build_dir}/lib/modules/4.14.108-ti-r144/extra"
+    mkdir -p "${build_dir}/lib/modules/5.10.168-ti-r71/extra"
     if [ -f "${DEPLOY_DIR}/hexapod_driver.ko" ]; then
-        cp "${DEPLOY_DIR}/hexapod_driver.ko" "${build_dir}/lib/modules/4.14.108-ti-r144/extra/"
+        cp "${DEPLOY_DIR}/hexapod_driver.ko" "${build_dir}/lib/modules/5.10.168-ti-r71/extra/"
         log "${GREEN}" "Copied kernel module"
     else
         log "${YELLOW}" "Warning: No kernel module found in deploy directory"
@@ -689,7 +689,7 @@ create_package_structure() {
     fi
     
     # Create README files in appropriate directories
-    cat > "${build_dir}/lib/modules/4.14.108-ti-r144/extra/README.md" << EOF
+    cat > "${build_dir}/lib/modules/5.10.168-ti-r71/extra/README.md" << EOF
 # Hexapod Driver Kernel Module
 
 This directory contains the hexapod_driver.ko kernel module for the Hexapod Robot Control System.

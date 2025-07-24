@@ -13,7 +13,8 @@ ENV DEBIAN_VERSION=bullseye \
     INSTALL_DIR=/build/deploy
 
 # Kernel headers package name and its version
-ENV KERNEL_VERSION=4.14.108-ti-r144
+# ENV KERNEL_VERSION=4.14.108-ti-r144
+ENV KERNEL_VERSION=5.10.168-ti-r71
 ENV KERNEL_DIR=/build/kernel/usr/src/linux-headers-${KERNEL_VERSION} \
     KERNEL_HEADER=linux-headers-${KERNEL_VERSION}_1${DEBIAN_VERSION}_armhf.deb
 
@@ -47,7 +48,7 @@ RUN ln -s /usr/bin/arm-linux-gnueabihf-gcc-${GCC_VERSION} /usr/bin/arm-linux-gnu
 WORKDIR /build
 RUN mkdir -p /build/kernel /build/module /build/deploy
 
-# Download and extract kernel headers for BeagleBone AI
+# Download and extract kernel headers for BeagleBone Black
 RUN echo "Downloading kernel headers for version ${KERNEL_VERSION}" && \
     wget https://rcn-ee.com/repos/debian/pool/main/l/linux-upstream/${KERNEL_HEADER} && \
     dpkg -x ${KERNEL_HEADER} /build/kernel && \

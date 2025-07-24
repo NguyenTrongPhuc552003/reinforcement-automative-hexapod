@@ -22,7 +22,7 @@
 
 title <font size=20><b>Hexapod Robot - Operation Sequence</b></font>
 left header Version 1.0 - Reinforcement Learning Autonomous Hexapod
-right header BeagleBone AI Platform
+right header BeagleBone Black Platform
 
 skinparam {
     SequenceArrowThickness 1.5

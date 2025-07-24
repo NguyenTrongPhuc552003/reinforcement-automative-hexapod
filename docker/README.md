@@ -116,7 +116,7 @@ For development, you can mount your source code as volumes:
 
 ```bash
 docker run -v $(pwd)/app:/app -v $(pwd)/driver:/driver \
-  --privileged --device=/dev/i2c-1 \
+  --privileged --device=/dev/i2c-2 \
   hexapod-driver
 ```
 

@@ -33,7 +33,7 @@
 /* ADXL345 I2C addresses */
 #define ADXL345_I2C_ADDR1 0x1D /* ALT ADDRESS pin connected to VCC */
 #define ADXL345_I2C_ADDR2 0x53 /* ALT ADDRESS pin connected to GND (default) */
-#define ADXL345_I2C_BUS 3 /* Default I2C bus for ADXL345 on BeagleBone */
+#define ADXL345_I2C_BUS 2      /* Default I2C bus for ADXL345 on BeagleBone */
 
 /* ADXL345 register addresses */
 #define ADXL345_REG_DEVID 0x00          /* Device ID */

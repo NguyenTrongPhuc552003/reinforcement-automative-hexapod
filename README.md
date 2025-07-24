@@ -4,9 +4,10 @@
 
 A comprehensive control system for a six-legged robot (hexapod) using BeagleBone AI (or Black), featuring both kernel-space drivers and user-space applications with reinforcement learning capabilities.
 
-<p align="center">
-  <img src="resource/beagleboneAI/overview.jpg" alt="Hexapod Robot">
-</p>
+<div align="center">
+  <img src="docs/component/beaglebone/AI/overview.png" width="300"/>
+  <img src="docs/component/beaglebone/Black/overview.png" width="300"/>
+</div>
 
 ## Project Overview
 
@@ -59,8 +60,8 @@ The system follows a layered architecture with hardware abstraction. For visual 
 
 ## Prerequisites
 
-- BeagleBone AI (or Black) running Linux 4.14+
-- I2C enabled (bus 3)
+- BeagleBone Black (Rev C) running Linux Kernel 5.10+
+- I2C enabled (bus 2)
 - 18x servo motors (MG996R recommended)
 - 1x MPU6050 IMU sensor
 - 2x PCA9685 PWM controllers
@@ -72,7 +73,7 @@ The system follows a layered architecture with hardware abstraction. For visual 
    ./scripts/build.sh -b driver
    ```
 
-2. Install the kernel module on BeagleBone AI:
+2. Install the kernel module on BeagleBone Black:
    ```bash
    ./install.sh
    ```
@@ -82,7 +83,7 @@ The system follows a layered architecture with hardware abstraction. For visual 
    ./scripts/build.sh -b app
    ```
 
-4. Run the test utility on BeagleBone AI:
+4. Run the test utility on BeagleBone Black:
    ```bash
    ./test_servo
    ```

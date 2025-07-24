@@ -31,7 +31,7 @@
 #include <linux/types.h>
 
 /* I2C configuration */
-#define MPU6050_I2C_BUS 3     /* BeagleBone I2C3 */
+#define MPU6050_I2C_BUS 2     /* BeagleBone Black I2C2 */
 #define MPU6050_I2C_ADDR 0x68 /* Default I2C address for MPU6050 */
 
 /* IMU data structure - self-contained definition */

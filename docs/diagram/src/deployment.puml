@@ -23,7 +23,7 @@
 
 title <font size=20><b>Hexapod Robot - System Deployment Architecture</b></font>
 left header Version 1.0 - Reinforcement Learning Autonomous Hexapod
-right header BeagleBone AI Platform
+right header BeagleBone Black Platform
 
 skinparam page {
     size A4
@@ -46,10 +46,10 @@ skinparam node {
 }
 
 ' Hardware Layer
-node "BeagleBone AI Hardware Platform" <<hardware>> {
-    component "TI AM5729 Sitara\nARM Cortex-A15\n1.5GHz Dual-Core\n1GB DDR3L RAM" as processor
-    component "16GB eMMC\nStorage" as storage
-    component "I2C Bus 3\n(0x40, 0x41, 0x53, 0x68)" as i2c_bus
+node "BeagleBone Black Hardware Platform" <<hardware>> {
+    component "TI AM3358 Sitara\nARM Cortex-A8\n1GHz Single-Core\n512MB DDR3 RAM" as processor
+    component "4GB eMMC\nStorage" as storage
+    component "I2C Bus 2\n(0x40, 0x41, 0x68)" as i2c_bus
     component "GPIO Pins\n(P9_11-P9_42)" as gpio_pins
     component "PWM Subsystem" as pwm_sys
 }
@@ -171,9 +171,9 @@ td3bridge -.-> hexapod_api : "Optional Integration"
 ' Notes with technical details
 note right of processor
   Processing Power:
-  - ARM Cortex-A15 @ 1.5GHz
-  - 1GB DDR3L RAM
-  - 16GB eMMC Storage
+  - ARM Cortex-A8 @ 1GHz
+  - 512MB DDR3 RAM
+  - 4GB eMMC Storage
   - Real-time capabilities
 end note
 
@@ -217,7 +217,7 @@ legend right
   <b>Hexapod Robot - Deployment Legend</b>
   --
   <b>Hardware Components:</b>
-  • BeagleBone AI
+  • BeagleBone Black
   • PCA9685 PWM Controllers
   • MPU6050 IMU Sensor
   • ADXL345 Accelerometer
