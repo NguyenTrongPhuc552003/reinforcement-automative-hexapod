@@ -266,12 +266,12 @@ int mpu6050_init_with_config(const struct mpu6050_config *config)
     }
 
     /* Create I2C client */
-    client = i2c_new_dummy(adapter, MPU6050_I2C_ADDR);
-    if (!client)
+    client = i2c_new_dummy_device(adapter, MPU6050_I2C_ADDR);
+    if (IS_ERR(client))
     {
         pr_err("MPU6050: Failed to create I2C client\n");
         i2c_put_adapter(adapter);
-        return -ENOMEM;
+        return PTR_ERR(client);
     }
 
     /* Initialize hardware */

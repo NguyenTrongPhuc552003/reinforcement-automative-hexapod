@@ -129,12 +129,12 @@ int adxl345_init(int i2c_bus)
     }
 
     /* Create a new I2C client device */
-    i2c_client = i2c_new_device(i2c_adap, &board_info);
-    if (!i2c_client)
+    i2c_client = i2c_new_client_device(i2c_adap, &board_info);
+    if (IS_ERR(i2c_client))
     {
         pr_err("ADXL345: Failed to create I2C client\n");
         i2c_put_adapter(i2c_adap);
-        return -ENODEV;
+        return PTR_ERR(i2c_client);
     }
 
     /* Store device information */
@@ -148,12 +148,12 @@ int adxl345_init(int i2c_bus)
         i2c_unregister_device(i2c_client);
 
         board_info.addr = ADXL345_I2C_ADDR1;
-        i2c_client = i2c_new_device(i2c_adap, &board_info);
-        if (!i2c_client)
+        i2c_client = i2c_new_client_device(i2c_adap, &board_info);
+        if (IS_ERR(i2c_client))
         {
             pr_err("ADXL345: Failed to create I2C client with alt address\n");
             i2c_put_adapter(i2c_adap);
-            return -ENODEV;
+            return PTR_ERR(i2c_client);
         }
 
         g_adxl345_dev.i2c_addr = ADXL345_I2C_ADDR1;

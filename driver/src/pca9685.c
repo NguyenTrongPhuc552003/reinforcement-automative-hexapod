@@ -282,24 +282,24 @@ int pca9685_init(void)
     mutex_lock(&pca9685_state.lock);
 
     /* Primary controller */
-    pca9685_state.controllers[0].client = i2c_new_dummy(adapter, PCA9685_I2C_ADDR_1);
-    if (!pca9685_state.controllers[0].client)
+    pca9685_state.controllers[0].client = i2c_new_dummy_device(adapter, PCA9685_I2C_ADDR_1);
+    if (IS_ERR(pca9685_state.controllers[0].client))
     {
         pr_err("PCA9685: Failed to create primary I2C client\n");
         mutex_unlock(&pca9685_state.lock);
         i2c_put_adapter(adapter);
-        return -ENOMEM;
+        return PTR_ERR(pca9685_state.controllers[0].client);
     }
 
     /* Secondary controller */
-    pca9685_state.controllers[1].client = i2c_new_dummy(adapter, PCA9685_I2C_ADDR_2);
-    if (!pca9685_state.controllers[1].client)
+    pca9685_state.controllers[1].client = i2c_new_dummy_device(adapter, PCA9685_I2C_ADDR_2);
+    if (IS_ERR(pca9685_state.controllers[1].client))
     {
         pr_err("PCA9685: Failed to create secondary I2C client\n");
         i2c_unregister_device(pca9685_state.controllers[0].client);
         mutex_unlock(&pca9685_state.lock);
         i2c_put_adapter(adapter);
-        return -ENOMEM;
+        return PTR_ERR(pca9685_state.controllers[1].client);
     }
 
     /* Safe to release adapter now that both clients are created */
