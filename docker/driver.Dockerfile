@@ -13,6 +13,7 @@ ENV DEBIAN_VERSION=bullseye \
     INSTALL_DIR=/build/deploy
 
 # Kernel headers package name and its version
+# ENV KERNEL_VERSION=4.14.108-ti-r144
 ENV KERNEL_VERSION=5.10.168-ti-r71
 ENV KERNEL_DIR=/build/kernel/usr/src/linux-headers-${KERNEL_VERSION} \
     KERNEL_HEADER=linux-headers-${KERNEL_VERSION}_1${DEBIAN_VERSION}_armhf.deb
