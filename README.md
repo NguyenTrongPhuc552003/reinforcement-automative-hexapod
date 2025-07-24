@@ -4,9 +4,10 @@
 
 A comprehensive control system for a six-legged robot (hexapod) using BeagleBone AI (or Black), featuring both kernel-space drivers and user-space applications with reinforcement learning capabilities.
 
-<p align="center">
-  <img src="resource/beagleboneAI/overview.jpg" alt="Hexapod Robot">
-</p>
+<div align="center">
+  <img src="resource/beaglebone/AI/overview.png" width="300"/>
+  <img src="resource/beaglebone/Black/overview.png" width="300"/>
+</div>
 
 ## Project Overview
 
