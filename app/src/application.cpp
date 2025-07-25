@@ -65,7 +65,7 @@ namespace application
          * @brief Construct a new Application Implementation object
          */
         ApplicationImpl()
-            : m_currentMode(ControlMode::MANUAL),
+            : m_currentMode(ControlMode::AUTONOMOUS),
               m_hexapod(nullptr),
               m_controller(nullptr),
               m_ultrasonicSensor(nullptr),
@@ -74,7 +74,7 @@ namespace application
               m_totalFrameTime(0),
               m_maxFrameTime(0),
               m_performanceMonitoringEnabled(true),
-              m_autonomousMode(false),
+              m_autonomousMode(true),
               m_obstacleDetectionEnabled(true),
               m_safeDistance(30.0f), // 30cm safe distance
               m_lastObstacleCheck(std::chrono::high_resolution_clock::now()),
