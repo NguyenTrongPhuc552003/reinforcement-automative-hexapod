@@ -1,0 +1,22 @@
+[Unit]
+Description=Hexapod Robot Autonomous Control Service
+After=network.target systemd-modules-load.service
+Requires=systemd-modules-load.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=root
+Environment=HEXAPOD_MODE=autonomous
+Environment=HEXAPOD_OBSTACLE_DETECTION=enabled
+ExecStartPre=/sbin/modprobe hexapod_driver
+ExecStart=/usr/local/bin/hexapod_app
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+TimeoutStartSec=30
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target
