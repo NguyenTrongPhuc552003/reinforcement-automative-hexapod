@@ -104,7 +104,7 @@ Individual tests:
 ```bash
 ./test_servo       # Test servo control
 ./test_mpu6050     # Test IMU sensor
-./test_movement    # Test movements like tripod, ripple, ...
+./test_autonomous  # Test autonomous navigation
 ./test_calibration # Test servos offset for each leg
 ./test_hcsr04      # Test HC-SR04 sensor
 ```
