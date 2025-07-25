@@ -36,13 +36,41 @@ fi
 mkdir -p /var/log/hexapod
 chmod 755 /var/log/hexapod
 
+# Install and enable systemd service
+if command -v systemctl &> /dev/null; then
+    echo "Installing hexapod systemd service..."
+    systemctl daemon-reload
+    systemctl enable hexapod.service
+    
+    # Start service with delay to ensure proper initialization
+    echo "Starting hexapod autonomous service..."
+    systemctl start hexapod.service || echo "Service start failed - check: journalctl -u hexapod"
+    
+    # Verify service is running
+    sleep 2
+    if systemctl is-active --quiet hexapod.service; then
+        echo "Hexapod autonomous service is running"
+    else
+        echo "Service may need manual start: systemctl start hexapod"
+    fi
+else
+    echo "Systemd not available - manual start required"
+fi
+
 echo "Hexapod Robot Control System installed successfully!"
 echo ""
-echo "Quick start:"
-echo "  sudo hexapod_app             - Run main application"
-echo "  sudo test_mpu6050            - Test IMU sensor"
-echo "  sudo /opt/hexapod/monitor.sh - Monitor system"
+echo "Autonomous Mode Commands:"
+echo "  systemctl status hexapod       - Check autonomous service status"
+echo "  systemctl stop hexapod         - Stop autonomous mode"
+echo "  systemctl restart hexapod      - Restart autonomous navigation"
+echo "  journalctl -u hexapod -f       - View live logs"
 echo ""
-echo "For more information, see /usr/local/bin/README.md"
+echo "Manual Mode Commands:"
+echo "  sudo hexapod_app               - Run manually (stops service)"
+echo "  sudo test_mpu6050              - Test IMU sensor"
+echo "  sudo /opt/hexapod/monitor.sh   - Monitor system"
+echo ""
+echo "Robot will automatically start moving and avoiding obstacles!"
+echo "Use 'systemctl stop hexapod' to stop autonomous movement"
 
 exit 0

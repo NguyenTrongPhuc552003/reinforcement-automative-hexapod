@@ -3,6 +3,21 @@ set -e
 
 echo "Removing Hexapod Robot Control System..."
 
+# Stop and disable systemd service
+if command -v systemctl &> /dev/null; then
+    if systemctl is-active --quiet hexapod.service; then
+        echo "Stopping hexapod autonomous service..."
+        systemctl stop hexapod.service
+    fi
+    
+    if systemctl is-enabled --quiet hexapod.service; then
+        echo "Disabling hexapod service..."
+        systemctl disable hexapod.service
+    fi
+    
+    systemctl daemon-reload
+fi
+
 # Stop any running hexapod processes
 echo "Stopping hexapod processes..."
 pkill -f hexapod_app || true
