@@ -474,7 +474,7 @@ EOF
     local output_file="${output_dir}/${package_name}_${version}_armhf.deb"
     
     log "${YELLOW}" "Building Debian package..."
-    if dpkg-deb --root-owner-group --build "${build_dir}" "${output_file}"; then
+    if dpkg-deb --root-owner-group -Zgzip --build "${build_dir}" "${output_file}"; then
         log "${GREEN}" "Debian package created: ${output_file}"
         
         # Create a symlink for easy access
@@ -680,6 +680,40 @@ create_package_structure() {
         cp "${DEPLOY_DIR}/monitor.sh" "${build_dir}/opt/hexapod/"
     fi
     log "${GREEN}" "Copied utilities"
+    
+    # Create systemd service directory and copy service file
+    mkdir -p "${build_dir}/etc/systemd/system"
+    if [ -f "${PACKAGE_DIR}/etc/systemd/system/hexapod.service" ]; then
+        cp "${PACKAGE_DIR}/etc/systemd/system/hexapod.service" "${build_dir}/etc/systemd/system/"
+        log "${GREEN}" "Copied systemd service file"
+    else
+        # Create systemd service file inline if not found
+        cat > "${build_dir}/etc/systemd/system/hexapod.service" << 'EOF'
+[Unit]
+Description=Hexapod Robot Autonomous Control Service
+After=network.target systemd-modules-load.service
+Requires=systemd-modules-load.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=root
+Environment=HEXAPOD_MODE=autonomous
+Environment=HEXAPOD_OBSTACLE_DETECTION=enabled
+ExecStartPre=/sbin/modprobe hexapod_driver
+ExecStart=/usr/local/bin/hexapod_app --autonomous --obstacle-detection
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+TimeoutStartSec=30
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF
+        log "${YELLOW}" "Created systemd service file inline"
+    fi
     
     # Copy PyTD3 files if they exist
     if [ -d "${DEPLOY_DIR}/pytd3" ]; then
