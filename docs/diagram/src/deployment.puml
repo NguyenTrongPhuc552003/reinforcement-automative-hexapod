@@ -95,7 +95,7 @@ node "User Space Applications" <<userspace>> {
         component "test_servo\nServo Testing" as test_servo
         component "test_mpu6050\nIMU Testing" as test_mpu6050
         component "test_adxl345\nAccel Testing" as test_adxl345
-        component "test_movement\nGait Testing" as test_movement
+        component "test_movement\nCPG Testing" as test_movement
         component "test_balance\nBalance Testing" as test_balance
         component "test_calibration\nCalibration Tool" as test_calibration
         component "test_hcsr04\nUltrasonic Testing" as test_hcsr04
@@ -103,8 +103,8 @@ node "User Space Applications" <<userspace>> {
     
     package "Core Libraries" {
         component "Hexapod API\nhexapod.hpp/cpp\nHardware Interface" as hexapod_api
-        component "Kinematics Engine\nForward/Inverse IK\n3D Calculations" as kinematics
-        component "Gait Controller\nTripod/Wave/Ripple\nMovement Patterns" as gait_controller
+        component "CPG Trajectory Generator\nBiological Motion\n3D Path Planning" as trajectory_gen
+        component "CPG Gait Controller\nTripod/Wave/Ripple\nOscillator Patterns" as cpg_gait_controller
         component "Calibration Manager\nOffset Management\nFile I/O" as calibration
         component "Ultrasonic Sensor\nDistance Measurement\nObstacle Detection" as ultrasonic_api
         component "Common Utilities\nTerminal/Signal/Performance" as common_utils
@@ -157,8 +157,8 @@ test_hcsr04 <|-- ultrasonic_api
 
 ' Application Layer Dependencies
 app_layer <|-- controller_layer
-controller_layer <|-- gait_controller
-controller_layer <|-- kinematics
+controller_layer <|-- cpg_gait_controller
+controller_layer <|-- trajectory_gen
 controller_layer <|-- calibration
 controller_layer <|-- ultrasonic_api
 controller_layer <|-- common_utils
@@ -195,13 +195,13 @@ note bottom of device_node
   - HEXAPOD_IOCTL_SET_SENSOR_TYPE
 end note
 
-note top of gait_controller
-  Supported Gaits:
-  - Tripod: Fast, stable
-  - Wave: Slow, smooth
-  - Ripple: Medium speed
-  - Adaptive parameters
-  - Obstacle avoidance
+note top of cpg_gait_controller
+  CPG Network Features:
+  - Biological Hopf oscillators
+  - Phase-coupled coordination
+  - Adaptive gait transitions
+  - Real-time balance feedback
+  - Autonomous obstacle response
 end note
 
 note bottom of ultrasonic_api

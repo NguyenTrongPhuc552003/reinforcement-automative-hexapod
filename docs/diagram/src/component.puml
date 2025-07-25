@@ -57,12 +57,6 @@ package "User Space Applications" <<UserSpace>> {
         component [CPG Oscillators] <<Control>> as CPGOsc
         component [CPG Parameters] <<Control>> as CPGParams
         component [Autonomous Navigation] <<Control>> as AutoNav
-    }
-    
-    package "Legacy Motion Control" {
-        component [Legacy Controller] <<Control>> as Ctrl
-        component [Gait Generator] <<Control>> as GaitGen
-        component [Kinematics Engine] <<Control>> as KinematicsEng
         component [Balance System] <<Control>> as BalSys
     }
     
@@ -105,8 +99,7 @@ package "External Systems" <<External>> {
 
 ' Application Layer Connections
 AppCtrl --> UI : "user commands"
-AppCtrl --> CPGCtrl : "CPG robot control"
-AppCtrl --> Ctrl : "legacy robot control"
+AppCtrl --> CPGCtrl : "robot control"
 AppCtrl --> CalMgr : "calibration data"
 
 ' CPG Control Layer Connections
@@ -118,14 +111,6 @@ CPGCtrl --> AutoNav : "autonomous control"
 AutoNav --> USSensor : "obstacle detection"
 AutoNav --> BalSys : "balance feedback"
 BalSys --> CPGCtrl : "tilt compensation"
-
-' Legacy Control Layer Connections
-Ctrl --> GaitGen : "gait parameters"
-Ctrl --> BalSys : "balance control"
-Ctrl --> HexHW : "hardware commands"
-GaitGen --> KinematicsEng : "position calculations"
-KinematicsEng --> HexHW : "joint angles"
-BalSys --> HexHW : "tilt corrections"
 
 ' Hardware Interface Connections
 HexHW --> KernelDriver : "/dev/hexapod\nIOCTL calls"
@@ -161,7 +146,7 @@ PkgMgr --> KernelDriver : "deployment\npackaging"
 
 ' Common Utilities Connections
 CommonUtil --> AppCtrl : "terminal mgmt,\nperformance monitoring"
-CommonUtil --> Ctrl : "error reporting,\nvalidation"
+CommonUtil --> CPGCtrl : "error reporting,\nvalidation"
 
 ' Notes for key components
 note right of CPGCtrl

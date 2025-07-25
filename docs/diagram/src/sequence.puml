@@ -49,9 +49,7 @@ box "Software Layer" #EEEEFF
     participant "CPG Controller" as CPGCtrl
     participant "CPG Network" as CPGNet
     participant "CPG Oscillators" as CPGOsc
-    participant "Legacy Controller" as Controller
-    participant "Gait Generator" as Gait
-    participant "Kinematics Engine" as Kinematics
+    participant "Balance System" as BalSys
     participant "Hardware Interface" as Hexapod
 endbox
 
@@ -104,14 +102,10 @@ group "System Initialization"
     CPGCtrl --> App: CPG controller ready
     deactivate CPGCtrl
     
-    App -> Controller: initialize legacy motion controller
-    activate Controller
-    Controller -> Gait: initialize gait patterns
-    activate Gait
-    Gait --> Controller: gait patterns ready
-    deactivate Gait
-    Controller --> App: controller ready
-    deactivate Controller
+    App -> BalSys: initialize balance system
+    activate BalSys
+    BalSys --> App: balance system ready
+    deactivate BalSys
     
     ' Center legs at startup - important hardware interaction
     App -> Hexapod: position legs in centered pose
@@ -142,92 +136,54 @@ group "Operation Cycle"
         User -> App: input command (key press)
         activate App
         
-        alt Autonomous Mode (CPG-based)
-            App -> CPGCtrl: update(deltaTime)
-            activate CPGCtrl
-            
-            CPGCtrl -> CPGNet: update network state
-            activate CPGNet
-            
-            loop for each oscillator (6 legs)
-                CPGNet -> CPGOsc: update oscillator with coupling
-                activate CPGOsc
-                note right of CPGOsc: Hopf oscillator dynamics:\nẋ = (μ - r²)x - ωy + coupling_input\nẏ = (μ - r²)y + ωx
-                CPGOsc --> CPGNet: oscillator output
-                deactivate CPGOsc
-            end
-            
-            CPGNet -> CPGNet: compute network synchronization
-            CPGNet --> CPGCtrl: network output (joint positions)
-            deactivate CPGNet
-            
-            CPGCtrl -> CPGCtrl: apply balance feedback from IMU
-            
-            loop for each leg (6 legs)
-                CPGCtrl -> Hexapod: setLegPosition(leg, cpg_angles)
-                activate Hexapod
-                
-                Hexapod -> Driver: ioctl(HEXAPOD_IOCTL_SET_LEG, leg_cmd)
-                activate Driver
-                note right of Driver: Driver converts CPG outputs\nto PWM timing values
-                
-                Driver -> Hardware: set PWM signals for leg servos
-                activate Hardware
-                note right of Hardware: Biologically-inspired coordination:\n- Phase relationships ensure stability\n- Smooth transitions between gaits\n- Natural obstacle response
-                Hardware --> Driver: PWM signals updated
-                deactivate Hardware
-                
-                Driver --> Hexapod: leg position updated
-                deactivate Driver
-                Hexapod --> CPGCtrl: position set
-                deactivate Hexapod
-            end
-            
-            CPGCtrl -> CPGCtrl: handle autonomous navigation
-            note right of CPGCtrl: Process ultrasonic sensor data\nfor obstacle avoidance
-            
-            CPGCtrl --> App: CPG cycle complete
-            deactivate CPGCtrl
-            
-        else Manual Mode (Legacy)
-            App -> Controller: update(input, deltaTime)
-            activate Controller
-            
-            Controller -> Gait: update(direction, speed)
-            activate Gait
-            
-            loop for each leg (6 legs)
-                Gait -> Gait: calculate leg trajectory
-                Gait -> Kinematics: calculate joint angles
-                activate Kinematics
-                Kinematics --> Gait: joint angles for leg
-                deactivate Kinematics
-                
-                ' Hardware interaction for leg movement
-                Gait -> Hexapod: setLegPosition(leg, angles)
-                activate Hexapod
-                
-                Hexapod -> Driver: ioctl(HEXAPOD_IOCTL_SET_LEG, leg_cmd)
-                activate Driver
-                note right of Driver: Driver converts angular positions\nto PWM timing values
-                
-                Driver -> Hardware: set PWM signals for leg servos
-                activate Hardware
-                note right of Hardware: Three servo signals updated per leg:\n- Hip servo: horizontal movement\n- Knee servo: vertical bend\n- Ankle servo: foot angle
-                Hardware --> Driver: PWM signals updated
-                deactivate Hardware
-                
-                Driver --> Hexapod: leg position updated
-                deactivate Driver
-                Hexapod --> Gait: position set
-                deactivate Hexapod
-            end
-            
-            Gait --> Controller: gait cycle updated
-            deactivate Gait
-            Controller --> App: control cycle complete
-            deactivate Controller
+        App -> CPGCtrl: update(deltaTime, input)
+        activate CPGCtrl
+        
+        CPGCtrl -> CPGNet: update network state
+        activate CPGNet
+        
+        loop for each oscillator (6 legs)
+            CPGNet -> CPGOsc: update oscillator with coupling
+            activate CPGOsc
+            note right of CPGOsc: Hopf oscillator dynamics:\nẋ = (μ - r²)x - ωy + coupling_input\nẏ = (μ - r²)y + ωx
+            CPGOsc --> CPGNet: oscillator output
+            deactivate CPGOsc
         end
+        
+        CPGNet -> CPGNet: compute network synchronization
+        CPGNet --> CPGCtrl: network output (joint positions)
+        deactivate CPGNet
+        
+        CPGCtrl -> BalSys: apply balance feedback from IMU
+        activate BalSys
+        BalSys --> CPGCtrl: balance corrections
+        deactivate BalSys
+        
+        loop for each leg (6 legs)
+            CPGCtrl -> Hexapod: setLegPosition(leg, cpg_angles)
+            activate Hexapod
+            
+            Hexapod -> Driver: ioctl(HEXAPOD_IOCTL_SET_LEG, leg_cmd)
+            activate Driver
+            note right of Driver: Driver converts CPG outputs\nto PWM timing values
+            
+            Driver -> Hardware: set PWM signals for leg servos
+            activate Hardware
+            note right of Hardware: Biologically-inspired coordination:\n- Phase relationships ensure stability\n- Smooth transitions between gaits\n- Natural obstacle response
+            Hardware --> Driver: PWM signals updated
+            deactivate Hardware
+            
+            Driver --> Hexapod: leg position updated
+            deactivate Driver
+            Hexapod --> CPGCtrl: position set
+            deactivate Hexapod
+        end
+        
+        CPGCtrl -> CPGCtrl: handle autonomous navigation
+        note right of CPGCtrl: Process ultrasonic sensor data\nfor obstacle avoidance
+        
+        CPGCtrl --> App: CPG cycle complete
+        deactivate CPGCtrl
         
         App -> App: update telemetry display
         

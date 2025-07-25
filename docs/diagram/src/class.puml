@@ -127,20 +127,24 @@ package "Hardware Layer" {
     }
 }
 
-package "Motion Control Layer" {
-    class Kinematics <<Singleton>> {
-        -pImpl: unique_ptr<KinematicsImpl>
-        +{static}getInstance(): Kinematics&
-        +forwardKinematics(angles: LegPosition&, position: Point3D&): bool
-        +inverseKinematics(position: Point3D&, angles: LegPosition&): bool
-        +isPositionReachable(position: Point3D&): bool
+package "CPG-Based Motion Control Layer" {
+    class "cpg::TrajectoryGenerator" <<Singleton>> {
+        -pImpl: unique_ptr<TrajectoryGeneratorImpl>
+        +{static}getInstance(): TrajectoryGenerator&
+        +generateLegTrajectory(legId: size_t, cpgOutput: double, phaseInfo: PhaseInfo&): LegPosition
+        +computeStepHeight(phase: double, maxHeight: double): double
+        +interpolateStance(startPos: Point3D, endPos: Point3D, progress: double): Point3D
         +setLegParameters(legIndex: int, coxa: double, femur: double, tibia: double): bool
+        +validateTrajectory(trajectory: vector<Point3D>&): bool
     }
 
-    class KinematicsImpl <<PIMPL>> {
+    class "cpg::TrajectoryGeneratorImpl" <<PIMPL>> {
         -initialized: bool
         -legParams: array<LegParameters, 6>
-        +setLegParameters(legIndex: int, coxa: double, femur: double, tibia: double): bool
+        -stepHeight: double
+        -stanceWidth: double
+        +computeBezierTrajectory(controlPoints: vector<Point3D>, t: double): Point3D
+        +generateSwingTrajectory(startPos: Point3D, endPos: Point3D, phase: double): Point3D
     }
 
     class Point3D {
@@ -159,96 +163,14 @@ package "Motion Control Layer" {
         +{static}cross(a: Point3D, b: Point3D): Point3D
     }
 
-    class Gait {
-        -pImpl: unique_ptr<GaitImpl>
-        +init(hexapod: Hexapod&, params: GaitParameters): bool
-        +update(time: double, direction: double, speed: double): bool
-        +centerLegs(): bool
-        +getParameters(): GaitParameters
-        +setParameters(params: GaitParameters): bool
-        +calculateLegPhase(legIndex: int, time: double): double
-        +isInitialized(): bool
-    }
-
-    class GaitImpl <<PIMPL>> {
-        -hexapod: Hexapod&
-        -params: GaitParameters
-        -initialized: bool
-        -defaultPositions: vector<Position>
-        -phaseOffsets: vector<double>
-        -legStates: vector<int>
-        +updateLegPosition(legIndex: int, phase: double, direction: double, speed: double): bool
-        +computeLegTrajectory(position: Point3D&, phase: double, direction: double, speed: double): void
-    }
-
-    class GaitParameters {
-        +type: GaitType
-        +stepHeight: double
-        +stepLength: double
-        +cycleTime: double
-        +dutyFactor: double
-        +validate(): bool
-    }
-
-    enum GaitType {
-        TRIPOD
-        WAVE
-        RIPPLE
-    }
-}
-
-package "Control Layer" {
-    class Controller <<Controller>> {
-        -pImpl: unique_ptr<ControllerImpl>
-        +Controller(hexapod: Hexapod&)
-        +init(): bool
-        +processKey(key: char): bool
-        +update(): bool
-        +getState(): ControllerState
-        +setSpeed(speed: double): void
-        +setDirection(direction: double): void
-        +setHeight(height: double): void
-        +setTilt(tiltX: double, tiltY: double): void
-        +setGaitType(type: GaitType): void
-        +setBalanceEnabled(enabled: bool): void
-        +isBalanceEnabled(): bool
-        +switchImuSensor(sensorType: SensorType): void
-        +getCurrentImuSensor(): SensorType
-        +validateServoMapping(): bool
-        +testServoConnectivity(): bool
-    }
-
-    class ControllerImpl <<PIMPL>> {
-        -hexapod: Hexapod&
-        -gait: Gait
-        -speed: double
-        -direction: double
-        -height: double
-        -tiltX: double
-        -tiltY: double
-        -state: ControllerState
-        -balanceConfig: BalanceConfig
-        -ultrasonicSensor: unique_ptr<UltrasonicSensor>
-        -currentSensorType: SensorType
-        +applyTilt(): bool
-        +processBalanceAdjustments(): bool
-        +calculateTilt(imuData: ImuData&, roll: double&, pitch: double&): void
-        +readUltrasonicDistance(): double
-        +processObstacleAvoidance(distance: double): bool
-    }
-
-    enum ControllerState {
-        IDLE
-        WALKING
-        ROTATING
-        TILTING
-    }
-
-    struct BalanceConfig {
-        +max_tilt_adjustment: double
-        +response_factor: double
-        +deadzone: double
-        +enabled: bool
+    struct PhaseInfo {
+        +phase: double
+        +isStancePhase: bool
+        +stanceProgress: double
+        +swingProgress: double
+        +gaitType: string
+        +PhaseInfo()
+        +PhaseInfo(ph: double, stance: bool, gaitT: string)
     }
 }
 
@@ -470,7 +392,6 @@ package "Application Layer" {
         -currentMode: ControlMode
         -hexapod: unique_ptr<Hexapod>
         -controller: unique_ptr<cpg::Controller>
-        -legacyController: unique_ptr<Controller>
         -keyCommands: unordered_map<char, KeyCommand>
         -frameCount: unsigned long
         -totalFrameTime: unsigned long
@@ -593,25 +514,15 @@ LegPosition *-- JointAngles
 Hexapod "1" *-- "1" ImuData : reads
 ImuData -- SensorType
 
-Kinematics ||--|| KinematicsImpl : pImpl
-Kinematics ..> Point3D : uses
-Kinematics ..> LegPosition : transforms
-
-Gait ||--|| GaitImpl : pImpl
-GaitImpl --> Hexapod : controls
-Gait "1" *-- "1" GaitParameters : configured_by
-GaitParameters -- GaitType
-
-Controller ||--|| ControllerImpl : pImpl
-ControllerImpl --> Hexapod : controls
-ControllerImpl "1" *-- "1" Gait : uses
-ControllerImpl "1" *-- "1" UltrasonicSensor : optional
-ControllerImpl "1" *-- "1" BalanceConfig : configured_by
-ControllerImpl -- ControllerState
+cpg::TrajectoryGenerator ||--|| cpg::TrajectoryGeneratorImpl : pImpl
+cpg::TrajectoryGenerator ..> Point3D : uses
+cpg::TrajectoryGenerator ..> LegPosition : generates
+cpg::TrajectoryGenerator ..> PhaseInfo : processes
 
 ' CPG System Relationships
 cpg::Controller "1" *-- "1" cpg::Network : manages
 cpg::Controller "1" *-- "1" cpg::Parameters : uses
+cpg::Controller "1" *-- "1" cpg::TrajectoryGenerator : uses
 cpg::Controller --> Hexapod : controls
 cpg::Controller ..> ImuData : processes
 
@@ -619,6 +530,7 @@ cpg::Network "1" *-- "6" cpg::Oscillator : contains
 cpg::Network "1" *-- "*" cpg::ConnectionTopology : manages
 cpg::Network ..> cpg::NetworkState : produces
 cpg::Network ..> cpg::NetworkOutput : generates
+cpg::Network ..> PhaseInfo : produces
 
 cpg::Oscillator "1" *-- "1" cpg::OscillatorState : maintains
 cpg::Oscillator "1" *-- "1" cpg::OscillatorParams : configured_by
@@ -631,16 +543,14 @@ cpg::Parameters "1" *-- "1" cpg::NetworkParams : manages
 
 cpg::ConnectionTopology "1" *-- "1" cpg::CouplingParams : configured_by
 
-' Enhanced Application Relationships
+' Application Relationships
 ApplicationImpl "1" *-- "1" cpg::Controller : primary_controller
-ApplicationImpl "1" *-- "1" Controller : legacy_support
 ApplicationImpl --> cpg::oscillator_utils : uses
 ApplicationImpl --> cpg::network_utils : uses
 
 Application ||--|| ApplicationImpl : pImpl
 ApplicationImpl "1" *-- "1" Hexapod : manages
 ApplicationImpl "1" *-- "1" cpg::Controller : uses
-ApplicationImpl "1" *-- "1" Controller : legacy_support
 Application -- ControlMode
 Application -- ExecutionResult
 
