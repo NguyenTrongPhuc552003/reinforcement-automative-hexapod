@@ -11,8 +11,8 @@ public:
     float getDistance(); // Returns distance in cm
 
 private:
-    static const int TRIG_PIN = 12; // P8_12
-    static const int ECHO_PIN = 11; // P8_11
+    static const int TRIG_PIN = 45; // P8_11
+    static const int ECHO_PIN = 44; // P8_12
 
     bool exportGPIO(int pin);
     bool setDirection(int pin, const char *direction);
