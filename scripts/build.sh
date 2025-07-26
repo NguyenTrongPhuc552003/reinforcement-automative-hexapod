@@ -653,15 +653,6 @@ create_package_structure() {
     
     log "${YELLOW}" "Creating package structure..."
     
-    # Create kernel module directory
-    mkdir -p "${build_dir}/lib/modules/5.10.168-ti-r71/extra"
-    if [ -f "${DEPLOY_DIR}/hexapod_driver.ko" ]; then
-        cp "${DEPLOY_DIR}/hexapod_driver.ko" "${build_dir}/lib/modules/5.10.168-ti-r71/extra/"
-        log "${GREEN}" "Copied kernel module"
-    else
-        log "${YELLOW}" "Warning: No kernel module found in deploy directory"
-    fi
-    
     # Create executables directory
     mkdir -p "${build_dir}/usr/local/bin"
     for exe in "${DEPLOY_DIR}"/hexapod_app "${DEPLOY_DIR}"/test_*; do
@@ -691,8 +682,7 @@ create_package_structure() {
         cat > "${build_dir}/etc/systemd/system/hexapod.service" << 'EOF'
 [Unit]
 Description=Hexapod Robot Autonomous Control Service
-After=network.target systemd-modules-load.service
-Requires=systemd-modules-load.service
+After=network.target
 StartLimitIntervalSec=0
 
 [Service]
@@ -700,8 +690,8 @@ Type=simple
 User=root
 Environment=HEXAPOD_MODE=autonomous
 Environment=HEXAPOD_OBSTACLE_DETECTION=enabled
-ExecStartPre=/sbin/modprobe hexapod_driver
-ExecStart=/usr/local/bin/hexapod_app --autonomous --obstacle-detection
+ExecStartPre=/bin/sleep 2
+ExecStart=/usr/local/bin/hexapod_app
 Restart=always
 RestartSec=5
 StandardOutput=journal
@@ -723,27 +713,6 @@ EOF
     fi
     
     # Create README files in appropriate directories
-    cat > "${build_dir}/lib/modules/5.10.168-ti-r71/extra/README.md" << EOF
-# Hexapod Driver Kernel Module
-
-This directory contains the hexapod_driver.ko kernel module for the Hexapod Robot Control System.
-
-## Installation
-The kernel module is automatically loaded during package installation.
-
-## Manual Installation
-\`\`\`bash
-sudo insmod hexapod_driver.ko
-\`\`\`
-
-## Removal
-\`\`\`bash
-sudo rmmod hexapod_driver
-\`\`\`
-
-Version: ${version}
-EOF
-    
     cat > "${build_dir}/usr/local/bin/README.md" << EOF
 # Hexapod Executables
 
@@ -753,13 +722,9 @@ This directory contains the main applications and test programs for the Hexapod 
 - **hexapod_app**: Main hexapod control application
 
 ## Test Programs
-- **test_mpu6050**: Test MPU6050 IMU sensor
-- **test_adxl345**: Test ADXL345 accelerometer
+- **test_hcsr04**: Test ultrasonic sensor
 - **test_servo**: Test servo motor control
 - **test_movement**: Test basic movement patterns
-- **test_balance**: Test balance control system
-- **test_calibration**: Servo calibration utility
-- **test_hcsr04**: Test ultrasonic sensor
 
 ## Usage
 Run any program with:
