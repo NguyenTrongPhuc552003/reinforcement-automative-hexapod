@@ -30,12 +30,12 @@ int main()
 
     if (!sensor.init())
     {
-        std::cerr << "❌ Failed to initialize ultrasonic sensor" << std::endl;
+        std::cerr << "Failed to initialize ultrasonic sensor" << std::endl;
         return -1;
     }
 
-    std::cout << "✅ Ultrasonic sensor initialized successfully" << std::endl;
-    std::cout << "\n🔍 Starting distance measurements..." << std::endl;
+    std::cout << "Ultrasonic sensor initialized successfully" << std::endl;
+    std::cout << "\nStarting distance measurements..." << std::endl;
     std::cout << "Press Ctrl+C to stop\n" << std::endl;
 
     int measurement_count = 0;
@@ -71,32 +71,31 @@ int main()
             if (distance < 20.0)
             {
                 obstacle_count++;
-                std::cout << " 🚫 OBSTACLE DETECTED! (< 20cm)";
+                std::cout << " OBSTACLE DETECTED! (< 20cm)";
             }
             else if (distance < 30.0)
             {
-                std::cout << " ⚠️  WARNING ZONE (< 30cm)";
+                std::cout << " WARNING ZONE (< 30cm)";
             }
             else if (distance < 50.0)
             {
-                std::cout << " ✅ SAFE DISTANCE";
+                std::cout << " SAFE DISTANCE";
             }
             else
             {
-                std::cout << " 🌐 CLEAR PATH";
+                std::cout << " CLEAR PATH";
             }
         }
         else
         {
             error_readings++;
-            std::cout << "❌ ERROR: Timeout or invalid reading";
+            std::cout << "ERROR: Timeout or invalid reading";
         }
 
         // Show statistics every 10 readings
         if (measurement_count % 10 == 0)
         {
-            std::cout << "\n";
-            std::cout << "📊 Statistics after " << measurement_count << " readings:" << std::endl;
+            std::cout << "\nStatistics after " << measurement_count << " readings:" << std::endl;
             std::cout << "   Valid readings: " << valid_readings << " (" 
                       << (valid_readings * 100.0 / measurement_count) << "%)" << std::endl;
             std::cout << "   Error readings: " << error_readings << " (" 
@@ -118,7 +117,7 @@ int main()
 
     sensor.cleanup();
     
-    std::cout << "\n📈 Final Statistics:" << std::endl;
+    std::cout << "\nFinal Statistics:" << std::endl;
     std::cout << "Total measurements: " << measurement_count << std::endl;
     std::cout << "Success rate: " << (valid_readings * 100.0 / measurement_count) << "%" << std::endl;
     if (valid_readings > 0)

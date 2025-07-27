@@ -96,11 +96,19 @@ private:
         uint16_t tibia;
     };
 
-    // Walking positions for each leg in each phase
-    static constexpr ServoPositions standing_position_ = {1500, 1500, 1500}; // HOME
-    static constexpr ServoPositions lift_position_ = {1500, 1400, 1300};     // Leg lifted
-    static constexpr ServoPositions forward_position_ = {1700, 1500, 1500};  // Step forward (FL, MR, BL)
-    static constexpr ServoPositions back_position_ = {1400, 1500, 1500};     // Step back
+    // Servo positions for natural, stable walking - FIXED servo direction for forward movement
+    static constexpr ServoPositions standing_position_ = {1500, 1550, 1450}; // Stable stance - slight body lift
+    static constexpr ServoPositions lift_position_ = {1500, 1350, 1200};     // Higher leg lift for clearance
+    static constexpr ServoPositions forward_position_ = {1750, 1580, 1480};  // Forward step - FIXED direction (higher value = forward)
+    static constexpr ServoPositions back_position_ = {1250, 1580, 1480};     // Back step - FIXED direction (lower value = backward)
+
+    // Enhanced sideways positions for effective obstacle avoidance
+    static constexpr ServoPositions sideways_lift = {1500, 1300, 1150};  // High lift for obstacle clearance
+    static constexpr ServoPositions sideways_reach = {1680, 1400, 1300}; // Extended sideways reach for avoidance
+
+    // Smoother turning positions
+    static constexpr ServoPositions turn_left_pos = {1400, 1550, 1450};  // Gradual left turn
+    static constexpr ServoPositions turn_right_pos = {1600, 1550, 1450}; // Gradual right turn
 
     // Tripod groups for alternating gait
     static constexpr uint8_t tripod_group_a_[3] = {1, 2, 5}; // FL, MR, BL

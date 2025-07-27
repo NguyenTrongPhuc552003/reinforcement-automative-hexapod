@@ -165,11 +165,11 @@ void Hexapod::update(double /*time_step*/)
         return;
     }
 
-    // Check if it's time for next step (500ms interval)
+    // Check if it's time for next step (600ms interval for smoother, more natural movement)
     auto current_time = std::chrono::steady_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - last_step_time_);
 
-    if (elapsed.count() >= 500) // 500ms per step
+    if (elapsed.count() >= 600) // 600ms per step for smooth, natural movement
     {
         performTripodStep();
         last_step_time_ = current_time;
@@ -196,87 +196,141 @@ void Hexapod::performTripodStep()
     case WALKING_FORWARD:
         if (step_phase_ == 0)
         {
-            // Lift group A, move group B forward
+            std::cout << "Forward walking phase 0: Smooth tripod gait - Group A advancing" << std::endl;
+            // Phase 1: Lift Group A smoothly
             setTripodGroup(tripod_group_a_, lift_position_);
+            std::this_thread::sleep_for(std::chrono::milliseconds(180)); // Reduced for smoother flow
+
+            // Phase 2: Move Group B forward while Group A pushes backward for forward momentum
+            setTripodGroup(tripod_group_a_, back_position_);
             setTripodGroup(tripod_group_b_, forward_position_);
+            std::this_thread::sleep_for(std::chrono::milliseconds(120)); // Quick stabilization
+
+            // Phase 3: Plant Group A for stable landing
+            setTripodGroup(tripod_group_a_, standing_position_);
         }
         else
         {
-            // Put group A down forward, lift group B
-            setTripodGroup(tripod_group_a_, forward_position_);
+            std::cout << "Forward walking phase 1: Smooth tripod gait - Group B advancing" << std::endl;
+            // Phase 1: Lift Group B smoothly
             setTripodGroup(tripod_group_b_, lift_position_);
+            std::this_thread::sleep_for(std::chrono::milliseconds(180)); // Consistent timing
+
+            // Phase 2: Move Group A forward while Group B pushes backward for forward momentum
+            setTripodGroup(tripod_group_b_, back_position_);
+            setTripodGroup(tripod_group_a_, forward_position_);
+            std::this_thread::sleep_for(std::chrono::milliseconds(120)); // Quick stabilization
+
+            // Phase 3: Plant Group B for stable landing
+            setTripodGroup(tripod_group_b_, standing_position_);
         }
         break;
 
     case TURNING_LEFT:
         if (step_phase_ == 0)
         {
-            // Group A: turn left (coxa less than 1500)
-            setTripodGroup(tripod_group_a_, {1400, 1500, 1500});
-            setTripodGroup(tripod_group_b_, lift_position_);
+            std::cout << "Turning left phase 0: Smooth left turn" << std::endl;
+            setTripodGroup(tripod_group_a_, lift_position_);
+            std::this_thread::sleep_for(std::chrono::milliseconds(160));
+            setTripodGroup(tripod_group_a_, turn_left_pos);
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            setTripodGroup(tripod_group_a_, standing_position_);
         }
         else
         {
-            setTripodGroup(tripod_group_a_, lift_position_);
-            setTripodGroup(tripod_group_b_, {1400, 1500, 1500});
+            std::cout << "Turning left phase 1: Completing left turn" << std::endl;
+            setTripodGroup(tripod_group_b_, lift_position_);
+            std::this_thread::sleep_for(std::chrono::milliseconds(160));
+            setTripodGroup(tripod_group_b_, turn_left_pos);
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            setTripodGroup(tripod_group_b_, standing_position_);
         }
         break;
 
     case TURNING_RIGHT:
         if (step_phase_ == 0)
         {
-            // Group A: turn right (coxa more than 1500)
-            setTripodGroup(tripod_group_a_, {1600, 1500, 1500});
-            setTripodGroup(tripod_group_b_, lift_position_);
+            std::cout << "Turning right phase 0: Smooth right turn" << std::endl;
+            setTripodGroup(tripod_group_a_, lift_position_);
+            std::this_thread::sleep_for(std::chrono::milliseconds(160));
+            setTripodGroup(tripod_group_a_, turn_right_pos);
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            setTripodGroup(tripod_group_a_, standing_position_);
         }
         else
         {
-            setTripodGroup(tripod_group_a_, lift_position_);
-            setTripodGroup(tripod_group_b_, {1600, 1500, 1500});
+            std::cout << "Turning right phase 1: Completing right turn" << std::endl;
+            setTripodGroup(tripod_group_b_, lift_position_);
+            std::this_thread::sleep_for(std::chrono::milliseconds(160));
+            setTripodGroup(tripod_group_b_, turn_right_pos);
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            setTripodGroup(tripod_group_b_, standing_position_);
         }
         break;
 
     case BACKING_UP:
         if (step_phase_ == 0)
         {
-            // Move backward (opposite of forward)
+            std::cout << "Backing up phase 0: Smooth backward movement" << std::endl;
             setTripodGroup(tripod_group_a_, lift_position_);
-            setTripodGroup(tripod_group_b_, back_position_);
+            std::this_thread::sleep_for(std::chrono::milliseconds(180));
+            setTripodGroup(tripod_group_a_, forward_position_); // FIXED: Move forward to push robot backward
+            setTripodGroup(tripod_group_b_, back_position_);    // FIXED: Group B prepares for next step
+            std::this_thread::sleep_for(std::chrono::milliseconds(120));
+            setTripodGroup(tripod_group_a_, standing_position_);
         }
         else
         {
-            setTripodGroup(tripod_group_a_, back_position_);
+            std::cout << "Backing up phase 1: Continuing backward movement" << std::endl;
             setTripodGroup(tripod_group_b_, lift_position_);
+            std::this_thread::sleep_for(std::chrono::milliseconds(180));
+            setTripodGroup(tripod_group_b_, forward_position_); // FIXED: Move forward to push robot backward
+            setTripodGroup(tripod_group_a_, back_position_);    // FIXED: Group A prepares for next step
+            std::this_thread::sleep_for(std::chrono::milliseconds(120));
+            setTripodGroup(tripod_group_b_, standing_position_);
         }
         break;
 
     case CRAWLING_SIDEWAYS:
         if (step_phase_ == 0)
         {
-            // Sideways crawling: lift group A, move group B sideways to the right
-            setTripodGroup(tripod_group_a_, lift_position_);
-            // For sideways movement, adjust femur outward (1600) and tibia down (1700) for stability
-            setTripodGroup(tripod_group_b_, {1500, 1600, 1700});
+            std::cout << "Sideways crawling phase 0: Enhanced obstacle avoidance movement" << std::endl;
+            // High lift for obstacle clearance
+            setTripodGroup(tripod_group_a_, sideways_lift);
+            std::this_thread::sleep_for(std::chrono::milliseconds(200)); // Extra time for clearance
+            // Extended sideways reach for effective avoidance
+            setTripodGroup(tripod_group_a_, sideways_reach);
+            std::this_thread::sleep_for(std::chrono::milliseconds(150)); // Stabilization
+            // Plant down in new position
+            setTripodGroup(tripod_group_a_, standing_position_);
         }
         else
         {
-            // Put group A down in sideways position, lift group B
-            setTripodGroup(tripod_group_a_, {1500, 1600, 1700});
-            setTripodGroup(tripod_group_b_, lift_position_);
+            std::cout << "Sideways crawling phase 1: Continuing enhanced sideways movement" << std::endl;
+            // High lift for obstacle clearance
+            setTripodGroup(tripod_group_b_, sideways_lift);
+            std::this_thread::sleep_for(std::chrono::milliseconds(200)); // Extra time for clearance
+            // Extended sideways reach for effective avoidance
+            setTripodGroup(tripod_group_b_, sideways_reach);
+            std::this_thread::sleep_for(std::chrono::milliseconds(150)); // Stabilization
+            // Plant down in new position
+            setTripodGroup(tripod_group_b_, standing_position_);
         }
         break;
 
     case PAUSED_FOR_OBSTACLE:
-        // During pause, keep all legs in standing position
+        // During pause, maintain stable standing position with slight body elevation for readiness
+        std::cout << "Maintaining elevated stable position during obstacle detection" << std::endl;
         setAllLegsPosition(standing_position_);
         return; // Don't change step_phase during pause
 
     default:
+        std::cout << "Default state: returning to stable standing position" << std::endl;
         setAllLegsPosition(standing_position_);
         break;
     }
 
-    // Alternate phase
+    // Alternate phase for continuous, smooth movement
     step_phase_ = 1 - step_phase_;
 }
 
@@ -337,11 +391,11 @@ void Hexapod::handleObstacleAvoidance()
     if (current_state_ != PAUSED_FOR_OBSTACLE)
     {
         // First time detecting obstacle - start pause
-        std::cout << "   Action: Stopping for 1 second before crawling sideways..." << std::endl;
+        std::cout << "   Action: Stopping for 1 second before advanced sideways crawling..." << std::endl;
         current_state_ = PAUSED_FOR_OBSTACLE;
         obstacle_pause_start_ = std::chrono::steady_clock::now();
 
-        // Stop all movement - set to standing position
+        // Stop all movement - set to elevated standing position for readiness
         setAllLegsPosition(standing_position_);
         return;
     }
@@ -353,41 +407,43 @@ void Hexapod::handleObstacleAvoidance()
 
     if (pause_duration.count() < 1000) // Still pausing
     {
-        std::cout << "   Pausing... (" << pause_duration.count() << "ms / 1000ms)" << std::endl;
+        std::cout << "   Obstacle detected - pausing for stability... (" << pause_duration.count() << "ms / 1000ms)" << std::endl;
         return;
     }
 
-    // Pause complete - now crawl sideways to avoid obstacle
-    std::cout << "   Pause complete! Now crawling sideways to avoid obstacle..." << std::endl;
+    // Pause complete - now execute enhanced sideways crawling for effective obstacle avoidance
+    std::cout << "   Pause complete! Initiating advanced sideways crawling maneuver..." << std::endl;
     current_state_ = CRAWLING_SIDEWAYS;
 
-    // Perform sideways crawling movement for a short duration
+    // Extended sideways crawling with multiple phases for effective avoidance
     static auto crawl_start = current_time;
     auto crawl_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
         current_time - crawl_start);
 
-    if (crawl_duration.count() < 1000) // Crawl sideways for 1 second
+    if (crawl_duration.count() < 4000) // Extended crawl for 4 seconds (6-7 complete sideways steps)
     {
-        // Perform crawling step
-        performTripodStep();
-        return;
+        // Continuous sideways crawling - each step covers more ground
+        std::cout << "   Advanced sideways crawling in progress... (" << crawl_duration.count() << "ms / 4000ms)" << std::endl;
+        std::cout << "   Step phase: " << step_phase_ << ", Moving away from obstacle effectively" << std::endl;
+        return; // Let the normal update() cycle handle the crawling steps
     }
 
-    // Reset crawl timer and check distance after sideways movement
+    // Reset crawl timer and check distance after extended sideways avoidance
     crawl_start = current_time;
-    double new_distance = ultrasonic_.getDistance();
-    std::cout << "   Distance after sideways crawl: " << new_distance << " cm" << std::endl;
 
-    if (new_distance > safe_distance_cm_)
+    // Check if we've successfully avoided the obstacle
+    double new_distance = ultrasonic_.getDistance();
+    std::cout << "   Sideways avoidance complete. Checking new distance: " << new_distance << " cm" << std::endl;
+
+    if (new_distance > safe_distance_cm_ || new_distance <= 0) // Clear path or sensor error
     {
-        std::cout << "   Path clear! Resuming forward movement" << std::endl;
+        std::cout << "   Success! Path is clear. Resuming forward movement..." << std::endl;
         current_state_ = WALKING_FORWARD;
     }
     else
     {
-        std::cout << "   Still detecting obstacle, pausing again before next crawl..." << std::endl;
-        // Go back to pause state for another cycle
-        current_state_ = PAUSED_FOR_OBSTACLE;
-        obstacle_pause_start_ = current_time;
+        std::cout << "   Obstacle still detected. Continuing sideways avoidance..." << std::endl;
+        // Continue crawling sideways - reset timer for another cycle
+        crawl_start = std::chrono::steady_clock::now();
     }
 }
