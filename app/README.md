@@ -2,15 +2,14 @@
 
 ## Overview
 
-This application provides a comprehensive control system for a 6-legged (hexapod) robot. It implements advanced kinematics, gait generation, sensor integration, and balance control to enable smooth and adaptive movement capabilities.
+This application provides a comprehensive control system for a 6-legged (hexapod) robot. It implements direct servo control, predefined movement patterns, obstacle detection, and autonomous navigation to enable smooth and reliable movement capabilities.
 
 ## Features
 
-- **Multiple Gait Patterns**: Tripod, Wave, and Ripple gaits with configurable parameters
-- **Adaptive Movement**: Dynamic speed, direction, and height control
-- **Sensor Integration**: Support for MPU6050 (6-axis) and ADXL345 (3-axis) IMU sensors
-- **Obstacle Detection**: Ultrasonic sensor integration with automatic avoidance
-- **Balance Mode**: Self-stabilizing capability using IMU feedback
+- **Simple Movement Patterns**: Tripod gait with predefined servo positions
+- **Direct Servo Control**: Manual position control without complex kinematics
+- **Obstacle Detection**: HC-SR04 ultrasonic sensor integration with automatic avoidance
+- **Autonomous Operation**: Real-time obstacle avoidance without IMU dependency
 - **Interactive Control**: Real-time keyboard control interface
 - **Diagnostics**: Performance monitoring and hardware verification tools
 - **Calibration**: Joint calibration system for mechanical adjustments
@@ -20,8 +19,8 @@ This application provides a comprehensive control system for a 6-legged (hexapod
 The application follows a modular, object-oriented design with several key components:
 
 - **Hexapod**: Hardware abstraction layer for the robot platform
-- **Kinematics**: Mathematical model for leg positioning and inverse kinematics
-- **Gait**: Movement pattern generation and coordination
+- **PCA9685**: PWM controller interface for direct servo control
+- **Ultrasonic**: Simple obstacle detection without complex sensor fusion
 - **Controller**: High-level control and command interpretation
 - **Calibration**: Servo calibration management
 - **Application**: Main program and user interface
