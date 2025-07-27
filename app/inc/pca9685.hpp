@@ -2,28 +2,34 @@
 #define PCA9685_HPP
 
 #include <cstdint>
+#include <string>
 
 class PCA9685
 {
 public:
-    static const uint8_t ADDR_1 = 0x40;
-    static const uint8_t ADDR_2 = 0x41;
-    static const int I2C_BUS = 2;
+    static constexpr uint8_t DEFAULT_ADDR_1 = 0x40;
+    static constexpr uint8_t DEFAULT_ADDR_2 = 0x41;
+    static constexpr uint16_t SERVO_MIN_PULSE = 1000;  // us
+    static constexpr uint16_t SERVO_MAX_PULSE = 2000;  // us
+    static constexpr uint16_t SERVO_HOME_PULSE = 1500; // us
+    static constexpr uint8_t CHANNELS_PER_DEVICE = 16;
+    static constexpr uint8_t TOTAL_SERVOS = 18;
 
-    PCA9685(uint8_t address);
+    PCA9685();
     ~PCA9685();
 
     bool init();
-    void setFreq(float freq);
-    void setPWM(uint8_t channel, uint16_t on, uint16_t off);
-    void setServoAngle(uint8_t channel, float angle);
+    void cleanup();
+    bool setServoMicroseconds(uint8_t channel, uint16_t microseconds);
+    bool setAllServosHome();
 
 private:
-    uint8_t addr;
-    int fd;
+    bool initialized_;
+    int device_fd_;
 
-    bool writeReg(uint8_t reg, uint8_t value);
-    uint8_t readReg(uint8_t reg);
+    bool writeRegister(uint8_t device_addr, uint8_t reg, uint8_t value);
+    bool setPWM(uint8_t device_addr, uint8_t channel, uint16_t on, uint16_t off);
+    uint16_t microsecondsToTicks(uint16_t microseconds);
 };
 
-#endif
+#endif // PCA9685_HPP

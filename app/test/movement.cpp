@@ -1,23 +1,21 @@
 #include "hexapod.hpp"
-#include <cstdio>
-#include <unistd.h>
+#include <iostream>
 
 int main()
 {
-    printf("Testing Hexapod Movement...\n");
+    std::cout << "Hexapod Movement Test" << std::endl;
 
-    Hexapod hexapod;
-    if (!hexapod.init())
+    Hexapod robot;
+
+    if (!robot.init())
     {
-        printf("Failed to initialize hexapod\n");
+        std::cerr << "Failed to initialize hexapod" << std::endl;
         return -1;
     }
 
-    printf("Hardware initialized. Press Ctrl+C to stop autonomous mode.\n");
-    sleep(2);
+    std::cout << "Setting servos to home position..." << std::endl;
+    robot.homePosition();
 
-    // Start autonomous walking
-    hexapod.run();
-
+    std::cout << "Movement test completed" << std::endl;
     return 0;
 }

@@ -3,34 +3,134 @@
 
 #include "pca9685.hpp"
 #include "ultrasonic.hpp"
-#include "gait.hpp"
-#include "kinematics.hpp"
+#include <array>
+#include <chrono>
 
 class Hexapod
 {
 public:
+    static constexpr uint8_t NUM_LEGS = 6;
+    static constexpr uint8_t SERVOS_PER_LEG = 3;
+
+    // Servo channel mapping (view from top, hexapod facing forward)
+    // PCA9685 #1 (0x40): FR(0,1,2), FL(3,4,5), MR(6,7,8), unused(9-15)
+    // PCA9685 #2 (0x41): ML(0,1,2), BR(3,4,5), BL(6,7,8), unused(9-15)
+    enum ServoChannels
+    {
+        // Front Right leg (servo indices 0-2 -> PCA9685 #1 channels 0-2)
+        FR_COXA = 0,
+        FR_FEMUR = 1,
+        FR_TIBIA = 2,
+        // Front Left leg (servo indices 3-5 -> PCA9685 #1 channels 3-5)
+        FL_COXA = 3,
+        FL_FEMUR = 4,
+        FL_TIBIA = 5,
+        // Middle Right leg (servo indices 6-8 -> PCA9685 #1 channels 6-8)
+        MR_COXA = 6,
+        MR_FEMUR = 7,
+        MR_TIBIA = 8,
+        // Middle Left leg (servo indices 9-11 -> PCA9685 #2 channels 0-2)
+        ML_COXA = 9,
+        ML_FEMUR = 10,
+        ML_TIBIA = 11,
+        // Back Right leg (servo indices 12-14 -> PCA9685 #2 channels 3-5)
+        BR_COXA = 12,
+        BR_FEMUR = 13,
+        BR_TIBIA = 14,
+        // Back Left leg (servo indices 15-17 -> PCA9685 #2 channels 6-8)
+        BL_COXA = 15,
+        BL_FEMUR = 16,
+        BL_TIBIA = 17
+    };
+
     Hexapod();
     ~Hexapod();
 
     bool init();
-    void run(); // Main autonomous loop
+    void cleanup();
+    bool homePosition();
+
+    // Movement functions
+    bool startAutonomousMovement();
+    void stopMovement();
+    bool moveForward();
+    bool turnLeft();
+    bool turnRight();
+    bool stepBack();
+    bool crawlSideways(); // New sideways crawling movement
+
+    // Update hexapod state (call this in main loop)
+    void update(double time_step);
+
+    // Manual servo control functions
+    bool setServoAngles(uint8_t leg_index, uint16_t coxa_us, uint16_t femur_us, uint16_t tibia_us);
 
 private:
-    PCA9685 pca1;
-    PCA9685 pca2;
-    Ultrasonic ultrasonic;
-    Gait gait;
+    PCA9685 pwm_controller_;
+    Ultrasonic ultrasonic_;
+    bool initialized_;
+    bool moving_;
 
-    static const float OBSTACLE_THRESHOLD; // cm
-    static const float TURN_SPEED;
-    static const float WALK_SPEED;
+    // Movement state
+    enum MovementState
+    {
+        STANDING,
+        WALKING_FORWARD,
+        TURNING_LEFT,
+        TURNING_RIGHT,
+        BACKING_UP,
+        CRAWLING_SIDEWAYS,
+        PAUSED_FOR_OBSTACLE
+    };
 
-    void updateServos();
-    void setLegAngles(int leg, const Angles &angles);
-    void obstacleAvoidance();
+    MovementState current_state_;
+    std::chrono::steady_clock::time_point last_step_time_;
+    std::chrono::steady_clock::time_point obstacle_pause_start_;
+    int step_phase_; // 0 or 1 for tripod gait phases
 
-    // Servo mapping: leg * 3 + joint (0=coxa, 1=femur, 2=tibia)
-    int getServoChannel(int leg, int joint);
+    // Predefined servo positions (in microseconds)
+    struct ServoPositions
+    {
+        uint16_t coxa;
+        uint16_t femur;
+        uint16_t tibia;
+    };
+
+    // Walking positions for each leg in each phase
+    static constexpr ServoPositions standing_position_ = {1500, 1500, 1500}; // HOME
+    static constexpr ServoPositions lift_position_ = {1500, 1400, 1300};     // Leg lifted
+    static constexpr ServoPositions forward_position_ = {1700, 1500, 1500};  // Step forward (FL, MR, BL)
+    static constexpr ServoPositions back_position_ = {1400, 1500, 1500};     // Step back
+
+    // Tripod groups for alternating gait
+    static constexpr uint8_t tripod_group_a_[3] = {1, 2, 5}; // FL, MR, BL
+    static constexpr uint8_t tripod_group_b_[3] = {0, 3, 4}; // FR, ML, BR
+
+    // Distance thresholds for obstacle avoidance
+    static constexpr double obstacle_threshold_cm_ = 20.0;
+    static constexpr double safe_distance_cm_ = 30.0;
+
+    // Map leg index to servo channels
+    struct LegServos
+    {
+        uint8_t coxa_channel;
+        uint8_t femur_channel;
+        uint8_t tibia_channel;
+    };
+
+    std::array<LegServos, 6> leg_servo_mapping_;
+
+    // Initialize servo mapping
+    void initializeServoMapping();
+
+    // Manual movement functions
+    void performTripodStep();
+    void setTripodGroup(const uint8_t group[], const ServoPositions &position);
+    void setAllLegsPosition(const ServoPositions &position);
+
+    // Obstacle avoidance logic
+    bool isObstacleDetected();
+    void handleObstacleAvoidance();
 };
 
-#endif
+#endif // HEXAPOD_HPP

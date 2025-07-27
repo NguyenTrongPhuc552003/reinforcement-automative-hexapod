@@ -1,124 +1,170 @@
 #include "ultrasonic.hpp"
 #include <fcntl.h>
 #include <unistd.h>
-#include <cstdio>
-#include <cstring>
-#include <cstdlib>
-#include <sys/time.h>
+#include <fstream>
+#include <chrono>
+#include <thread>
+#include <iostream>
+#include <time.h>
 
-Ultrasonic::Ultrasonic() {}
-
-Ultrasonic::~Ultrasonic() {}
+Ultrasonic::Ultrasonic() : trigger_pin_(TRIG_PIN), echo_pin_(ECHO_PIN), initialized_(false)
+{
+    // Default constructor using predefined pins
+}
 
 bool Ultrasonic::init()
 {
     // Export GPIO pins
-    if (!exportGPIO(TRIG_PIN) || !exportGPIO(ECHO_PIN))
+    if (!exportGPIO(trigger_pin_) || !exportGPIO(echo_pin_))
     {
+        std::cerr << "Failed to export GPIO pins" << std::endl;
         return false;
     }
 
-    // Set directions
-    if (!setDirection(TRIG_PIN, "out") || !setDirection(ECHO_PIN, "in"))
+    // Set pin directions
+    if (!setGPIODirection(trigger_pin_, "out") || !setGPIODirection(echo_pin_, "in"))
     {
+        std::cerr << "Failed to set GPIO directions" << std::endl;
         return false;
     }
 
-    // Initialize TRIG to LOW
-    writeGPIO(TRIG_PIN, 0);
-    usleep(100000); // 100ms
+    // Set trigger pin to low initially
+    setGPIOValue(trigger_pin_, 0);
 
+    initialized_ = true;
+    std::cout << "HC-SR04 ultrasonic sensor initialized" << std::endl;
     return true;
 }
 
-float Ultrasonic::getDistance()
+double Ultrasonic::getDistance()
 {
-    // Send trigger pulse
-    writeGPIO(TRIG_PIN, 1);
-    usleep(10); // 10us pulse
-    writeGPIO(TRIG_PIN, 0);
+    if (!initialized_)
+        return -1.0;
 
-    // Wait for echo start
-    struct timeval start, end;
-    int timeout = 10000; // 10ms timeout
+    // Send trigger pulse - exactly like working C code
+    setGPIOValue(trigger_pin_, 0);
+    delayMicroseconds(2); // Initial 2us delay
+    setGPIOValue(trigger_pin_, 1);
+    delayMicroseconds(10); // 10us trigger pulse
+    setGPIOValue(trigger_pin_, 0);
 
-    while (readGPIO(ECHO_PIN) == 0 && timeout-- > 0)
+    // Use nanosecond precision timing like C code
+    struct timespec start, end;
+
+    // Wait for echo pin to go HIGH (start of pulse)
+    auto timeout_start = std::chrono::high_resolution_clock::now();
+    while (getGPIOValue(echo_pin_) == 0)
     {
-        usleep(1);
+        if (std::chrono::high_resolution_clock::now() - timeout_start > std::chrono::milliseconds(30))
+        {
+            return -1.0; // Timeout waiting for echo start
+        }
     }
 
-    if (timeout <= 0)
-        return -1; // Timeout
+    // Record pulse start time
+    clock_gettime(CLOCK_MONOTONIC, &start);
 
-    gettimeofday(&start, nullptr);
-
-    // Wait for echo end
-    timeout = 30000; // 30ms timeout
-    while (readGPIO(ECHO_PIN) == 1 && timeout-- > 0)
+    // Wait for echo pin to go LOW (end of pulse)
+    auto timeout_end = std::chrono::high_resolution_clock::now();
+    while (getGPIOValue(echo_pin_) == 1)
     {
-        usleep(1);
+        if (std::chrono::high_resolution_clock::now() - timeout_end > std::chrono::milliseconds(30))
+        {
+            return -1.0; // Timeout waiting for echo end
+        }
     }
 
-    if (timeout <= 0)
-        return -1; // Timeout
+    // Record pulse end time
+    clock_gettime(CLOCK_MONOTONIC, &end);
 
-    gettimeofday(&end, nullptr);
+    // Calculate pulse duration in microseconds
+    long start_ns = start.tv_sec * 1000000000L + start.tv_nsec;
+    long end_ns = end.tv_sec * 1000000000L + end.tv_nsec;
+    long duration_us = (end_ns - start_ns) / 1000;
 
-    // Calculate distance
-    long duration = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec);
-    float distance = duration * 0.034f / 2.0f; // Speed of sound = 34000 cm/s
+    // Calculate distance using exact same formula as C code
+    double distance_cm = (duration_us * 0.034) / 2.0;
 
-    return distance;
+    return distance_cm;
 }
 
-bool Ultrasonic::exportGPIO(int pin)
+void Ultrasonic::cleanup()
 {
-    char command[50];
-    sprintf(command, "echo %d > /sys/class/gpio/export", pin);
-    return system(command) == 0;
+    if (initialized_)
+    {
+        // Unexport GPIO pins
+        unexportGPIO(trigger_pin_);
+        unexportGPIO(echo_pin_);
+        initialized_ = false;
+    }
 }
 
-bool Ultrasonic::setDirection(int pin, const char *direction)
+bool Ultrasonic::exportGPIO(uint8_t pin)
 {
-    char filename[50];
-    sprintf(filename, "/sys/class/gpio/gpio%d/direction", pin);
-
-    int fd = open(filename, O_WRONLY);
-    if (fd < 0)
+    std::ofstream export_file("/sys/class/gpio/export");
+    if (!export_file.is_open())
         return false;
 
-    bool result = write(fd, direction, strlen(direction)) > 0;
-    close(fd);
-    return result;
+    export_file << static_cast<int>(pin);
+    export_file.close();
+
+    // Small delay to allow system to set up the GPIO
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    return true;
 }
 
-bool Ultrasonic::writeGPIO(int pin, int value)
+bool Ultrasonic::unexportGPIO(uint8_t pin)
 {
-    char filename[50];
-    sprintf(filename, "/sys/class/gpio/gpio%d/value", pin);
-
-    int fd = open(filename, O_WRONLY);
-    if (fd < 0)
+    std::ofstream unexport_file("/sys/class/gpio/unexport");
+    if (!unexport_file.is_open())
         return false;
 
-    char val = value ? '1' : '0';
-    bool result = write(fd, &val, 1) == 1;
-    close(fd);
-    return result;
+    unexport_file << static_cast<int>(pin);
+    unexport_file.close();
+    return true;
 }
 
-int Ultrasonic::readGPIO(int pin)
+bool Ultrasonic::setGPIODirection(uint8_t pin, const std::string &direction)
 {
-    char filename[50];
-    sprintf(filename, "/sys/class/gpio/gpio%d/value", pin);
+    std::string direction_path = "/sys/class/gpio/gpio" + std::to_string(pin) + "/direction";
+    std::ofstream direction_file(direction_path);
+    if (!direction_file.is_open())
+        return false;
 
-    int fd = open(filename, O_RDONLY);
-    if (fd < 0)
+    direction_file << direction;
+    direction_file.close();
+    return true;
+}
+
+bool Ultrasonic::setGPIOValue(uint8_t pin, int value)
+{
+    std::string value_path = "/sys/class/gpio/gpio" + std::to_string(pin) + "/value";
+    std::ofstream value_file(value_path);
+    if (!value_file.is_open())
+        return false;
+
+    value_file << value;
+    value_file.close();
+    return true;
+}
+
+int Ultrasonic::getGPIOValue(uint8_t pin)
+{
+    std::string value_path = "/sys/class/gpio/gpio" + std::to_string(pin) + "/value";
+    std::ifstream value_file(value_path);
+    if (!value_file.is_open())
         return -1;
 
-    char val;
-    read(fd, &val, 1);
-    close(fd);
+    int value;
+    value_file >> value;
+    value_file.close();
+    return value;
+}
 
-    return val == '1' ? 1 : 0;
+void Ultrasonic::delayMicroseconds(int us)
+{
+    struct timespec ts;
+    ts.tv_sec = us / 1000000;
+    ts.tv_nsec = (us % 1000000) * 1000;
+    nanosleep(&ts, NULL);
 }
