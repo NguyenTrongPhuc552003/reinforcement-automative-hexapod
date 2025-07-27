@@ -16,8 +16,8 @@ void signalHandler(int signal)
 int main()
 {
     std::cout << "=== HC-SR04 Ultrasonic Test (Updated Logic) ===" << std::endl;
-    std::cout << "TRIG Pin: P8_12 (GPIO45)" << std::endl;
-    std::cout << "ECHO Pin: P8_11 (GPIO44)" << std::endl;
+    std::cout << "TRIG Pin: P8_12 (GPIO44)" << std::endl;
+    std::cout << "ECHO Pin: P8_11 (GPIO45)" << std::endl;
     std::cout << "Obstacle threshold: 20.0 cm" << std::endl;
     std::cout << "Safe distance: 30.0 cm" << std::endl;
     std::cout << "=========================================" << std::endl;
