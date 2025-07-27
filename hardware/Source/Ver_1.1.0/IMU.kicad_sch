@@ -1230,7 +1230,7 @@
 		)
 		(uuid "dca7c35c-0d58-43a7-a2a2-faa480eebc8b")
 	)
-	(global_label "BBAI_I2C_SDA"
+	(global_label "BBBlack_I2C_SDA"
 		(shape bidirectional)
 		(at 144.78 95.25 0)
 		(fields_autoplaced yes)
@@ -1252,7 +1252,7 @@
 			)
 		)
 	)
-	(global_label "BBAI_I2C_SCL"
+	(global_label "BBBlack_I2C_SCL"
 		(shape input)
 		(at 144.78 92.71 0)
 		(fields_autoplaced yes)

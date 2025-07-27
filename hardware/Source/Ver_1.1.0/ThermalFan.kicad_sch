@@ -1877,7 +1877,7 @@
 		)
 		(uuid "fdea8faa-dfa1-4e1a-99f1-5224ab0149c5")
 	)
-	(global_label "BBAI_PWM1A"
+	(global_label "BBBlack_PWM1A"
 		(shape input)
 		(at 121.92 104.14 180)
 		(fields_autoplaced yes)

@@ -1935,7 +1935,7 @@
 		)
 		(uuid "fbd3db39-1173-4e92-bb80-3a02e6c32c62")
 	)
-	(global_label "BBAI_TRIG"
+	(global_label "BBBlack_TRIG"
 		(shape output)
 		(at 97.79 87.63 180)
 		(fields_autoplaced yes)
@@ -2001,7 +2001,7 @@
 			)
 		)
 	)
-	(global_label "BBAI_ECHO"
+	(global_label "BBBlack_ECHO"
 		(shape input)
 		(at 97.79 128.27 180)
 		(fields_autoplaced yes)
