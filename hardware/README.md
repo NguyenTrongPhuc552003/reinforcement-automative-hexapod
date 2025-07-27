@@ -1,4 +1,4 @@
-## 📦 System Components
+## System Components
 
 ### 1. **BeagleBone Black (BBB)**
 BeagleBone Black is used as the central processing unit, running Linux and handling all real-time control logic. It communicates with:
@@ -64,7 +64,7 @@ The HC-SR04 sensor is used to detect obstacles and measure distance:
 
 ---
 
-## 📁 Files and Schematics
+## Files and Schematics
 The full KiCad schematic set includes:
 - `Overview Schematic`
 - `BBBlack.kicad_sch`
@@ -78,7 +78,7 @@ The full KiCad schematic set includes:
 
 ---
 
-## ⚙️ Key Features
+## Key Features
 - 18 DOF hexapod locomotion with coordinated servo control
 - Real-time obstacle detection using HC-SR04
 - Modular design with clean separation of power, control, and sensing
