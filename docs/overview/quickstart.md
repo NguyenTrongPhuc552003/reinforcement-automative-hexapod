@@ -46,9 +46,8 @@ This guide will help you quickly set up and operate the reinforcement learning-e
 ## Hardware Setup
 
 1. Connect the servo controller (PCA9685) to I2C bus
-2. Connect the IMU sensor (MPU6050 or ADXL345) to I2C bus
-3. Connect ultrasonic sensor (optional) to designated GPIO pins
-4. Connect power supply to the servo power rail
+2. Connect ultrasonic sensor to GPIO pins (P8_12 for Trigger, P8_11 for Echo)
+3. Connect power supply to the servo power rail
 
 ## Running the Hexapod
 

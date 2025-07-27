@@ -18,13 +18,12 @@ The hardware layer provides direct interaction with the physical components of t
 
 - **Kernel Driver**: Low-level kernel module for hardware access
 - **Hardware Abstraction**: C++ interface to the kernel driver
-- **Sensor Integration**: IMU and ultrasonic sensor management
+- **Sensor Integration**: ultrasonic sensor management
 
 #### Key Components:
 - `hexapod::Hexapod`: Hardware abstraction layer for servo control
 - `PCA9685` driver: PWM controller for servo motors
-- `MPU6050` and `ADXL345` drivers: IMU sensor interfaces
-- `UltrasonicSensor`: HC-SR04 distance sensor interface
+- `UltrasonicSensor`: HC-SR04 distance sensor interface (P8_12/P8_11)
 
 ### 2. Kinematics Layer
 

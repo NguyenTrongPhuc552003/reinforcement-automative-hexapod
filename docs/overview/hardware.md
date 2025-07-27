@@ -20,7 +20,7 @@ For detailed visual representation of hardware organization, see the [Component 
 | Control Board         | BeagleBone Black                           |
 | Servo Motors          | 18× MG996R (or compatible)                 |
 | Degrees of Freedom    | 18 (3 per leg)                             |
-| Operating Time        | ~1 hour (with 2800mAh battery)             |
+| Operating Time        | ~1 hour (with 2000mAh battery)             |
 | Sensing               | 6-axis IMU (accelerometer + gyroscope)     |
 
 ## Component List
