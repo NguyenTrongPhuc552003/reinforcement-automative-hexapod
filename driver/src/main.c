@@ -130,9 +130,9 @@ MODULE_PARM_DESC(servo_freq, "Servo PWM frequency in Hz (default: 50)");
  *
  * These values must match the physical robot construction
  */
-#define HEXAPOD_COXA_LENGTH 30   ///< Hip segment length (mm)
+#define HEXAPOD_COXA_LENGTH 28   ///< Hip segment length (mm)
 #define HEXAPOD_FEMUR_LENGTH 85  ///< Upper leg segment length (mm)
-#define HEXAPOD_TIBIA_LENGTH 130 ///< Lower leg segment length (mm)
+#define HEXAPOD_TIBIA_LENGTH 120 ///< Lower leg segment length (mm)
 
 /**
  * @brief Servo angle limits (degrees)

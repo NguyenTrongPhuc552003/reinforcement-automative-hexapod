@@ -55,9 +55,9 @@ The hexapod follows a standard hexapod design with 6 legs arranged radially arou
 
 - **Body Diameter**: 150mm
 - **Leg Segments**:
-  - Hip to Knee (COXA): 30mm
+  - Hip to Knee (COXA): 28mm
   - Knee to Ankle (FEMUR): 85mm
-  - Ankle to Foot (TIBIA): 130mm
+  - Ankle to Foot (TIBIA): 120mm
 - **Total Leg Extension**: ~245mm fully extended
 
 ## Electrical Architecture

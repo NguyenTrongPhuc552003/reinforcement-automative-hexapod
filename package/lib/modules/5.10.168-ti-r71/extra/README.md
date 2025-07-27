@@ -5,7 +5,7 @@ This directory contains the hexapod_driver.ko kernel module for the Hexapod Robo
 ## Purpose
 The kernel module provides low-level hardware interface for:
 - Servo motor control via PCA9685 PWM controller
-- IMU sensor data reading (MPU6050/ADXL345)
+- Ultrasonic sensor data reading (HC-SR04)
 - Device file interface (/dev/hexapod)
 
 ## Installation

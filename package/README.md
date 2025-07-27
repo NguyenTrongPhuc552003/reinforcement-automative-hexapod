@@ -9,7 +9,7 @@ This installation package includes:
 ### Kernel Driver (`/lib/modules/*/extra/`)
 - **hexapod_driver.ko**: Low-level hardware interface kernel module
 - Provides device file interface at `/dev/hexapod`
-- Supports PCA9685 PWM controller and IMU sensors
+- Supports PCA9685 PWM controller and ultrasonic sensors
 
 ### Applications (`/usr/local/bin/`)  
 - **hexapod_app**: Main interactive control application
@@ -45,9 +45,9 @@ This installation package includes:
 
 - BeagleBone Black or compatible ARM platform
 - PCA9685 16-channel PWM driver
-- MPU6050 or ADXL345 IMU sensor
+- HC-SR04 ultrasonic sensor for obstacle detection
 - 18 servo motors (3 per leg × 6 legs)
-- HC-SR04 ultrasonic sensor (optional)
+- Simple and cost-effective design without complex sensors
 
 ## System Requirements
 
