@@ -86,6 +86,9 @@ private:
     MovementState current_state_;
     std::chrono::steady_clock::time_point last_step_time_;
     std::chrono::steady_clock::time_point obstacle_pause_start_;
+    std::chrono::steady_clock::time_point back_start_;
+    std::chrono::steady_clock::time_point turn_start_;
+
     int step_phase_; // 0 or 1 for tripod gait phases
 
     // Predefined servo positions (in microseconds)
@@ -100,7 +103,7 @@ private:
     static constexpr ServoPositions standing_position_ = {1500, 1550, 1450}; // Stable stance - slight body lift
     static constexpr ServoPositions lift_position_ = {1500, 1350, 1200};     // Higher leg lift for clearance
     static constexpr ServoPositions forward_position_ = {1750, 1580, 1480};  // Forward step - FIXED direction (higher value = forward)
-    static constexpr ServoPositions back_position_ = {1250, 1580, 1480};     // Back step - FIXED direction (lower value = backward)
+    static constexpr ServoPositions back_position_ = {1220, 1580, 1480};     // Back step - FIXED direction (lower value = backward)
 
     // Enhanced sideways positions for effective obstacle avoidance
     static constexpr ServoPositions sideways_lift = {1500, 1300, 1150};  // High lift for obstacle clearance
@@ -111,8 +114,8 @@ private:
     static constexpr ServoPositions turn_right_pos = {1600, 1550, 1450}; // Gradual right turn
 
     // Tripod groups for alternating gait
-    static constexpr uint8_t tripod_group_a_[3] = {1, 2, 5}; // FL, MR, BL
-    static constexpr uint8_t tripod_group_b_[3] = {0, 3, 4}; // FR, ML, BR
+    static constexpr uint8_t tripod_group_a_[3] = {0, 3, 5}; // FR, ML, BL
+    static constexpr uint8_t tripod_group_b_[3] = {1, 2, 4}; // FL, MR, BR
 
     // Distance thresholds for obstacle avoidance
     static constexpr double obstacle_threshold_cm_ = 20.0;

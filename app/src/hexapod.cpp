@@ -381,69 +381,54 @@ bool Hexapod::isObstacleDetected()
 
 void Hexapod::handleObstacleAvoidance()
 {
-    double current_distance = ultrasonic_.getDistance();
-
-    std::cout << "OBSTACLE AVOIDANCE TRIGGERED!" << std::endl;
-    std::cout << "   Current distance: " << current_distance << " cm" << std::endl;
-    std::cout << "   Threshold: " << obstacle_threshold_cm_ << " cm" << std::endl;
-
-    // Check if we're already in pause state
-    if (current_state_ != PAUSED_FOR_OBSTACLE)
+    if (current_state_ != PAUSED_FOR_OBSTACLE &&
+        current_state_ != BACKING_UP &&
+        current_state_ != TURNING_LEFT)
     {
-        // First time detecting obstacle - start pause
-        std::cout << "   Action: Stopping for 1 second before advanced sideways crawling..." << std::endl;
+        std::cout << "Obstacle detected! Pausing..." << std::endl;
         current_state_ = PAUSED_FOR_OBSTACLE;
         obstacle_pause_start_ = std::chrono::steady_clock::now();
-
-        // Stop all movement - set to elevated standing position for readiness
         setAllLegsPosition(standing_position_);
         return;
     }
 
-    // We're in pause state - check if 1 second has passed
-    auto current_time = std::chrono::steady_clock::now();
-    auto pause_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-        current_time - obstacle_pause_start_);
+    auto now = std::chrono::steady_clock::now();
 
-    if (pause_duration.count() < 1000) // Still pausing
+    // After pausing for 0.5 second, start backing up
+    if (current_state_ == PAUSED_FOR_OBSTACLE)
     {
-        std::cout << "   Obstacle detected - pausing for stability... (" << pause_duration.count() << "ms / 1000ms)" << std::endl;
+        auto pause_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now - obstacle_pause_start_).count();
+        if (pause_ms >= 500) // down from 1000ms to 500ms
+        {
+            std::cout << "Pause done. Start backing up..." << std::endl;
+            current_state_ = BACKING_UP;
+            back_start_ = now;
+        }
         return;
     }
 
-    // Pause complete - now execute enhanced sideways crawling for effective obstacle avoidance
-    std::cout << "   Pause complete! Initiating advanced sideways crawling maneuver..." << std::endl;
-    current_state_ = CRAWLING_SIDEWAYS;
-
-    // Extended sideways crawling with multiple phases for effective avoidance
-    static auto crawl_start = current_time;
-    auto crawl_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-        current_time - crawl_start);
-
-    if (crawl_duration.count() < 4000) // Extended crawl for 4 seconds (6-7 complete sideways steps)
+    // Back up in 0.8 seconds
+    if (current_state_ == BACKING_UP)
     {
-        // Continuous sideways crawling - each step covers more ground
-        std::cout << "   Advanced sideways crawling in progress... (" << crawl_duration.count() << "ms / 4000ms)" << std::endl;
-        std::cout << "   Step phase: " << step_phase_ << ", Moving away from obstacle effectively" << std::endl;
-        return; // Let the normal update() cycle handle the crawling steps
+        auto back_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now - back_start_).count();
+        if (back_ms >= 800) // down from 2000ms to 800ms
+        {
+            std::cout << "Backing done. Start turning left 60deg..." << std::endl;
+            current_state_ = TURNING_LEFT;
+            turn_start_ = now;
+        }
+        return;
     }
 
-    // Reset crawl timer and check distance after extended sideways avoidance
-    crawl_start = current_time;
-
-    // Check if we've successfully avoided the obstacle
-    double new_distance = ultrasonic_.getDistance();
-    std::cout << "   Sideways avoidance complete. Checking new distance: " << new_distance << " cm" << std::endl;
-
-    if (new_distance > safe_distance_cm_ || new_distance <= 0) // Clear path or sensor error
+    // Turn left in 1.2 seconds
+    if (current_state_ == TURNING_LEFT)
     {
-        std::cout << "   Success! Path is clear. Resuming forward movement..." << std::endl;
-        current_state_ = WALKING_FORWARD;
-    }
-    else
-    {
-        std::cout << "   Obstacle still detected. Continuing sideways avoidance..." << std::endl;
-        // Continue crawling sideways - reset timer for another cycle
-        crawl_start = std::chrono::steady_clock::now();
+        auto turn_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now - turn_start_).count();
+        if (turn_ms >= 1200) // down from 2000ms to 1200ms
+        {
+            std::cout << "Turning done. Resume forward walking." << std::endl;
+            current_state_ = WALKING_FORWARD;
+        }
+        return;
     }
 }
